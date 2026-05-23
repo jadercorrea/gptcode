@@ -274,7 +274,7 @@ func (bn *BugNotifier) CheckAndNotify(ctx context.Context, hours int) error {
 		title := fmt.Sprintf("%d new errors detected", len(critical))
 		var details strings.Builder
 		for _, issue := range critical {
-			details.WriteString(fmt.Sprintf("- [%s] %s\n", issue.ShortID, issue.Title))
+			fmt.Fprintf(&details, "- [%s] %s\n", issue.ShortID, issue.Title)
 		}
 		bn.telegram.SendError(ctx, title, details.String())
 	}

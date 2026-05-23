@@ -224,7 +224,7 @@ func Chat(input string, args []string) {
 							text = fmt.Sprintf("%s\n\n... (%d lines omitted) ...\n\n%s", head, len(lines)-50, tail)
 						}
 
-						contextBuilder.WriteString(fmt.Sprintf("File: %s\n```\n%s\n```\n", file, text))
+						fmt.Fprintf(&contextBuilder, "File: %s\n```\n%s\n```\n", file, text)
 					}
 				}
 
@@ -409,7 +409,7 @@ func ChatWithResponse(input string, args []string) (string, error) {
 							tail := strings.Join(lines[tailStart:], "\n")
 							text = fmt.Sprintf("%s\n\n... (%d lines omitted) ...\n\n%s", head, len(lines)-50, tail)
 						}
-						contextBuilder.WriteString(fmt.Sprintf("File: %s\n```\n%s\n```\n", file, text))
+						fmt.Fprintf(&contextBuilder, "File: %s\n```\n%s\n```\n", file, text)
 					}
 				}
 				history.Messages[len(history.Messages)-1].Content += contextBuilder.String()

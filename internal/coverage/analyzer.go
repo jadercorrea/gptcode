@@ -275,19 +275,19 @@ func (a *CoverageAnalyzer) generateBasicReport(gaps []Gap, data *coverageData) s
 	var sb strings.Builder
 
 	sb.WriteString("Coverage Report\n")
-	sb.WriteString(fmt.Sprintf("Total Coverage: %.1f%%\n\n", data.Total))
+	fmt.Fprintf(&sb, "Total Coverage: %.1f%%\n\n", data.Total)
 
 	if len(gaps) == 0 {
 		sb.WriteString("✅ All functions meet coverage threshold\n")
 		return sb.String()
 	}
 
-	sb.WriteString(fmt.Sprintf("⚠️  %d function(s) below 70%% coverage:\n\n", len(gaps)))
+	fmt.Fprintf(&sb, "⚠️  %d function(s) below 70%% coverage:\n\n", len(gaps))
 	for _, gap := range gaps {
-		sb.WriteString(fmt.Sprintf("- %s:%d %s (%.1f%%)\n",
-			filepath.Base(gap.File), gap.Line, gap.Function, gap.Coverage))
+		fmt.Fprintf(&sb, "- %s:%d %s (%.1f%%)\n",
+			filepath.Base(gap.File), gap.Line, gap.Function, gap.Coverage)
 		if gap.Suggestion != "" {
-			sb.WriteString(fmt.Sprintf("  → %s\n", gap.Suggestion))
+			fmt.Fprintf(&sb, "  → %s\n", gap.Suggestion)
 		}
 	}
 

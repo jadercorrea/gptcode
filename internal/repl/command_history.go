@@ -112,11 +112,11 @@ func (h *CommandHistory) String() string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Command history (%d/%d):\n", len(h.Commands), h.MaxEntries))
+	fmt.Fprintf(&sb, "Command history (%d/%d):\n", len(h.Commands), h.MaxEntries)
 	for _, cmd := range h.Commands {
-		sb.WriteString(fmt.Sprintf("  [%s] %s", cmd.ID, cmd.Command))
+		fmt.Fprintf(&sb, "  [%s] %s", cmd.ID, cmd.Command)
 		if cmd.ExitCode != 0 {
-			sb.WriteString(fmt.Sprintf(" (exit: %d)", cmd.ExitCode))
+			fmt.Fprintf(&sb, " (exit: %d)", cmd.ExitCode)
 		}
 		sb.WriteString("\n")
 	}

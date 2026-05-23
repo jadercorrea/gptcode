@@ -676,13 +676,13 @@ func searchExa(query string, numResults int, apiKey string) (string, error) {
 	var output strings.Builder
 	output.WriteString("Search Results:\n\n")
 	for i, r := range result.Results {
-		output.WriteString(fmt.Sprintf("%d. %s\n", i+1, r.Title))
-		output.WriteString(fmt.Sprintf("   URL: %s\n", r.URL))
+		fmt.Fprintf(&output, "%d. %s\n", i+1, r.Title)
+		fmt.Fprintf(&output, "   URL: %s\n", r.URL)
 		truncated := r.Content
 		if len(truncated) > 300 {
 			truncated = truncated[:300] + "..."
 		}
-		output.WriteString(fmt.Sprintf("   %s\n\n", truncated))
+		fmt.Fprintf(&output, "   %s\n\n", truncated)
 	}
 
 	return output.String(), nil
@@ -729,13 +729,13 @@ func searchTavily(query string, numResults int, apiKey string) (string, error) {
 	var output strings.Builder
 	output.WriteString("Search Results:\n\n")
 	for i, r := range result.Results {
-		output.WriteString(fmt.Sprintf("%d. %s\n", i+1, r.Title))
-		output.WriteString(fmt.Sprintf("   URL: %s\n", r.URL))
+		fmt.Fprintf(&output, "%d. %s\n", i+1, r.Title)
+		fmt.Fprintf(&output, "   URL: %s\n", r.URL)
 		truncated := r.Content
 		if len(truncated) > 300 {
 			truncated = truncated[:300] + "..."
 		}
-		output.WriteString(fmt.Sprintf("   %s\n\n", truncated))
+		fmt.Fprintf(&output, "   %s\n\n", truncated)
 	}
 
 	return output.String(), nil

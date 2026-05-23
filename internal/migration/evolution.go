@@ -156,20 +156,20 @@ func (s *SchemaEvolution) SaveEvolution(evolution *Evolution) error {
 func (s *SchemaEvolution) generateReadme(evolution *Evolution) string {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("# %s\n\n", evolution.Name))
+	fmt.Fprintf(&sb, "# %s\n\n", evolution.Name)
 	sb.WriteString("## Zero-Downtime Migration Strategy\n\n")
 	sb.WriteString("This migration is split into multiple phases for safe deployment:\n\n")
 
 	for _, step := range evolution.Steps {
-		sb.WriteString(fmt.Sprintf("### Phase %d: %s\n\n", step.Phase, step.Description))
-		sb.WriteString(fmt.Sprintf("**Safety Check:**\n```sql\n%s\n```\n\n", step.SafetyCheck))
-		sb.WriteString(fmt.Sprintf("**Migration:**\n```sql\n%s\n```\n\n", step.SQL))
-		sb.WriteString(fmt.Sprintf("**Rollback:**\n```sql\n%s\n```\n\n", step.Rollback))
+		fmt.Fprintf(&sb, "### Phase %d: %s\n\n", step.Phase, step.Description)
+		fmt.Fprintf(&sb, "**Safety Check:**\n```sql\n%s\n```\n\n", step.SafetyCheck)
+		fmt.Fprintf(&sb, "**Migration:**\n```sql\n%s\n```\n\n", step.SQL)
+		fmt.Fprintf(&sb, "**Rollback:**\n```sql\n%s\n```\n\n", step.Rollback)
 	}
 
 	sb.WriteString("## Deployment Steps\n\n")
 	for _, step := range evolution.Steps {
-		sb.WriteString(fmt.Sprintf("%d. Deploy Phase %d migration\n", step.Phase, step.Phase))
+		fmt.Fprintf(&sb, "%d. Deploy Phase %d migration\n", step.Phase, step.Phase)
 		sb.WriteString("   - Run safety check\n")
 		sb.WriteString("   - Apply migration\n")
 		sb.WriteString("   - Verify no errors\n")

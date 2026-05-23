@@ -152,7 +152,7 @@ func (g *ChangelogGenerator) formatChangelog(groups map[string][]Commit, fromTag
 		version = "Unreleased"
 	}
 
-	sb.WriteString(fmt.Sprintf("## [%s] - %s\n\n", version, time.Now().Format("2006-01-02")))
+	fmt.Fprintf(&sb, "## [%s] - %s\n\n", version, time.Now().Format("2006-01-02"))
 
 	typeOrder := []string{"feat", "fix", "perf", "refactor", "docs", "test", "chore", "build", "ci"}
 	typeNames := map[string]string{
@@ -179,7 +179,7 @@ func (g *ChangelogGenerator) formatChangelog(groups map[string][]Commit, fromTag
 	if len(breaking) > 0 {
 		sb.WriteString("### ⚠ BREAKING CHANGES\n\n")
 		for _, commit := range breaking {
-			sb.WriteString(fmt.Sprintf("- **%s**: %s (%s)\n", commit.Scope, commit.Message, commit.Hash))
+			fmt.Fprintf(&sb, "- **%s**: %s (%s)\n", commit.Scope, commit.Message, commit.Hash)
 		}
 		sb.WriteString("\n")
 	}
@@ -201,13 +201,13 @@ func (g *ChangelogGenerator) formatChangelog(groups map[string][]Commit, fromTag
 			}
 		}
 
-		sb.WriteString(fmt.Sprintf("### %s\n\n", name))
+		fmt.Fprintf(&sb, "### %s\n\n", name)
 
 		for _, commit := range commits {
 			if commit.Scope != "" {
-				sb.WriteString(fmt.Sprintf("- **%s**: %s (%s)\n", commit.Scope, commit.Message, commit.Hash))
+				fmt.Fprintf(&sb, "- **%s**: %s (%s)\n", commit.Scope, commit.Message, commit.Hash)
 			} else {
-				sb.WriteString(fmt.Sprintf("- %s (%s)\n", commit.Message, commit.Hash))
+				fmt.Fprintf(&sb, "- %s (%s)\n", commit.Message, commit.Hash)
 			}
 		}
 		sb.WriteString("\n")

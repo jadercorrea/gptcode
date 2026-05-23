@@ -703,7 +703,7 @@ func (c *Conductor) formatValidationIssues(issues []string) string {
 	sb.WriteString("VALIDATION FAILED\n\n")
 	sb.WriteString("The following issues were found:\n")
 	for i, issue := range issues {
-		sb.WriteString(fmt.Sprintf("%d. %s\n", i+1, issue))
+		fmt.Fprintf(&sb, "%d. %s\n", i+1, issue)
 	}
 	sb.WriteString("\nINSTRUCTIONS:\n")
 	sb.WriteString("1. Fix each issue listed above\n")

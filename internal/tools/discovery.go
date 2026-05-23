@@ -160,13 +160,13 @@ func FindRelevantFiles(call ToolCall, workdir string) ToolResult {
 
 	// Format output
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("Found %d relevant files for query: %q\n", len(matches), query))
-	result.WriteString(fmt.Sprintf("Keywords: %s\n\n", strings.Join(keywords, ", ")))
+	fmt.Fprintf(&result, "Found %d relevant files for query: %q\n", len(matches), query)
+	fmt.Fprintf(&result, "Keywords: %s\n\n", strings.Join(keywords, ", "))
 
 	for i, m := range matches {
-		result.WriteString(fmt.Sprintf("%d. %s (%d matches)\n", i+1, m.Path, m.MatchCount))
+		fmt.Fprintf(&result, "%d. %s (%d matches)\n", i+1, m.Path, m.MatchCount)
 		if m.FirstMatch != "" {
-			result.WriteString(fmt.Sprintf("   Preview: %s\n", m.FirstMatch))
+			fmt.Fprintf(&result, "   Preview: %s\n", m.FirstMatch)
 		}
 	}
 
@@ -281,11 +281,11 @@ func findRelevantFilesWithGrep(query string, keywords []string, workdir string, 
 	}
 
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("Found %d relevant files (using grep fallback)\n", len(matches)))
-	result.WriteString(fmt.Sprintf("Keywords: %s\n\n", strings.Join(keywords, ", ")))
+	fmt.Fprintf(&result, "Found %d relevant files (using grep fallback)\n", len(matches))
+	fmt.Fprintf(&result, "Keywords: %s\n\n", strings.Join(keywords, ", "))
 
 	for i, m := range matches {
-		result.WriteString(fmt.Sprintf("%d. %s (%d matches)\n", i+1, m.Path, m.MatchCount))
+		fmt.Fprintf(&result, "%d. %s (%d matches)\n", i+1, m.Path, m.MatchCount)
 	}
 
 	return ToolResult{

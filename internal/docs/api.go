@@ -250,11 +250,11 @@ func (g *APIDocGenerator) formatEndpointList(endpoints []APIEndpoint) string {
 	var builder strings.Builder
 
 	for i, ep := range endpoints {
-		builder.WriteString(fmt.Sprintf("%d. %s %s\n", i+1, ep.Method, ep.Path))
+		fmt.Fprintf(&builder, "%d. %s %s\n", i+1, ep.Method, ep.Path)
 		if ep.Handler != "" {
-			builder.WriteString(fmt.Sprintf("   Handler: %s\n", ep.Handler))
+			fmt.Fprintf(&builder, "   Handler: %s\n", ep.Handler)
 		}
-		builder.WriteString(fmt.Sprintf("   Location: %s:%d\n", ep.File, ep.Line))
+		fmt.Fprintf(&builder, "   Location: %s:%d\n", ep.File, ep.Line)
 		builder.WriteString("\n")
 	}
 

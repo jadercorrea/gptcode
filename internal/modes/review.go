@@ -101,15 +101,15 @@ func buildReviewPrompt(targetPath string, isDir bool, focus string) string {
 	var prompt strings.Builder
 
 	if isDir {
-		prompt.WriteString(fmt.Sprintf("Review the code in directory: %s\n\n", targetPath))
+		fmt.Fprintf(&prompt, "Review the code in directory: %s\n\n", targetPath)
 		prompt.WriteString("Use project_map to get an overview, then examine key files.\n")
 	} else {
-		prompt.WriteString(fmt.Sprintf("Review the code in file: %s\n\n", targetPath))
+		fmt.Fprintf(&prompt, "Review the code in file: %s\n\n", targetPath)
 		prompt.WriteString("Read and analyze the file thoroughly.\n")
 	}
 
 	if focus != "" {
-		prompt.WriteString(fmt.Sprintf("\nSpecial focus: %s\n", focus))
+		fmt.Fprintf(&prompt, "\nSpecial focus: %s\n", focus)
 	}
 
 	prompt.WriteString("\nProvide a structured review covering:\n")

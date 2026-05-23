@@ -62,19 +62,19 @@ func (g *Generator) GenerateREADME() string {
 	sb.WriteString("## Commands\n\n")
 
 	for _, cmd := range g.commands {
-		sb.WriteString(fmt.Sprintf("### %s\n\n", cmd.Name))
+		fmt.Fprintf(&sb, "### %s\n\n", cmd.Name)
 		sb.WriteString(cmd.Short + "\n\n")
 
 		if len(cmd.Flags) > 0 {
 			sb.WriteString("**Flags:**\n\n")
 			for _, flag := range cmd.Flags {
-				sb.WriteString(fmt.Sprintf("- `--%s`", flag.Name))
+				fmt.Fprintf(&sb, "- `--%s`", flag.Name)
 				if flag.Short != "" {
-					sb.WriteString(fmt.Sprintf(" (`-%s`)", flag.Short))
+					fmt.Fprintf(&sb, " (`-%s`)", flag.Short)
 				}
-				sb.WriteString(fmt.Sprintf(": %s", flag.Description))
+				fmt.Fprintf(&sb, ": %s", flag.Description)
 				if flag.Default != "" {
-					sb.WriteString(fmt.Sprintf(" (default: `%s`)", flag.Default))
+					fmt.Fprintf(&sb, " (default: `%s`)", flag.Default)
 				}
 				sb.WriteString("\n")
 			}
@@ -84,9 +84,9 @@ func (g *Generator) GenerateREADME() string {
 		if len(cmd.Examples) > 0 {
 			sb.WriteString("**Examples:**\n\n")
 			for _, ex := range cmd.Examples {
-				sb.WriteString(fmt.Sprintf("```bash\n%s\n```\n", ex.Command))
+				fmt.Fprintf(&sb, "```bash\n%s\n```\n", ex.Command)
 				if ex.Output != "" {
-					sb.WriteString(fmt.Sprintf("```\n%s\n```\n", ex.Output))
+					fmt.Fprintf(&sb, "```\n%s\n```\n", ex.Output)
 				}
 			}
 		}
@@ -244,7 +244,7 @@ func (m *MarkdownFormatter) Link(text, url string) string {
 func (m *MarkdownFormatter) List(items []string) string {
 	var sb strings.Builder
 	for _, item := range items {
-		sb.WriteString(fmt.Sprintf("- %s\n", item))
+		fmt.Fprintf(&sb, "- %s\n", item)
 	}
 	sb.WriteString("\n")
 	return sb.String()

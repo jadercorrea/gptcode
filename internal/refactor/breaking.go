@@ -396,15 +396,15 @@ func (c *BreakingCoordinator) getPackageInfo(file string) (string, string) {
 func (c *BreakingCoordinator) generateMigrationPlan(ctx context.Context, changes []BreakingChange, consumers map[string][]Consumer) (string, error) {
 	var changeDesc strings.Builder
 	for i, change := range changes {
-		changeDesc.WriteString(fmt.Sprintf("%d. %s: %s\n", i+1, change.Type, change.Description))
-		changeDesc.WriteString(fmt.Sprintf("   Old: %s\n", change.OldAPI))
+		fmt.Fprintf(&changeDesc, "%d. %s: %s\n", i+1, change.Type, change.Description)
+		fmt.Fprintf(&changeDesc, "   Old: %s\n", change.OldAPI)
 		if change.NewAPI != "" {
-			changeDesc.WriteString(fmt.Sprintf("   New: %s\n", change.NewAPI))
+			fmt.Fprintf(&changeDesc, "   New: %s\n", change.NewAPI)
 		}
 
 		key := fmt.Sprintf("%s.%s", change.Package, change.Symbol)
 		if cons, ok := consumers[key]; ok {
-			changeDesc.WriteString(fmt.Sprintf("   Affected files: %d\n", len(cons)))
+			fmt.Fprintf(&changeDesc, "   Affected files: %d\n", len(cons))
 		}
 	}
 

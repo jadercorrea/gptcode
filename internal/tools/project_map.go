@@ -35,7 +35,7 @@ func ProjectMap(call ToolCall, workdir string) ToolResult {
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("Project Map (max_depth=%d):\n", maxDepth))
+	fmt.Fprintf(&b, "Project Map (max_depth=%d):\n", maxDepth)
 
 	err := filepath.Walk(workdir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -71,9 +71,9 @@ func ProjectMap(call ToolCall, workdir string) ToolResult {
 
 		indent := strings.Repeat("  ", depth)
 		if info.IsDir() {
-			b.WriteString(fmt.Sprintf("%s📂 %s/\n", indent, filepath.Base(path)))
+			fmt.Fprintf(&b, "%s📂 %s/\n", indent, filepath.Base(path))
 		} else {
-			b.WriteString(fmt.Sprintf("%s📄 %s\n", indent, filepath.Base(path)))
+			fmt.Fprintf(&b, "%s📄 %s\n", indent, filepath.Base(path))
 		}
 
 		return nil
