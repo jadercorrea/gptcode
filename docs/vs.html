@@ -1,7 +1,7 @@
 ---
 layout: default
-title: GPTCode vs Cursor vs Copilot
-description: Honest comparison of AI coding assistants - features, pricing, and privacy
+title: gptcode live vs Insecure Local Agents
+description: Why a unified CLI agent + Live control plane is the only safe way to run AI coding loops in professional teams
 permalink: /vs/
 ---
 
@@ -34,8 +34,8 @@ permalink: /vs/
 
     .comparison-cards {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
         margin-bottom: 2rem;
     }
 
@@ -86,18 +86,6 @@ permalink: /vs/
         margin-bottom: 1rem;
     }
 
-    .tool-price {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--color-text);
-    }
-
-    .tool-price span {
-        font-size: 0.9rem;
-        font-weight: 400;
-        color: var(--color-text-secondary);
-    }
-
     /* Detailed Comparison */
     .detailed-comparison {
         max-width: 900px;
@@ -120,8 +108,8 @@ permalink: /vs/
 
     .comparison-row {
         display: grid;
-        grid-template-columns: 1.5fr repeat(3, 1fr);
-        gap: 1rem;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 1.5rem;
         padding: 1rem 0;
         border-bottom: 1px solid var(--color-border);
         align-items: center;
@@ -267,125 +255,96 @@ permalink: /vs/
 </style>
 
 <div class="vs-hero">
-    <h1>GPTCode vs Cursor vs GitHub Copilot</h1>
-    <p class="subtitle">An honest comparison. We built GPTCode for developers who want control, transparency, and
-        freedom.</p>
+    <h1>Ecosystem Supervision vs Local-Only Chaos</h1>
+    <p class="subtitle">Why traditional AI agents represent a severe compliance and cost hazard for professional engineering teams—and how the unified gptcode stack solves it.</p>
 </div>
 
 <div class="main-comparison">
     <div class="comparison-cards">
         <div class="tool-card highlight">
             <div class="tool-logo">⌘</div>
-            <div class="tool-name">GPTCode</div>
-            <div class="tool-tagline">Open-source, BYOK</div>
-            <div class="tool-price">$0-9<span>/mo</span></div>
+            <div class="tool-name">gptcode CLI + Live</div>
+            <div class="tool-tagline">Supervised Ecosystem</div>
         </div>
         <div class="tool-card">
-            <div class="tool-logo">▲</div>
-            <div class="tool-name">Cursor</div>
-            <div class="tool-tagline">AI-first editor</div>
-            <div class="tool-price">$20<span>/mo</span></div>
-        </div>
-        <div class="tool-card">
-            <div class="tool-logo">🐙</div>
-            <div class="tool-name">GitHub Copilot</div>
-            <div class="tool-tagline">IDE extension</div>
-            <div class="tool-price">$10<span>/mo</span></div>
+            <div class="tool-logo">✗</div>
+            <div class="tool-name">Unmonitored Local Agents</div>
+            <div class="tool-tagline">Isolated local-only shells</div>
         </div>
     </div>
 </div>
 
 <div class="detailed-comparison">
-    <!-- Pricing & Cost -->
+    <!-- Security & Compliance -->
     <div class="comparison-category">
-        <h3 class="category-title">💰 Pricing & True Cost</h3>
+        <h3 class="category-title">🔒 Security & Compliance</h3>
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Base Price</div>
+                <div class="feature-name">Real-Time PII Scrubbing</div>
+                <div class="feature-desc">Redact credentials, tokens, or personal data before logs save</div>
             </div>
-            <div class="feature-value yes"><strong>$0</strong> (CLI free)</div>
-            <div class="feature-value">$20/mo</div>
-            <div class="feature-value">$10/mo</div>
+            <div class="feature-value yes">✓ (ML + Regex Engine)<span class="winner-badge">✓</span></div>
+            <div class="feature-value no">✗ (Raw local dumps)</div>
         </div>
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Team/Business Price</div>
+                <div class="feature-name">Active Command Blocking</div>
+                <div class="feature-desc">Enforce restricted commands declared in `agentops.yml`</div>
             </div>
-            <div class="feature-value yes">$29/user/mo</div>
-            <div class="feature-value">$40/user/mo</div>
-            <div class="feature-value">$19-39/user/mo</div>
+            <div class="feature-value yes">✓ (Active dashboard intercept)</div>
+            <div class="feature-value no">✗ (Unlimited shell execution)</div>
         </div>
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Actual API Cost</div>
-                <div class="feature-desc">What you really pay for LLM usage</div>
+                <div class="feature-name">Audit Logs (SOC2 CC)</div>
+                <div class="feature-desc">Immutable timeline of who ran which commands and edits</div>
             </div>
-            <div class="feature-value yes"><strong>$2-5/mo</strong><span class="winner-badge">Lowest</span></div>
-            <div class="feature-value">Included (limited)</div>
-            <div class="feature-value">Included (limited)</div>
+            <div class="feature-value yes">✓ (Team/Enterprise)<span class="winner-badge">Audit-Ready</span></div>
+            <div class="feature-value no">✗ (Fragmented terminal histories)</div>
         </div>
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Free Tier</div>
+                <div class="feature-name">Zero-Trust Sandbox Levels</div>
+                <div class="feature-desc">Isolate execution domains from process level to dedicated node levels</div>
             </div>
-            <div class="feature-value yes">Unlimited local</div>
-            <div class="feature-value partial">2000 completions</div>
-            <div class="feature-value partial">2000 completions</div>
+            <div class="feature-value yes">✓ (Dynamic Supervisors)</div>
+            <div class="feature-value no">✗ (Host user system privileges)</div>
         </div>
     </div>
 
-    <!-- Data & Privacy -->
+    <!-- Active Intervention & Control -->
     <div class="comparison-category">
-        <h3 class="category-title">🔒 Privacy & Control</h3>
+        <h3 class="category-title">⚙️ Active Intervention & Control</h3>
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Open Source</div>
+                <div class="feature-name">Remote Session Suspension</div>
+                <div class="feature-desc">Instantly pause or SIGKILL runs from web/mobile dashboards</div>
             </div>
-            <div class="feature-value yes">✓ MIT<span class="winner-badge">✓</span></div>
-            <div class="feature-value no">✗</div>
-            <div class="feature-value no">✗</div>
+            <div class="feature-value yes">✓ (Bidirectional WebSockets)</div>
+            <div class="feature-value no">✗ (Must SSH or terminate locally)</div>
         </div>
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Your Own API Keys</div>
-                <div class="feature-desc">No vendor lock-in</div>
+                <div class="feature-name">Remote Command Injection</div>
+                <div class="feature-desc">Push instructions or inputs into stdin directly from the dashboard</div>
             </div>
-            <div class="feature-value yes">✓<span class="winner-badge">BYOK</span></div>
-            <div class="feature-value no">✗</div>
-            <div class="feature-value no">✗</div>
+            <div class="feature-value yes">✓<span class="winner-badge">ChatOps</span></div>
+            <div class="feature-value no">✗ (Keyboard local input only)</div>
         </div>
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Local/Offline Mode</div>
+                <div class="feature-name">Cost & Runaway Loop Protection</div>
+                <div class="feature-desc">Kill sessions immediately when token/cost budgets are exceeded</div>
             </div>
-            <div class="feature-value yes">✓ Ollama</div>
-            <div class="feature-value no">✗</div>
-            <div class="feature-value no">✗</div>
-        </div>
-
-        <div class="comparison-row">
-            <div>
-                <div class="feature-name">No Telemetry</div>
-            </div>
-            <div class="feature-value yes">✓</div>
-            <div class="feature-value partial">Opt-out</div>
-            <div class="feature-value partial">Business only</div>
-        </div>
-
-        <div class="comparison-row">
-            <div>
-                <div class="feature-name">Code Stays Local</div>
-            </div>
-            <div class="feature-value yes">✓ Always</div>
-            <div class="feature-value partial">Privacy mode</div>
-            <div class="feature-value partial">Enterprise only</div>
+            <div class="feature-value yes">✓ (Cost policy engine)</div>
+            <div class="feature-value no">✗ (Starves keys or triggers huge bills)</div>
         </div>
     </div>
 
@@ -395,150 +354,39 @@ permalink: /vs/
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Multi-Agent Architecture</div>
-                <div class="feature-desc">Specialized agents for different tasks</div>
+                <div class="feature-name">Visual Trajectory Diagrams</div>
+                <div class="feature-desc">High-fidelity dynamic sequence diagrams of agent interactions</div>
             </div>
-            <div class="feature-value yes">✓ 4 agents</div>
-            <div class="feature-value yes">✓</div>
-            <div class="feature-value partial">Limited</div>
+            <div class="feature-value yes">✓ (Built-in)</div>
+            <div class="feature-value no">✗ (Text-only terminal logs)</div>
         </div>
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Model Choice</div>
+                <div class="feature-name">Centralized Backend Profiles</div>
+                <div class="feature-desc">Manage API endpoints and model selections in one control plane</div>
             </div>
-            <div class="feature-value yes">Any LLM<span class="winner-badge">300+</span></div>
-            <div class="feature-value partial">Selected</div>
-            <div class="feature-value no">GitHub models</div>
+            <div class="feature-value yes">✓ (Live Sync)</div>
+            <div class="feature-value no">✗ (Ad-hoc local config files)</div>
         </div>
 
         <div class="comparison-row">
             <div>
-                <div class="feature-name">Autonomous Execution</div>
-                <div class="feature-desc">End-to-end task completion</div>
+                <div class="feature-name">Neovim Native Integration</div>
+                <div class="feature-desc">Integrated terminal chat and floating windows</div>
             </div>
-            <div class="feature-value yes">✓ gt do</div>
-            <div class="feature-value yes">✓</div>
-            <div class="feature-value partial">Chat only</div>
-        </div>
-
-        <div class="comparison-row">
-            <div>
-                <div class="feature-name">Validation & Safety</div>
-                <div class="feature-desc">Prevents unintended changes</div>
-            </div>
-            <div class="feature-value yes">✓ Built-in</div>
-            <div class="feature-value partial">Basic</div>
-            <div class="feature-value no">None</div>
-        </div>
-
-        <div class="comparison-row">
-            <div>
-                <div class="feature-name">Dependency Graph</div>
-                <div class="feature-desc">Smart context selection</div>
-            </div>
-            <div class="feature-value yes">✓ PageRank</div>
-            <div class="feature-value partial">Partial</div>
-            <div class="feature-value no">✗</div>
-        </div>
-    </div>
-
-    <!-- Editor Support -->
-    <div class="comparison-category">
-        <h3 class="category-title">🛠️ Editor & Workflow</h3>
-
-        <div class="comparison-row">
-            <div>
-                <div class="feature-name">VS Code</div>
-            </div>
-            <div class="feature-value partial">Via terminal</div>
-            <div class="feature-value yes">✓ Native</div>
-            <div class="feature-value yes">✓</div>
-        </div>
-
-        <div class="comparison-row">
-            <div>
-                <div class="feature-name">Neovim</div>
-            </div>
-            <div class="feature-value yes">✓ Native plugin<span class="winner-badge">Best</span></div>
-            <div class="feature-value no">✗</div>
-            <div class="feature-value partial">Extension</div>
-        </div>
-
-        <div class="comparison-row">
-            <div>
-                <div class="feature-name">Terminal/CLI</div>
-            </div>
-            <div class="feature-value yes">✓ First-class</div>
-            <div class="feature-value no">✗</div>
-            <div class="feature-value partial">Copilot CLI</div>
-        </div>
-
-        <div class="comparison-row">
-            <div>
-                <div class="feature-name">Git Integration</div>
-            </div>
-            <div class="feature-value yes">✓ Full workflow</div>
-            <div class="feature-value yes">✓</div>
-            <div class="feature-value yes">✓</div>
+            <div class="feature-value yes">✓ (Lua Plugin)</div>
+            <div class="feature-value no">✗ (Requires tmux/split screens)</div>
         </div>
     </div>
 </div>
 
-<!-- Use Cases -->
-<div class="use-cases">
-    <h2>Choose the Right Tool for Your Situation</h2>
-
-    <div class="use-case-grid">
-        <div class="use-case-card">
-            <div class="use-case-title">💸 "I want the cheapest option"</div>
-            <div class="use-case-tool">→ GPTCode + Ollama (free) or Groq ($2-5/mo)</div>
-            <div class="use-case-reason">No subscriptions. Pay only for actual API usage, or run 100% free with local
-                models.</div>
-        </div>
-
-        <div class="use-case-card">
-            <div class="use-case-title">🔒 "Privacy is critical"</div>
-            <div class="use-case-tool">→ GPTCode + Ollama</div>
-            <div class="use-case-reason">Code never leaves your machine. No telemetry, no cloud services, open-source
-                you can audit.</div>
-        </div>
-
-        <div class="use-case-card">
-            <div class="use-case-title">⌨️ "I live in Neovim"</div>
-            <div class="use-case-tool">→ GPTCode</div>
-            <div class="use-case-reason">Native Lua plugin with floating windows, tree-sitter aware, and 300+ model
-                search.</div>
-        </div>
-
-        <div class="use-case-card">
-            <div class="use-case-title">🏢 "My team uses VS Code"</div>
-            <div class="use-case-tool">→ Cursor or Copilot</div>
-            <div class="use-case-reason">Native VS Code integration with inline suggestions. Better UX for VS Code power
-                users.</div>
-        </div>
-
-        <div class="use-case-card">
-            <div class="use-case-title">🔧 "I want to tinker"</div>
-            <div class="use-case-tool">→ GPTCode</div>
-            <div class="use-case-reason">Open-source Go codebase. Customize prompts, agents, and behavior. It's yours.
-            </div>
-        </div>
-
-        <div class="use-case-card">
-            <div class="use-case-title">🚀 "I just want it to work"</div>
-            <div class="use-case-tool">→ Cursor or Copilot</div>
-            <div class="use-case-reason">One subscription, no config. Works out of the box with curated models.</div>
-        </div>
-    </div>
-</div>
-
-<!-- CTA -->
+<!-- Comparison CTA -->
 <div class="comparison-cta">
-    <h2>Ready to Own Your AI Assistant?</h2>
-    <p>GPTCode is free, open-source, and respects your privacy. Start coding with AI that's truly yours.</p>
+    <h2>Empower Your Team Securely</h2>
+    <p>Enable safe, compliant autonomous AI execution across your engineering team. Get the unified gptcode control plane today.</p>
     <div class="cta-buttons">
-        <a href="https://github.com/gptcode-cloud/cli" class="cta-btn primary">Get GPTCode Free →</a>
-        <a href="/pricing" class="cta-btn secondary">See Pricing</a>
+        <a href="/pricing" class="cta-btn primary">See Subscription Plans →</a>
+        <a href="https://gptcode.live/connect" class="cta-btn secondary">Open Live Dashboard</a>
     </div>
 </div>

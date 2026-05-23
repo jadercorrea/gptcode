@@ -1,374 +1,108 @@
 ---
 layout: default
-title: Features
-description: Complete feature set of GPTCode AI coding assistant
+title: Core Agent Features
+description: Built-in features and execution capabilities of the pre-compiled Live CLI Agent. Learn how the local runner orchestrates multi-agent tasks, optimizes context, and integrates with the Live dashboard.
 ---
 
-# Features
+# Core Agent Features
 
-## Agent-Based Architecture
+The **gptcode CLI agent** (`gt`) is a pre-compiled, high-performance binary engineered to run complex autonomous coding loops directly on your machine or host server. It combines localized intelligence with active control policies streamed from your **gptcode live** subscription.
 
-### Autonomous Execution with `gt do`
+---
 
-The flagship command that orchestrates 4 specialized agents working in sequence:
+## 1. High-Performance Multi-Agent Architecture
 
-1. **Analyzer**: Understands codebase, reads relevant files using dependency graph
-2. **Planner**: Creates minimal implementation plan, lists files to modify
-3. **Editor**: Executes changes ONLY on planned files (file validation)
-4. **Validator**: Verifies success criteria, triggers auto-retry if needed
+The cornerstone of the `gt` agent is its specialized, multi-stage pipeline. When you issue a task, the agent orchestrates four distinct agent personalities to execute the job safely and verify correctness locally.
 
-**Usage:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                          You run: gt do                         │
+├───────────────┬───────────────┬────────────────┬────────────────┤
+│  1. ANALYZER  │   2. PLANNER  │   3. EDITOR    │  4. VALIDATOR  │
+│ Scans code &  │ Creates minimal│ Modifies files │ Executes tests │
+│ dependencies  │  diff target  │  under sandbox │  and compiles  │
+└───────────────┴───────────────┴────────────────┴────────────────┘
+```
+
+### Flagship Commands
 ```bash
-gt do "add JWT authentication"
-gt do "fix bug in payment processing" --supervised
-gt do "refactor error handling" --interactive
+# Execute a task autonomously
+gt do "add email notification hook to user schema"
+
+# Require manual approval before applying modifications
+gt do "refactor legacy database model" --supervised
+
+# View real-time model selections and cost calculations
+gt do "optimize critical loop" --verbose
 ```
 
-**Flags:**
-- `--supervised` - Manual approval before implementation
-- `--interactive` - Prompt when model selection is ambiguous
-- `--dry-run` - Show plan only
-- `-v` - Verbose (show model selection)
-- `--max-attempts N` - Max retry attempts (default 3)
-
-**Benefits:**
-- Automatic model selection per agent (queries performance history)
-- Auto-retry with better models when validation fails
-- File validation prevents unintended changes
-- Success criteria checked before completion
-
-[See full agent flow diagram on homepage →](/)
+### Flags Reference
+*   `--supervised`: Forces the agent to halt and request human approval via the terminal or Live Dashboard before applying file modifications.
+*   `--interactive`: Prompts the user when the local intent router encounters ambiguous commands.
+*   `--dry-run`: Generates and displays the execution plan without making any changes.
+*   `--max-attempts N`: Sets the maximum self-healing retries if validation fails (default: 3).
 
 ---
 
-## Validation & Safety
+## 2. Active Validation & Safety Guardrails
 
-### File Validation
-The Editor agent can **only** modify files explicitly mentioned in the Planner's output. This prevents:
-- Creating unexpected configuration files
-- Modifying unrelated code
-- Adding surprise scripts
+Security is baked directly into the pre-compiled binary. The agent cannot run wild on your system; all actions are bound by strict local and remote policies.
 
-### Success Criteria Validation
-The Validator agent automatically:
-1. Checks if task completion criteria are met
-2. Runs tests if applicable
-3. Verifies file changes match plan
-4. Triggers retry with feedback if validation fails
-
-### Supervised vs Autonomous Modes
-- **Autonomous** (default): Fast execution with automatic validation
-- **Supervised** (`--supervised`): Manual approval before implementation
-
-Choose based on task criticality.
+*   **File Sandbox Validation**: The **Editor** agent is strictly confined. It can *only* modify files explicitly approved by the **Planner** agent during the plan phase. The binary rejects any attempt to touch unauthorized system directories, hidden scripts, or cross-project files.
+*   **Self-Healing Test Cycles**: The **Validator** agent automatically compiles code, runs language-specific tests, evaluates linters, and retries if compilation or tests fail. If self-healing fails after maximum attempts, `gt` automatically rolls back the workspace to its clean git HEAD state.
+*   **Active Interception Policies**: Centrally managed rules from your **gptcode live** dashboard are pushed to the binary in real time. If the agent attempts a command blocked in your organization’s `agentops.yml`, the process is actively aborted.
 
 ---
 
-## ML-Powered Intelligence
+## 3. High-Speed Local ML Intelligence
 
-### Intent Classification
-Routes requests in 1ms instead of 500ms LLM calls. Classifies user intent (query, edit, research, review) with 89% accuracy and smart LLM fallback when uncertain.
+To minimize latency and subscription API costs, `gt` embeds lightweight local ML models compiled directly into the Go binary.
 
-**Benefits:**
-- 500x faster routing (1ms vs 500ms)
-- 80% cost reduction for routing operations
-- Zero API calls for confident predictions
-- Smart fallback maintains quality
-
-**Configuration:**
-```bash
-gt config get defaults.ml_intent_threshold  # default: 0.7
-gt config set defaults.ml_intent_threshold 0.8
-```
-
-### Complexity Detection
-Automatically triggers Guided Mode (research → plan → implement) for complex multi-step tasks.
-
-**Configuration:**
-```bash
-gt config get defaults.ml_complex_threshold  # default: 0.55
-gt config set defaults.ml_complex_threshold 0.6
-```
-
-**CLI Commands:**
-```bash
-gt ml list                    # List available models
-gt ml test intent "query"     # Test intent classification
-gt ml eval intent             # Evaluate accuracy
-gt ml train intent            # Retrain model (requires Python)
-```
-
-[Read more about ML features →](/ml-features)
+*   **Intent Classification (1ms)**: Instantly routes user inputs (categorizing as code query, file edit, documentation research, or structural review) in **1ms** instead of waiting for a 500ms cloud LLM call. This reduces routing API costs to zero.
+*   **Complexity Detection**: Automatically analyzes the task structure and local dependency trees to trigger **Guided Mode** (multi-agent orchestration) for complex modifications, or fast single-shot routing for basic questions.
+*   **Heuristic Threshold Configuration**:
+    ```bash
+    # View current ML thresholds
+    gt config get defaults.ml_intent_threshold
+    
+    # Adjust sensitivity via CLI config
+    gt config set defaults.ml_intent_threshold 0.8
+    ```
 
 ---
 
-## Smart Context Selection
+## 4. Intelligent Context Selection (PageRank Graph)
 
-### Dependency Graph Analysis
-Automatically builds a graph of your codebase's file dependencies and uses PageRank to identify important files.
+To avoid feeding massive codebases into LLM context windows (which causes high costs and model confusion), the pre-compiled binary builds a localized import graph.
 
-**How it works:**
-1. Analyzes imports/requires to build dependency graph
-2. Ranks files by importance using PageRank
-3. Matches query terms to relevant files
-4. Expands to 1-hop neighbors (dependencies + dependents)
-5. Provides top 5 most relevant files as context
-
-**Benefits:**
-- 5x token reduction (100k → 20k tokens)
-- Better responses with focused context
-- Automatic, transparent operation
-- Cached for performance
-
-**Supported languages:**
-Go, Python, JavaScript/TypeScript, Ruby, Rust
-
-**Debug mode:**
-```bash
-GPTCODE_DEBUG=1 gt chat "your query"
-# [GRAPH] Built graph: 142 nodes, 287 edges
-# [GRAPH] Selected 5 files:
-# [GRAPH]   1. internal/agents/router.go (score: 0.842)
-```
-
-[Read more about graph features →](/graph-features)
+*   **Codebase PageRank Analysis**: Analyzes import syntax and structural dependencies to build a real-time dependency graph of your workspace.
+*   **Focused 1-Hop Context**: When you ask a question or request a change, `gt` runs keyword matching combined with PageRank weights to extract the top files and their direct dependencies (1-hop neighbors).
+*   **Token Optimization**: Automatically reduces typical context size by 5x (e.g., packing a 100k-token repository context into a highly focused 20k-token payload), maintaining high model accuracy.
+*   **Graph Debugging**:
+    ```bash
+    # Force rebuild of localized dependency cache
+    gt graph build
+    
+    # Query dependency weights for a concept
+    gt graph query "authentication"
+    ```
 
 ---
 
-## Multi-Agent Architecture
+## 5. Centralized Cost & Model Governance
 
-### Specialized Agents
+Although the compiled agent executes code locally with total privacy, its model usage and telemetry are managed centrally via **gptcode live**.
 
-**Router Agent** (fast, cheap)
-- Intent classification and routing
-- Recommended: Llama 3.1 8B Instant (840 TPS, $0.05/M)
-
-**Query Agent** (comprehension)
-- Code reading and analysis
-- Recommended: GPT-OSS 120B ($0.15/M) or Qwen 2.5 Coder
-
-**Editor Agent** (code generation)
-- Code writing and modification
-- Recommended: DeepSeek R1 Distill (83.3% AIME) or Qwen 2.5 Coder
-
-**Research Agent** (web search)
-- Web search and documentation lookup
-- Recommended: Grok 4.1 Fast (2M context, free tier)
-
-### Agent Configuration
-
-```yaml
-backend:
-  groq:
-    agent_models:
-      router: llama-3.1-8b-instant
-      query: gpt-oss-120b-128k
-      editor: deepseek-r1-distill-qwen-32b
-      research: groq/compound
-```
-
-[Compare models →](/compare)
+*   **Bring Your Own Keys (BYOK)**: Connect your own corporate API keys (OpenAI, Anthropic, DeepSeek, Groq, OpenRouter) safely through the Live Control Plane.
+*   **Centralized Budget Caps**: Configure hard spending limits per user, repository, or workspace. If a local execution loop gets stuck, the Live policy engine triggers a remote `SIGTERM` interrupt automatically.
+*   **Automatic PII Redactor**: Before any logs, files, or tokens are streamed to your Live visualization dashboard, an embedded regex and ML-scrubbing pipeline redacts API keys, passwords, database URLs, and email addresses.
 
 ---
 
-## Profile Management
+## 6. Local Developer Ecosystem
 
-Switch between model configurations instantly:
+The compiled agent fits natively into advanced developer configurations.
 
-- **Budget profile**: Groq with Llama 3.1 8B ($2-5/month)
-- **Quality profile**: GPT-4 or Claude for critical work
-- **Local profile**: Ollama for complete privacy ($0/month)
-- **Hybrid profile**: Mix cloud and local models
-
-**Neovim UI:**
-- `<C-m>` - Profile management interface
-- Create, load, edit, delete profiles
-- Configure per-agent models
-- View profile details and costs
-
-**CLI:**
-```bash
-gt backend list           # List configured backends
-gt backend use groq       # Switch to Groq backend
-```
-
----
-
-## TDD-First Workflow
-
-### Test-Driven Development
-- Writes tests before implementation
-- Focuses on small, testable functions
-- Enforces clear requirements
-- Keeps functions focused and maintainable
-
-### Commands
-```bash
-gt tdd                    # Interactive TDD mode
-gt feature "description"  # Generate tests + implementation
-```
-
-### Workflow
-1. Describe feature requirements
-2. AI generates tests first
-3. Tests guide implementation
-4. Verify with test suite
-5. Iterate until green
-
----
-
-## Neovim Integration
-
-### Chat Interface
-- Floating window with syntax highlighting
-- Context-aware suggestions
-- LSP and Tree-sitter integration
-- Persistent chat history
-
-### Model Management
-- Search 193+ Ollama models
-- Auto-install models directly from Neovim
-- View pricing and context windows
-- Set default or session-specific models
-
-### Key Bindings (configurable)
-```lua
-<C-d>      -- Toggle chat interface
-<C-m>      -- Profile management
-<leader>ms -- Model search and install
-```
-
-### Features
-- Code context from LSP
-- Tree-sitter aware
-- Multiple file support
-- Diff preview
-- Interactive code review
-
----
-
-## Cost Optimization
-
-### Per-Agent Pricing
-Configure different model tiers based on task importance:
-
-| Agent | Model | Input | Output | Use Case |
-|-------|-------|-------|--------|----------|
-| Router | Llama 3.1 8B | $0.05 | $0.08 | Fast intent classification |
-| Query | GPT-OSS 120B | $0.15 | $0.60 | Code comprehension |
-| Editor | DeepSeek R1 | $0.14 | $0.42 | Code generation |
-| Research | Grok 4.1 Free | $0.00 | $0.00 | Web search |
-
-### Monthly Cost Examples
-- **Budget**: $2-5/month (Groq with small models)
-- **Balanced**: $10-20/month (mix of models)
-- **Quality**: $30-50/month (premium models for editor)
-- **Local**: $0/month (Ollama only)
-
-[See optimal configurations →](/blog/2025-11-15-groq-optimal-configs)
-
----
-
-## Local Deployment
-
-### Ollama Support
-Run completely offline with Ollama:
-
-**Recommended models:**
-- Qwen 2.5 Coder 32B (88.4% HumanEval, requires 32GB RAM)
-- DeepSeek Coder 33B (81.1% HumanEval, requires 32GB RAM)
-- Llama 3.1 8B (budget option, 8GB RAM)
-
-**Configuration:**
-```yaml
-backend:
-  ollama:
-    base_url: http://localhost:11434
-    default_model: qwen2.5-coder:32b
-```
-
-**Benefits:**
-- Zero API costs
-- Complete privacy
-- No internet required
-- No rate limits
-
-[Setup guide →](/blog/2025-11-17-ollama-local-setup)
-
----
-
-## OpenRouter Integration
-
-Access 100+ models through single API:
-
-- Free tier models (Grok 4.1 Fast, GPT-OSS)
-- Premium models (Claude, GPT-4)
-- Fallback routing
-- Automatic retries
-
-**Configuration:**
-```yaml
-backend:
-  openrouter:
-    base_url: https://openrouter.ai/api/v1
-    default_model: anthropic/claude-4.5-sonnet
-```
-
-[OpenRouter setup →](/blog/2025-11-16-openrouter-multi-provider)
-
----
-
-## Research & Planning
-
-### Research Mode
-Comprehensive codebase research with parallel sub-agents:
-
-```bash
-gt research "how does authentication work"
-```
-
-- Spawns specialized research agents
-- Analyzes dependencies and patterns
-- Generates detailed documentation
-- Creates research artifacts
-
-[Research workflow →](/prompts#research)
-
-### Planning Mode
-Interactive plan creation with iteration:
-
-```bash
-gt plan "add JWT authentication"
-```
-
-- Guided question/answer flow
-- Validates against codebase
-- Phases implementation
-- Generates detailed specs
-
-[Planning workflow →](/prompts#plan)
-
-### Implementation
-Execute plans with verification:
-
-```bash
-gptcode implement plan.md
-```
-
-- Step-by-step execution
-- Automated testing
-- Progress tracking
-- Rollback support
-
----
-
-## Model Comparison
-
-Interactive tool to compare LLMs for coding:
-
-- Side-by-side comparison (up to 4 models)
-- Coding-specific benchmarks (HumanEval, SWE-Bench)
-- Cost calculator for workflows
-- Filter by provider, cost, speed, role
-
-[Compare models →](/compare)
+*   **Neovim IDE Integration**: Seamless floating terminal chats, LSP context synchronization, tree-sitter integration, and profile management interfaces (`<C-d>` and `<C-m>`).
+*   **Interactive TDD Runner**: Rapidly iterate using a test-driven development workflow (`gt tdd`), building robust coverage blocks before writing code.
+*   **Operational DevOps Commands**: Execute tasks and DevOps scripts using `gt run [task]`, which supports direct command REPLs, output referencing, and environment management variables.

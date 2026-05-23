@@ -1,7 +1,7 @@
 ---
 layout: default
-title: GPTCode Live - Real-time AI Coding Dashboard
-description: Monitor, analyze, and optimize your AI coding sessions in real-time
+title: gptcode live — Real-time AI Agent Control Plane
+description: Secure, monitor, and supervise your CLI coding agents in real-time. Active security policies, remote control, and cost analytics.
 permalink: /live/
 ---
 
@@ -19,6 +19,7 @@ permalink: /live/
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        color: transparent;
     }
 
     .live-hero .subtitle {
@@ -63,11 +64,6 @@ permalink: /live/
     .hero-btn.secondary:hover {
         border-color: #7aa2f7;
         color: #7aa2f7;
-    }
-
-    .hero-note {
-        font-size: 0.85rem;
-        color: var(--color-text-secondary);
     }
 
     /* Dashboard Preview */
@@ -336,135 +332,15 @@ permalink: /live/
     .cta-btn:hover {
         transform: translateY(-2px);
     }
-
-    /* ── Connect-page hero (copied from gptcode.live/app.css) ── */
-    .rc-hero {
-        text-align: center;
-        padding: 2rem 1rem 0;
-    }
-
-    .rc-scroll-strip {
-        position: relative;
-        width: 100%;
-        max-width: 720px;
-        margin: 0 auto 48px;
-        padding: 20px 0;
-        mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
-        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
-    }
-
-    .rc-scroll-track {
-        display: flex;
-        gap: 14px;
-        animation: rc-scroll 30s linear infinite;
-        width: max-content;
-    }
-
-    .rc-scroll-track:hover {
-        animation-play-state: paused;
-    }
-
-    @keyframes rc-scroll {
-        0%   { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
-    }
-
-    .rc-scroll-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: rgba(255,255,255,0.03);
-        flex-shrink: 0;
-        transition: transform 0.3s ease, border-color 0.3s ease;
-        overflow: visible;
-    }
-
-    .rc-scroll-icon:hover {
-        transform: scale(1.12);
-        border-color: rgba(255,255,255,0.18);
-    }
-
-    .rc-scroll-icon svg, .rc-scroll-icon img { width: 24px; height: 24px; object-fit: contain; }
-
-    .rc-hero h1 {
-        font-size: clamp(48px, 8vw, 80px);
-        font-weight: 700;
-        color: #ffffff;
-        margin: 0 0 16px;
-        letter-spacing: -0.03em;
-        line-height: 1;
-    }
-
-    .rc-hero .rc-subtitle {
-        font-size: 18px;
-        color: rgba(255,255,255,0.45);
-        max-width: 520px;
-        margin: 0 auto;
-        line-height: 1.6;
-    }
-
-    @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50%      { opacity: 0; }
-    }
 </style>
 
-<div class="rc-hero">
-    <!-- Scrolling Compatible Agents Strip -->
-    <div class="rc-scroll-strip">
-      <div class="rc-scroll-track">
-        <!-- Set 1 (original) -->
-        <div class="rc-scroll-icon" title="Claude Code"><img src="{{ '/assets/logos/claude.svg' | relative_url }}" alt="Claude" style="width:100%;height:100%; border-radius:6px;"/></div>
-        <div class="rc-scroll-icon" title="Cursor"><img src="{{ '/assets/logos/cursor.svg' | relative_url }}" alt="Cursor" style="width:100%;height:100%; border-radius:6px; filter: invert(1);"/></div>
-        <div class="rc-scroll-icon" title="Antigravity"><img src="https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/antigravity-color.png" alt="Antigravity" style="width:100%;height:100%; object-fit: contain;"/></div>
-        <div class="rc-scroll-icon" title="Gemini CLI"><img src="{{ '/assets/logos/gemini.svg' | relative_url }}" alt="Gemini" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="GitHub Copilot"><img src="{{ '/assets/logos/copilot.svg' | relative_url }}" alt="Copilot" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="Windsurf"><img src="{{ '/assets/logos/windsurf.svg' | relative_url }}" alt="Windsurf" style="width:100%;height:100%; object-fit: contain;"/></div>
-        <div class="rc-scroll-icon" title="Aider"><img src="{{ '/assets/logos/aider.svg' | relative_url }}" alt="Aider" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="OpenCode"><img src="{{ '/assets/logos/opencode-dark.png' | relative_url }}" alt="OpenCode" style="width:70%;height:70%; object-fit: contain;"/></div>
-        <div class="rc-scroll-icon" title="Cody"><img src="{{ '/assets/logos/cody.svg' | relative_url }}" alt="Cody" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="Continue"><img src="{{ '/assets/logos/continue.png' | relative_url }}" alt="Continue" style="width:100%;height:100%; filter: invert(1);"/></div>
-        <div class="rc-scroll-icon" title="Cline"><img src="{{ '/assets/logos/cline.svg' | relative_url }}" alt="Cline" style="width:100%;height:100%; filter: invert(1);"/></div>
-        <div class="rc-scroll-icon" title="Codex CLI"><img src="{{ '/assets/logos/codex.svg' | relative_url }}" alt="Codex" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="Gptcode CLI"><img src="{{ '/assets/gptcode.svg' | relative_url }}" alt="Gptcode" style="width:100%;height:100%; border-radius:6px;"/></div>
-        <div class="rc-scroll-icon" title="Goose"><img src="{{ '/assets/logos/goose.png' | relative_url }}" alt="Goose" style="width:100%;height:100%; object-fit: contain; filter: invert(1);"/></div>
-        <div class="rc-scroll-icon" title="MCP Agents"><img src="{{ '/assets/logos/mcp.png' | relative_url }}" alt="MCP" style="width:100%;height:100%; object-fit: contain;"/></div>
-        <!-- Set 2 (duplicate for seamless loop) -->
-        <div class="rc-scroll-icon" title="Claude Code"><img src="{{ '/assets/logos/claude.svg' | relative_url }}" alt="Claude" style="width:100%;height:100%; border-radius:6px;"/></div>
-        <div class="rc-scroll-icon" title="Cursor"><img src="{{ '/assets/logos/cursor.svg' | relative_url }}" alt="Cursor" style="width:100%;height:100%; border-radius:6px; filter: invert(1);"/></div>
-        <div class="rc-scroll-icon" title="Antigravity"><img src="https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/antigravity-color.png" alt="Antigravity" style="width:100%;height:100%; object-fit: contain;"/></div>
-        <div class="rc-scroll-icon" title="Gemini CLI"><img src="{{ '/assets/logos/gemini.svg' | relative_url }}" alt="Gemini" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="GitHub Copilot"><img src="{{ '/assets/logos/copilot.svg' | relative_url }}" alt="Copilot" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="Windsurf"><img src="{{ '/assets/logos/windsurf.svg' | relative_url }}" alt="Windsurf" style="width:100%;height:100%; object-fit: contain;"/></div>
-        <div class="rc-scroll-icon" title="Aider"><img src="{{ '/assets/logos/aider.svg' | relative_url }}" alt="Aider" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="OpenCode"><img src="{{ '/assets/logos/opencode-dark.png' | relative_url }}" alt="OpenCode" style="width:70%;height:70%; object-fit: contain;"/></div>
-        <div class="rc-scroll-icon" title="Cody"><img src="{{ '/assets/logos/cody.svg' | relative_url }}" alt="Cody" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="Continue"><img src="{{ '/assets/logos/continue.png' | relative_url }}" alt="Continue" style="width:100%;height:100%; filter: invert(1);"/></div>
-        <div class="rc-scroll-icon" title="Cline"><img src="{{ '/assets/logos/cline.svg' | relative_url }}" alt="Cline" style="width:100%;height:100%; filter: invert(1);"/></div>
-        <div class="rc-scroll-icon" title="Codex CLI"><img src="{{ '/assets/logos/codex.svg' | relative_url }}" alt="Codex" style="width:100%;height:100%;"/></div>
-        <div class="rc-scroll-icon" title="gptcode CLI"><img src="{{ '/assets/gptcode.svg' | relative_url }}" alt="gptcode" style="width:100%;height:100%; border-radius:6px;"/></div>
-        <div class="rc-scroll-icon" title="Goose"><img src="{{ '/assets/logos/goose.png' | relative_url }}" alt="Goose" style="width:100%;height:100%; object-fit: contain; filter: invert(1);"/></div>
-        <div class="rc-scroll-icon" title="MCP Agents"><img src="{{ '/assets/logos/mcp.png' | relative_url }}" alt="MCP" style="width:100%;height:100%; object-fit: contain;"/></div>
-      </div>
+<div class="live-hero">
+    <h1>Supervised AI Agent Control Plane</h1>
+    <p class="subtitle">Secure, monitor, and audit your pre-compiled CLI agent executions in real-time from a centralized dashboard.</p>
+    <div class="hero-cta-group">
+        <a href="https://gptcode.live" class="hero-btn primary">Access Live Dashboard</a>
+        <a href="/pricing" class="hero-btn secondary">View Subscriptions</a>
     </div>
-
-    <div style="min-height: 90px; margin: 0 0 16px 0;">
-      <h1 id="hero-title" style="display:inline-block;">Agents</h1><span class="tw-cursor" style="display:inline-block; width:4px; height:0.9em; background:#10b981; margin-left:8px; animation:blink 1s step-end infinite; transform:translateY(4px);"></span>
-    </div>
-    <p class="rc-subtitle">
-      Connect your AI agents and take your development workflow to the next level.
-    </p>
-
-    <div class="hero-cta-group" style="margin-top: 2rem;">
-        <a href="https://gptcode.live/connect" class="hero-btn primary">Open Dashboard</a>
-        <a href="https://gptcode.live" class="hero-btn secondary">See Pricing</a>
-    </div>
-
-    <p class="hero-note">The Live Dashboard is available now. The CLI is free and open source.</p>
 </div>
 
 <!-- Dashboard Preview -->
@@ -478,29 +354,27 @@ permalink: /live/
         <div class="preview-content">
             <div class="preview-sidebar">
                 <div class="preview-session">
-                    <div class="session-title">Session #42</div>
-                    <div class="session-meta">gt do "add auth" • 2m ago</div>
+                    <div class="session-title">Session #104</div>
+                    <div class="session-meta">gt do "deploy-api" • Active</div>
                 </div>
                 <div class="preview-session">
-                    <div class="session-title">Session #41</div>
-                    <div class="session-meta">gt chat • 15m ago</div>
+                    <div class="session-title">Session #103</div>
+                    <div class="session-meta">gt review src/ • 4m ago</div>
                 </div>
                 <div class="preview-session">
-                    <div class="session-title">Session #40</div>
-                    <div class="session-meta">gt review • 1h ago</div>
+                    <div class="session-title">Session #102</div>
+                    <div class="session-meta">gt chat • 1h ago</div>
                 </div>
             </div>
             <div class="preview-main">
                 <div class="preview-terminal">
-                    <div class="preview-line info">[Router] Analyzing request complexity...</div>
-                    <div class="preview-line agent">[Intelligence] KAN: 0.78, XGB: 0.65 - Using KAN</div>
-                    <div class="preview-line success">[Router] Mode: OrchestratedMode (0.92)</div>
-                    <div class="preview-line info">[Analyzer] Scanning src/ directory...</div>
-                    <div class="preview-line"> Found 14 relevant files</div>
-                    <div class="preview-line info">[Planner] Creating implementation plan...</div>
-                    <div class="preview-line success">[Editor] Applied 3 file changes</div>
-                    <div class="preview-line success">[Validator] All 12 tests passing</div>
-                    <div class="preview-line success">Done! Authentication added successfully.</div>
+                    <div class="preview-line info">[Live] WebSocket connected. Session #104 active...</div>
+                    <div class="preview-line agent">[Security] Running PII Redactor: CPFs, tokens scrubbed.</div>
+                    <div class="preview-line success">[Policy] Execution allowed. Running commands:</div>
+                    <div class="preview-line info">[Conductor] Starting edit phase...</div>
+                    <div class="preview-line"> Executing: `fly deploy --detach`</div>
+                    <div class="preview-line success">[Live] Dynamic trajectory map updated.</div>
+                    <div class="preview-line success">Done! Session logged and audited.</div>
                 </div>
             </div>
         </div>
@@ -509,43 +383,38 @@ permalink: /live/
 
 <!-- Features -->
 <div class="features-section">
-    <h2>Everything You Need to Master AI Coding</h2>
-    <p class="features-subtitle">Live adds powerful tools on top of the free CLI</p>
+    <h2>Ecosystem Supervision Features</h2>
+    <p class="features-subtitle">The dashboard introduces active oversight and compliance tools for your team</p>
 
     <div class="features-grid">
         <div class="feature-card">
-            <div class="feature-title">Real-time Monitoring</div>
-            <div class="feature-desc">Watch agents work in real-time. See token usage, model selection, and
-                decision-making as it happens.</div>
+            <div class="feature-title">Real-Time WebSocket Stream</div>
+            <div class="feature-desc">Every log line, prompt, and intermediate agent choice is piped in real-time to your dashboard via Elixir PubSub. Watch agent trajectories on any device.</div>
         </div>
 
         <div class="feature-card">
-            <div class="feature-title">Session Replay</div>
-            <div class="feature-desc">Review past sessions step-by-step. Understand what worked, what didn't, and why.
-            </div>
+            <div class="feature-title">Active Command Injection</div>
+            <div class="feature-desc">Supervise sessions live. Send strings to stdin, approve planner steps, or inject shell signals (SIGINT/SIGKILL) to stop runaway loops immediately.</div>
         </div>
 
         <div class="feature-card">
-            <div class="feature-title">Cost Analytics</div>
-            <div class="feature-desc">Track API costs per session, model, and agent. Optimize your spending with
-                actionable insights.</div>
+            <div class="feature-title">Automated PII Redaction</div>
+            <div class="feature-desc">Our streaming engine automatically redacts API keys, credentials, or personal information before they are visualized or persisted, ensuring full compliance.</div>
         </div>
 
         <div class="feature-card">
-            <div class="feature-title">Team Workspaces</div>
-            <div class="feature-desc">Collaborate with your team. Share prompts, monitor usage, and manage API keys
-                centrally.</div>
+            <div class="feature-title">GitOps Convergence Policy</div>
+            <div class="feature-desc">Declare agent execution constraints and safety schemas centrally in a `agentops.yml` manifest file. The backend automatically boots custom dynamic VM pipelines to enforce them.</div>
         </div>
 
         <div class="feature-card">
-            <div class="feature-title">Multi-device Sync</div>
-            <div class="feature-desc">Start on your laptop, continue on your desktop. Your sessions sync across all
-                devices.</div>
+            <div class="feature-title">Detailed Cost Metering</div>
+            <div class="feature-desc">Track token usage, cost analytics, and active budgets per developer, host bridge, or session, preventing surprises on your LLM API accounts.</div>
         </div>
 
         <div class="feature-card">
-            <div class="feature-title">Enterprise Security</div>
-            <div class="feature-desc">SSO, audit logs, and role-based access. Meet your compliance requirements.</div>
+            <div class="feature-title">Audit Logs (SOC2)</div>
+            <div class="feature-desc">Centralized access history logs detailing who ran which tasks, accessed which repos, and modified which files, ready for external compliance reviews.</div>
         </div>
     </div>
 </div>
@@ -557,66 +426,30 @@ permalink: /live/
     <div class="steps">
         <div class="step">
             <div class="step-number">1</div>
-            <div class="step-title">Install the CLI</div>
-            <div class="step-desc">Free and open-source. Works with your existing API keys.</div>
+            <div class="step-title">Get Compiled Agent</div>
+            <div class="step-desc">Subscribe to a Live plan and download the optimized binary built for your operating system.</div>
         </div>
 
         <div class="step">
             <div class="step-number">2</div>
-            <div class="step-title">Connect to Live</div>
-            <div class="step-desc">One command to link your CLI to the dashboard: <code>gptcode live connect</code>
-            </div>
+            <div class="step-title">Link Your Terminal</div>
+            <div class="step-desc">Authenticate your terminal once with your dashboard credentials using: <code>gt login</code>.</div>
         </div>
 
         <div class="step">
             <div class="step-number">3</div>
-            <div class="step-title">Code & Monitor</div>
-            <div class="step-desc">Use the CLI as normal. Sessions appear in your dashboard in real-time.</div>
+            <div class="step-title">Code with Oversight</div>
+            <div class="step-desc">Run autonomous tasks. Telemetry, cost limits, and security filters are enforced in real-time.</div>
         </div>
     </div>
 </div>
 
 <!-- CTA -->
 <div class="cta-section" id="get-started">
-    <h2>Start Using GPTCode Live</h2>
-    <p>Connect your CLI to the dashboard and monitor your AI coding sessions in real-time.</p>
-
-    <div style="margin-bottom: 2rem;">
-        <a href="https://gptcode.live/connect" class="cta-btn primary"
-            style="display: inline-block; text-decoration: none; margin-bottom: 1rem;">
-            Open Live Dashboard
-        </a>
+    <h2>Connect Your Terminal to the Control Plane</h2>
+    <p>Unlock the compiled CLI agent, real-time trajectory visualization, and SOC2-ready policy compliance.</p>
+    <div class="cta-buttons">
+        <a href="https://gptcode.live" class="cta-btn primary">Go to Live Dashboard</a>
+        <a href="/pricing" class="cta-btn secondary">View Plans & Pricing</a>
     </div>
-
-    <p style="font-size: 0.9rem; color: var(--color-text-secondary); margin-bottom: 1rem;">Or install the CLI first:</p>
-
-    <div style="max-width: 500px; margin: 0 auto 1.5rem;">
-        <pre
-            style="text-align: left; padding: 1rem; border-radius: 8px; background: var(--color-bg-code, #111219); border: 1px solid var(--color-border);"><code>curl -sSL https://gptcode.dev/install.sh | bash</code></pre>
-    </div>
-
-    <a href="https://github.com/gptcode-cloud/cli" class="cta-btn secondary">View on GitHub</a>
 </div>
-
-<script>
-(function(){
-  var words = ["Agents", "CLIs", "MCPs", "Dashboards", "Extensions"];
-  var wIdx = 0, cIdx = "Agents".length, isDel = true;
-  var el = document.getElementById("hero-title");
-  if (!el) return;
-  function type(){
-    var target = words[wIdx];
-    if (isDel) {
-      cIdx--;
-      el.innerText = target.substring(0, cIdx);
-      if (cIdx === 0) { isDel = false; wIdx = (wIdx + 1) % words.length; setTimeout(type, 300); return; }
-    } else {
-      cIdx++;
-      el.innerText = target.substring(0, cIdx);
-      if (cIdx === target.length) { isDel = true; setTimeout(type, 2000); return; }
-    }
-    setTimeout(type, isDel ? 40 : 80);
-  }
-  setTimeout(type, 2000);
-})();
-</script>

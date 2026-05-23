@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Pricing
-description: Simple, transparent pricing for GPTCode Live
+description: Simple, transparent pricing for gptcode live and the premium compiled CLI agent
 permalink: /pricing/
 ---
 
@@ -19,6 +19,7 @@ permalink: /pricing/
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        color: transparent;
     }
 
     .pricing-hero .subtitle {
@@ -28,26 +29,9 @@ permalink: /pricing/
         margin: 0 auto;
     }
 
-    .pricing-toggle {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        margin: 2rem 0;
-        align-items: center;
-    }
-
-    .pricing-toggle span {
-        color: var(--color-text-secondary);
-    }
-
-    .pricing-toggle .active {
-        color: var(--color-text);
-        font-weight: 600;
-    }
-
     .pricing-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 1.5rem;
         max-width: 1000px;
         margin: 0 auto 3rem;
@@ -167,61 +151,6 @@ permalink: /pricing/
         color: #7aa2f7;
     }
 
-    /* Comparison Section */
-    .comparison-section {
-        max-width: 900px;
-        margin: 4rem auto;
-        padding: 0 1rem;
-    }
-
-    .comparison-section h2 {
-        text-align: center;
-        font-size: 1.75rem;
-        margin-bottom: 2rem;
-    }
-
-    .comparison-table-wrapper {
-        overflow-x: auto;
-        border: 1px solid var(--color-border);
-        border-radius: 12px;
-    }
-
-    .comparison-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-    }
-
-    .comparison-table th,
-    .comparison-table td {
-        padding: 1rem;
-        text-align: left;
-        border-bottom: 1px solid var(--color-border);
-    }
-
-    .comparison-table th {
-        background: var(--color-card-bg);
-        font-weight: 600;
-        color: var(--color-text);
-    }
-
-    .comparison-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .comparison-table td:first-child {
-        color: var(--color-text-secondary);
-    }
-
-    .check {
-        color: #9ece6a;
-    }
-
-    .cross {
-        color: var(--color-text-secondary);
-        opacity: 0.5;
-    }
-
     /* FAQ */
     .faq-section {
         max-width: 700px;
@@ -258,140 +187,69 @@ permalink: /pricing/
 </style>
 
 <div class="pricing-hero">
-    <h1>Simple, Transparent Pricing</h1>
-    <p class="subtitle">CLI is free and open-source. Live Dashboard unlocks team collaboration, monitoring, and advanced
-        features.</p>
+    <h1>Unified Control Plane Pricing</h1>
+    <p class="subtitle">Access to the premium compiled CLI agent is included in all gptcode live subscription plans.</p>
 </div>
 
 <div class="pricing-grid">
-    <!-- Free Tier -->
-    <div class="pricing-card">
-        <div class="plan-name">Open Source</div>
-        <div class="plan-description">For individual developers who want full control</div>
-        <div class="plan-price">
-            <span class="price-amount">$0</span>
-            <span class="price-period">forever</span>
-        </div>
-        <ul class="plan-features">
-            <li>Full CLI with all commands</li>
-            <li>Bring your own API keys</li>
-            <li>Unlimited local usage</li>
-            <li>All agents (Router, Query, Editor, Research)</li>
-            <li>ML-powered routing (1ms inference)</li>
-            <li>Dependency graph analysis</li>
-            <li>Neovim plugin</li>
-            <li>Community support</li>
-        </ul>
-        <a href="https://github.com/gptcode-cloud/cli" class="plan-cta secondary">Get Started Free →</a>
-    </div>
-
-    <!-- Pro Tier -->
+    <!-- Live Pro Tier -->
     <div class="pricing-card featured">
         <div class="plan-name">Live Pro</div>
-        <div class="plan-description">For developers who want the complete experience</div>
+        <div class="plan-description">For individual developers wanting secure, autonomous execution</div>
         <div class="plan-price">
-            <span class="price-amount">$9</span>
+            <span class="price-amount">$12</span>
             <span class="price-period">/month</span>
         </div>
         <ul class="plan-features">
-            <li>Everything in Open Source</li>
-            <li>Live Dashboard (real-time agent monitoring)</li>
-            <li>Session history & replay</li>
-            <li>Cost tracking & analytics</li>
-            <li>Multi-device sync</li>
-            <li>Priority agent execution</li>
-            <li>Custom prompts library</li>
+            <li><strong>Compiled CLI Agent Download</strong> (macOS, Linux, Windows)</li>
+            <li>Live Dashboard (real-time execution monitoring)</li>
+            <li>Interactive Remote Control (SIGKILL, command injection)</li>
+            <li>Centralized prompt & backend model profiles</li>
+            <li>Unified cost tracking & analytics per agent session</li>
+            <li>Complete execution history & diff replays</li>
             <li>Email support</li>
         </ul>
-        <a href="https://buy.stripe.com/test_14AfZgcwl4m7frb8c74F200" class="plan-cta primary">Subscribe to Pro →</a>
+        <a href="https://gptcode.live/checkout/pro" class="plan-cta primary">Subscribe to Pro →</a>
     </div>
 
-    <!-- Team Tier -->
+    <!-- Live Team Tier -->
     <div class="pricing-card">
         <div class="plan-name">Live Team</div>
-        <div class="plan-description">For teams building together</div>
+        <div class="plan-description">For software engineering and DevOps teams</div>
         <div class="plan-price">
-            <span class="price-amount">$29</span>
+            <span class="price-amount">$49</span>
             <span class="price-period">/user/month</span>
         </div>
         <ul class="plan-features">
             <li>Everything in Live Pro</li>
-            <li>Team workspaces</li>
-            <li>Shared prompt library</li>
-            <li>Centralized API key management</li>
-            <li>Usage analytics per member</li>
-            <li>SSO (SAML/OIDC)</li>
-            <li>Audit logs</li>
-            <li>Dedicated support</li>
+            <li><strong>Active Security Policies</strong> (PII Redaction, Command Blocking)</li>
+            <li>Declarative `agentops.yml` convergence via GitOps</li>
+            <li>Centralized API key management across servers</li>
+            <li>Shared prompt & tool definitions libraries</li>
+            <li>Audit logs for SOC2 compliance</li>
+            <li>SSO (SAML/OIDC) integration</li>
+            <li>Priority Slack support</li>
         </ul>
-        <a href="https://buy.stripe.com/test_dRm14m0NDg4PbaVgID4F201" class="plan-cta secondary">Subscribe to Team →</a>
+        <a href="https://gptcode.live/checkout/team" class="plan-cta secondary">Subscribe to Team →</a>
     </div>
-</div>
 
-<!-- Comparison Table -->
-<div class="comparison-section">
-    <h2>GPTCode vs Competitors</h2>
-    <div class="comparison-table-wrapper">
-        <table class="comparison-table">
-            <thead>
-                <tr>
-                    <th>Feature</th>
-                    <th>GPTCode</th>
-                    <th>Cursor</th>
-                    <th>Copilot</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Starting Price</td>
-                    <td><strong>$0/mo</strong></td>
-                    <td>$20/mo</td>
-                    <td>$10/mo</td>
-                </tr>
-                <tr>
-                    <td>Open Source</td>
-                    <td><span class="check">✓</span></td>
-                    <td><span class="cross">✗</span></td>
-                    <td><span class="cross">✗</span></td>
-                </tr>
-                <tr>
-                    <td>Your Own API Keys</td>
-                    <td><span class="check">✓</span></td>
-                    <td><span class="cross">✗</span></td>
-                    <td><span class="cross">✗</span></td>
-                </tr>
-                <tr>
-                    <td>Model Agnostic</td>
-                    <td><span class="check">✓ Any LLM</span></td>
-                    <td>Limited</td>
-                    <td>GitHub models only</td>
-                </tr>
-                <tr>
-                    <td>Local/Offline Mode</td>
-                    <td><span class="check">✓ Ollama</span></td>
-                    <td><span class="cross">✗</span></td>
-                    <td><span class="cross">✗</span></td>
-                </tr>
-                <tr>
-                    <td>Multi-Agent Architecture</td>
-                    <td><span class="check">✓ 4 agents</span></td>
-                    <td><span class="check">✓</span></td>
-                    <td>Partial</td>
-                </tr>
-                <tr>
-                    <td>Neovim Native</td>
-                    <td><span class="check">✓</span></td>
-                    <td><span class="cross">✗</span></td>
-                    <td>Via extension</td>
-                </tr>
-                <tr>
-                    <td>Data Privacy</td>
-                    <td><span class="check">✓ No telemetry</span></td>
-                    <td>Opt-out</td>
-                    <td>Business tier only</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- Enterprise Tier -->
+    <div class="pricing-card">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-description">For organizations requiring complete data sovereignty</div>
+        <div class="plan-price">
+            <span class="price-amount">Custom</span>
+            <span class="price-period">Annual licensing</span>
+        </div>
+        <ul class="plan-features">
+            <li>Everything in Live Team</li>
+            <li><strong>On-Prem / Self-Hosted Control Plane</strong> (Phoenix/Elixir/OTP stack)</li>
+            <li>Custom compiled CLI agent binaries with private registries</li>
+            <li>Node-isolated BEAM VM sandboxing levels</li>
+            <li>Custom capability policies (DB/Infrastructure gateways)</li>
+            <li>Uptime SLA & 24/7 designated support engineer</li>
+        </ul>
+        <a href="mailto:enterprise@gptcode.live" class="plan-cta secondary">Contact Enterprise →</a>
     </div>
 </div>
 
@@ -400,40 +258,27 @@ permalink: /pricing/
     <h2>Frequently Asked Questions</h2>
 
     <div class="faq-item">
-        <div class="faq-question">Do I need to pay for the CLI?</div>
-        <div class="faq-answer">No. The CLI is completely free and open-source. You only pay for your own API keys (like
-            Groq at $0-5/month or free with Ollama locally).</div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-question">What's the difference between CLI and Live?</div>
-        <div class="faq-answer">The CLI is the core tool that runs locally on your machine. Live is a web dashboard that
-            adds real-time monitoring, session history, team collaboration, and analytics on top of your CLI usage.
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <div class="faq-question">Can I use GPTCode with my company's API keys?</div>
-        <div class="faq-answer">Yes! GPTCode is designed for BYOK (Bring Your Own Keys). Configure your OpenAI,
-            Anthropic, Groq, or any OpenAI-compatible endpoint. Your keys stay on your machine.</div>
+        <div class="faq-question">How do I obtain the CLI agent?</div>
+        <div class="faq-answer">The pre-compiled, optimized CLI agent binary is available exclusively for active gptcode live subscribers. Download packages for your operating system are provided immediately inside your Live Dashboard under the "Downloads" section.</div>
     </div>
 
     <div class="faq-item">
         <div class="faq-question">Is there a free trial for Live Pro?</div>
-        <div class="faq-answer">Yes, Live Pro includes a 14-day free trial with full features. No credit card required
-            to start.</div>
+        <div class="faq-answer">Yes, all Live plans include a 14-day free trial. You can download and evaluate the compiled CLI agent during the trial window at no cost.</div>
     </div>
 
     <div class="faq-item">
-        <div class="faq-question">How is this cheaper than Cursor or Copilot?</div>
-        <div class="faq-answer">GPTCode lets you use any LLM provider, including free ones like Ollama or ultra-cheap
-            ones like Groq (~$0.05/100K tokens). You pay the actual API cost, not a markup. Most developers spend
-            $2-5/month on API calls.</div>
+        <div class="faq-question">Why is the CLI bundled with the subscription?</div>
+        <div class="faq-answer">The CLI agent is designed as a secure local executor that streams its entire state to the Live control plane. This unified design enables active policy checks, real-time command injection, cost tracking, and PII redaction, which are only possible through our connected OTP stack.</div>
     </div>
 
     <div class="faq-item">
-        <div class="faq-question">What if I want to self-host Live?</div>
-        <div class="faq-answer">Contact us for enterprise self-hosted licensing. The Live dashboard is built with
-            Phoenix LiveView and can run on your infrastructure.</div>
+        <div class="faq-question">Can I manage my own API keys?</div>
+        <div class="faq-answer">Yes! Both Live Pro and Live Team support Bring Your Own Keys (BYOK). You can configure your OpenAI, Anthropic, or OpenRouter keys centrally in the dashboard, and they will be securely synchronized to your local agent runs.</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">What does "Active Security Policies" mean?</div>
+        <div class="faq-answer">Under the Team plan, you can declare security parameters (like allowed/blocked shell commands or custom regexes) in a root `agentops.yml` file. When the local agent executes, our dashboard actively monitors the streams; if the agent tries to run a forbidden command, the control plane immediately injects a termination signal to halt the session before execution.</div>
     </div>
 </div>

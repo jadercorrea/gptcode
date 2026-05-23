@@ -1,31 +1,29 @@
 ---
 layout: default
-title: Skills
-description: Language-specific expertise that gt injects into AI prompts for generating production-quality, idiomatic code.
+title: Agent Skills — Built-in Premium Capabilities
+description: Built-in capabilities of the pre-compiled Live CLI Agent. Learn how language-specific and general skills are centrally managed for secure, high-performance, and idiomatic local code execution.
 permalink: /skills/
 ---
 
-# GPTCode Skills
+# Agent Skills
 
-**Skills are the secret sauce** behind `gt`'s ability to generate production-quality code. When you run any `gt` command, it automatically detects your project's language and injects the relevant skill into the AI's system prompt.
+**Skills are the built-in expertise engines** that power the `gt` pre-compiled CLI agent. Every `gt` session automatically leverages these secure capabilities to generate production-quality, enterprise-grade code that adheres to industry guidelines and strict framework patterns.
 
-> 💡 **The result**: Instead of generic code that "works", you get idiomatic code that follows community best practices, proper error handling, and language-specific patterns.
+> 💡 **Unified Subscription Advantage**: Under the **gptcode live** subscription, your compiled CLI agent automatically retrieves, verifies, and updates these skills from your central organization control plane. This ensures every developer on your team compiles, edits, and reviews code with identical, highly optimized standards.
 
-## Why Skills Matter
+---
 
-Without skills, AI models produce **generic** code:
-- No language idioms
-- Inconsistent error handling
-- Poor naming conventions
-- Missing documentation patterns
+## Why Built-in Skills Matter
 
-With skills, `gt` produces **production-ready** code:
-- Idiomatic patterns (e.g., Go's explicit error handling, Elixir's pattern matching)
-- Consistent style following community guidelines
-- Proper documentation and testing patterns
-- Framework-specific best practices (Rails, Phoenix, React)
+Without enterprise skills, raw AI models produce generic, unoptimized code that lacks security context or language idioms. With `gt`'s built-in skills, your pre-compiled agent natively produces **production-ready code**:
 
-## How Skills Work
+*   **Idiomatic Patterns**: Follows precise language conventions (e.g., explicit error handling in Go, pattern matching and OTP architectures in Elixir, type-safety in TypeScript, and lifetime constraints in Rust).
+*   **Strict Security Norms**: Natively incorporates input sanitization, OWASP guidelines, and vulnerability mitigation (XSS, CSRF, and SQL Injection prevention) as part of its generation path.
+*   **Consistent Testing & Formatting**: Automatically implements test-driven designs (TDD) using standard frameworks and applies exact project styling patterns.
+
+---
+
+## How Skills Work Natively
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -33,230 +31,85 @@ With skills, `gt` produces **production-ready** code:
 │                        ↓                                 │
 │  gt detects: Ruby on Rails project (Gemfile, config/)   │
 │                        ↓                                 │
-│  gt injects: Rails skill + Ruby skill into prompt       │
+│  gt fetches: Verified Rails & Ruby skills from Live      │
 │                        ↓                                 │
-│  AI generates: Service objects, proper migrations,      │
-│                RSpec tests, Devise patterns             │
+│  gt executes: Generates idiomatic service objects,       │
+│               RSpec tests, and runs local verification   │
 └──────────────────────────────────────────────────────────┘
 ```
 
-## Available Skills
+Because skills are managed centrally via the **gptcode live** control plane, they run locally within the pre-compiled binary sandbox. Your source code never leaves your local machine, and your proprietary prompt blueprints remain secure.
 
-### Language-Specific
+---
 
-| Skill | Language | Description |
-|-------|----------|-------------|
-| [Go](/skills/go) | Go | Error handling, naming, interfaces, concurrency |
-| [Elixir](/skills/elixir) | Elixir | Pattern matching, OTP, Phoenix, Ecto |
-| [Ruby](/skills/ruby) | Ruby | Method design, error handling, testing |
-| [Rails](/skills/rails) | Ruby | Active Record, controllers, services, RSpec |
-| [Python](/skills/python) | Python | PEP 8, type hints, pytest, comprehensions |
-| [TypeScript](/skills/typescript) | TypeScript | Types, generics, async patterns, React |
-| [JavaScript](/skills/javascript) | JavaScript | ES6+, async/await, modules, array methods |
-| [Rust](/skills/rust) | Rust | Ownership, error handling, iterators, traits |
+## Available Built-in Skills
 
-### General
+### 1. Language-Specific Engineering
 
-| Skill | Description |
-|-------|-------------|
-| [TDD Bug Fix](/skills/tdd-bug-fix) | Write failing tests before fixing bugs |
-| [Code Review](/skills/code-review) | Structured code review with priorities |
-| [Git Commit](/skills/git-commit) | Conventional commit messages |
+| Skill | Primary Focus | Best Practices Enforced |
+|:---|:---|:---|
+| **Go** | Performance & Concurrency | Explicit error handling, interfaces, goroutines, and standard project layouts. |
+| **Elixir** | Fault Tolerance & Scaling | Pattern matching, OTP supervisors, Phoenix contexts, and Ecto query safety. |
+| **Ruby** | Readable MVC | Clean method designs, modular patterns, Active Record optimization, and dry code. |
+| **Rails** | Rapid Web Dev | Service objects, thin controllers, secure migrations, and clean RSpec test structures. |
+| **Python** | Data & Type Safety | PEP 8 styling, strict type hinting, robust pytest fixtures, and list comprehensions. |
+| **TypeScript** | Strict Typing & Async | Generics, interface contracts, safe async/await patterns, and React-specific idioms. |
+| **JavaScript** | Modern ES6+ | Clean async flows, modular designs, performant array manipulation, and DOM-safe operations. |
+| **Rust** | Safety & Performance | Correct ownership management, error handling, trait systems, and cargo layouts. |
 
-### Design & Product
+### 2. General Development Standards
 
-| Skill | Category | Description |
-|-------|----------|-------------|
-| [Design System](/skills/design-system) | Design | Atomic Design, tokens, Storybook, accessibility |
-| [Product Metrics](/skills/product-metrics) | Product | GA4, UTM, funnels, tracking pixels |
-| [Production Ready](/skills/production-ready) | Product | Error handling, feature flags, health checks |
-| [QA Automation](/skills/qa-automation) | Product | E2E, visual regression, a11y, performance |
+| Skill | Focus | Operational Mechanics |
+|:---|:---|:---|
+| **TDD Bug Fix** | Test-Driven Design | Automatically generates failing tests before writing the implementation to guarantee fix efficacy. |
+| **Code Review** | High Quality | Automatically reviews code changes locally against performance, safety, and naming rubrics. |
+| **Git Commit** | Clean History | Standardizes commit histories using strict Conventional Commits syntax tied to Live issues. |
 
-### Ops
+### 3. Product & Design Delivery
 
-| Skill | Category | Description |
-|-------|----------|-------------|
-| [Security](/skills/security) | Security | OWASP, input validation, auth, XSS/CSRF prevention |
-| [DevOps](/skills/devops) | DevOps | Docker, Kubernetes, Terraform, CI/CD pipelines |
-| [SysOps](/skills/sysops) | SysOps | Shell scripting, systemd, Linux administration |
-| [SecOps](/skills/secops) | SecOps | Vulnerability scanning, incident response, WAF |
-| [MLOps](/skills/mlops) | MLOps | Model serving, experiment tracking, feature stores |
+| Skill | Focus | Implementation Patterns |
+|:---|:---|:---|
+| **Design System** | UI Consistency | Atomic Design principles, token-based variables, Storybook mappings, and WCAG accessibility. |
+| **Product Metrics** | Analytics Integrity | Proper instrumentation of funnels, UTM trackers, telemetry pixels, and data events. |
+| **Production Ready** | Robustness | Heavy error handling, feature flagging, health checking, and graceful degradation. |
+| **QA Automation** | Reliability | Automated E2E testing (Playwright/Cypress), visual regression systems, and performance budgets. |
 
-## Installing Skills
+### 4. Enterprise Ops & Security
+
+| Skill | Focus | Deployment Patterns |
+|:---|:---|:---|
+| **Security** | Compliance | Enforces OWASP Top 10 defenses, sanitizes inputs, and handles credentials safely. |
+| **DevOps** | Infrastructure | Compiles Docker containers, drafts Kubernetes configs, and constructs Terraform modules. |
+| **SysOps** | Shell & Linux | Safe shell scripts, unit test scripts, systemd configurations, and system administration. |
+| **SecOps** | Threat Management | Integrates vulnerability scanners, configures WAF rules, and schedules dependency audits. |
+| **MLOps** | Model Pipelines | Builds containerized serving setups, tracks experiments, and sets up feature stores. |
+
+---
+
+## CLI Skill Management
+
+Subscribers of **gptcode live** can interact with and manage these built-in skills directly via the `gt` binary:
 
 ```bash
-# List available skills
+# List all verified skills loaded in your session
 gt skills list
 
-# Install a specific skill
+# Synchronize and download a specific skill from the Live dashboard
 gt skills install ruby
 
-# Install all built-in skills
+# Sync all subscription-entitled skills
 gt skills install-all
 
-# View skill content
+# Inspect the architectural guidelines of a skill locally
 gt skills show ruby
 ```
 
-## Creating Custom Skills
-
-You can create custom skills for your team or Stack:
-
-1. Create a markdown file in `~/.gptcode/skills/`
-2. Add frontmatter with `name`, `language`, and `description`
-3. The skill will be automatically loaded when working with that language
-
-### Example Custom Skill
-
-```markdown
----
-name: my-company-style
-language: typescript
-description: Our company's TypeScript conventions
 ---
 
-# Company TypeScript Style
+## Centralized Governance via gptcode live
 
-## Always use strict mode
-...
-```
+For teams and enterprises, skills are not just local configurations; they are active policies. Through your **gptcode live** dashboard, administrators can:
 
-## Contributing Skills
-
-Want to add a skill for your favorite language? [Open a PR](https://github.com/gptcode/cli/tree/main/docs/_skills) with your skill markdown file.
-
----
-
-## Using Skills in Other Tools
-
-The skills that power `gt` can also be used in other AI coding tools. Here's how to apply them in your favorite environment:
-
-### Cursor
-
-Cursor has the **strongest support** for project rules via `.cursorrules`:
-
-```bash
-# Export skills directly to Cursor format
-gt skills show go > .cursorrules
-
-# Or combine multiple skills
-gt skills show go >> .cursorrules
-gt skills show tdd-bug-fix >> .cursorrules
-```
-
-Cursor reads `.cursorrules` automatically and applies them to **every** interaction—no need to ask.
-
-### VS Code (GitHub Copilot)
-
-GitHub Copilot supports custom instructions via files in your project:
-
-**Project-wide instructions:**
-```bash
-# Export a gt skill to Copilot format
-gt skills show ruby > .github/copilot-instructions.md
-```
-
-The file `.github/copilot-instructions.md` is automatically read by Copilot before every interaction.
-
-**Reusable prompts:**
-```bash
-# Create a prompt for TDD workflow
-gt skills show tdd-bug-fix > .github/prompts/tdd.prompt.md
-```
-
-Use in Copilot Chat by referencing the prompt.
-
-### Antigravity (Gemini in IDE)
-
-If you're using Google's Antigravity (Gemini IDE integration):
-
-1. Create `.gemini/settings.json` in your project:
-```json
-{
-  "customInstructions": "See .gemini/skills/ for coding guidelines"
-}
-```
-
-2. Export skills to `.gemini/skills/`:
-```bash
-mkdir -p .gemini/skills
-gt skills show python > .gemini/skills/python.md
-gt skills show tdd-bug-fix > .gemini/skills/tdd.md
-```
-
-### Google Gemini (AI Studio / API)
-
-For Gemini, use skills as system instructions:
-
-```bash
-# Show skill content to copy
-gt skills show typescript
-```
-
-Paste the content into:
-- **AI Studio**: System Instructions field
-- **API**: `system_instruction` parameter in your request
-
-```python
-# Example with Gemini API
-import google.generativeai as genai
-
-model = genai.GenerativeModel(
-    'gemini-pro',
-    system_instruction=open('typescript-skill.md').read()
-)
-```
-
-### Claude (Anthropic Console / API)
-
-Claude supports system prompts where you can inject skills:
-
-```bash
-# Export for Claude
-gt skills show elixir > claude-system.md
-```
-
-Use in:
-- **claude.ai**: Start conversation with "Follow these guidelines:" + paste skill
-- **API**: Set as `system` parameter
-
-```python
-# Example with Claude API
-import anthropic
-
-client = anthropic.Anthropic()
-message = client.messages.create(
-    model="claude-3-opus-20240229",
-    system=open('elixir-skill.md').read(),
-    messages=[{"role": "user", "content": "Create a GenServer"}]
-)
-```
-
-### Replit (Agent / Ghostwriter)
-
-Replit doesn't auto-load rule files yet, but you can use a convention:
-
-```bash
-# Export to a RULES file
-gt skills show python > RULES.md
-```
-
-**Tips for Replit:**
-1. Keep `RULES.md` **open in an editor tab**—Ghostwriter prioritizes open files
-2. When using Replit Agent, start with: *"Read RULES.md and follow strictly"*
-
----
-
-## Quick Reference
-
-| Tool | Config Location | Auto-loaded? |
-|------|-----------------|--------------|
-| **gt** | Built-in | ✅ Yes |
-| **Cursor** | `.cursorrules` | ✅ Yes (strong) |
-| **VS Code Copilot** | `.github/copilot-instructions.md` | ✅ Yes |
-| **Antigravity** | `.gemini/skills/` | ⚡ Partial |
-| **Gemini** | System instruction | ❌ Manual |
-| **Claude** | System prompt | ❌ Manual |
-| **Replit** | `RULES.md` (convention) | ❌ Manual |
-
-> 💡 **Pro tip**: Commit your skills files to git so your whole team benefits from consistent AI-generated code!
+1.  **Enforce Corporate Coding Standards**: Customize or disable specific built-in skills globally for the entire workspace.
+2.  **Verify Compliance**: Reject commits and pull requests that fail validation against active DevOps and Security skill rules.
+3.  **Deploy Proprietary Guidelines**: Upload internal team playbooks as custom skills, distributing them instantly to all active developer CLI binaries in real-time.

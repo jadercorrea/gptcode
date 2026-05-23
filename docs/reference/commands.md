@@ -5,7 +5,7 @@ description: Complete reference for all GPTCode CLI commands
 
 # Commands Reference
 
-Complete guide to all `chu` commands and their usage.
+Complete guide to all `gt` commands and their usage.
 
 ## Quick Navigation
 
@@ -139,11 +139,24 @@ gt do "optimize database queries" --interactive
 
 ---
 
-## Setup Commands
+## Setup & Connection Commands
+
+### `gt login`
+
+**NEW**: Connect and authenticate your compiled CLI binary with your active **gptcode live** subscription.
+
+```bash
+gt login --token <your-live-token>
+```
+
+**What it does:**
+- Validates your subscription entitlement with `gptcode.live`.
+- Retrieves your organization's custom coding guidelines, blocked-command patterns, and budget caps.
+- Installs local credentials to securely stream task execution metrics.
 
 ### `gt setup`
 
-Initialize GPTCode configuration at `~/.gptcode`.
+Initialize local workspace configurations and folders at `~/.gptcode`.
 
 ```bash
 gt setup
@@ -163,7 +176,7 @@ Creates:
 
 ### `gt key [backend]`
 
-Add or update API key for a backend provider.
+Add or update API key for a backend provider (for BYOK subscription configurations).
 
 ```bash
 gt key openrouter
@@ -172,7 +185,7 @@ gt key groq
 
 ### `gt models update`
 
-Update model catalog from available providers (OpenRouter, Groq, OpenAI, etc.).
+Update model catalog from available providers (OpenRouter, Groq, OpenAI, etc.) configured in your Live Dashboard.
 
 ```bash
 gt models update
