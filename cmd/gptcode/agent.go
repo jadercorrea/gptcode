@@ -100,8 +100,8 @@ func runAgent(cmd *cobra.Command, args []string) error {
 		agentType = "ci"
 	}
 
-	// Skip validation for Sentry agents — CI/CD will handle compilation
-	if agentType == "sentry" {
+	// Skip validation for Sentry and Hermes agents — CI/CD will handle compilation, or tasks are non-compilable business goals
+	if agentType == "sentry" || agentType == "hermes" {
 		os.Setenv("SKIP_VALIDATION", "1")
 	}
 
@@ -149,6 +149,46 @@ RULES:
 			sentryTitle, sentryStack,
 			branchName, sentryTitle, branchName,
 			sentryTitle, sentryTitle, defaultBranch)
+	} else if agentType == "hermes" {
+		targetGoal := os.Getenv("HERMES_GOAL")
+		if targetGoal == "" {
+			targetGoal = "Explore the workspace, discover high-friction developer experience bottlenecks, write local tools or scripts to automate them, and document your learnings."
+		}
+		targetNiche := os.Getenv("HERMES_NICHE")
+		if targetNiche == "" {
+			targetNiche = "General Software Automation & Agentic Optimization"
+		}
+		maxBudget := os.Getenv("HERMES_BUDGET")
+		if maxBudget == "" {
+			maxBudget = "10.00"
+		}
+
+		prompt = fmt.Sprintf(`You are an autonomous Hermes-class Agent. Your primary directive is to achieve profit-seeking tasks, optimize workflows, and distill your operational experience into permanent, reusable skills.
+
+CONTEXT & SPECIFICATIONS:
+- Target Niche: %s
+- Strategic Goal: %s
+- Allocated Budget: $%s (for API calls and third-party actions)
+
+INSTRUCTIONS — FOLLOW SYSTEMATICALLY:
+1. Research: Scan the workspace, read files, and execute searches to fully understand your goal and identify profitable actions or developer experience bottlenecks.
+2. Execute: Create, refine, and execute scripts, code bases, or API calls to resolve the goal. Work in isolated, safe bounds.
+3. Distill Reusable Skills: Upon successfully completing a workflow or creating a value-generating asset, you MUST extract your learnings. Create a detailed Markdown "skill card" under the directory '.gptcode/skills/' (e.g., '.gptcode/skills/lead_generation_script.md' or '.gptcode/skills/db_auto_migration.md').
+   - The skill card MUST include: a clear title, description of the skill, execution prerequisites, exact code snippets/tools created, and a guide on how to reuse it in future agent cycles.
+4. Git Commit & PR: Commit your changes, including the value-generating assets and the newly distilled skill files in '.gptcode/skills/'. Check out a new branch, push it to origin, and create a Pull Request using:
+
+   git checkout -b hermes/evolve-%s && \
+   git add -A && \
+   git commit -m "feat(hermes): execute '%s' & distill reusable skills" && \
+   git push origin hermes/evolve-%s && \
+   gh pr create --title "feat(hermes): execute '%s' & distill skills" --body "Automated workflow execution and self-improving skill distillation for Goal: %s" --base %s
+
+RULES:
+- Focus on producing robust, functional code or documents.
+- Always check if the '.gptcode/skills/' directory exists, and create it if necessary.
+- Distill exactly ONE clean skill file per successful workflow.
+- You have full shell execution capabilities via run_command to deploy scripts, run test suites, or interact with external APIs, but do not exceed your allocated budget limit.`,
+			targetNiche, targetGoal, maxBudget, runID, targetGoal, runID, targetGoal, targetGoal, branch)
 	} else {
 		// Default to CI pipeline logic
 		prompt = fmt.Sprintf(`The CI pipeline just failed for this repository on branch '%s'.
