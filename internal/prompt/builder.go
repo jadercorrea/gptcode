@@ -1,9 +1,13 @@
 package prompt
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+	"text/template"
+
+	"gptcode/internal/config"
 )
 
 type BuildOptions struct {
@@ -75,6 +79,26 @@ func (b *Builder) BuildSystemPrompt(opts BuildOptions) string {
 			}
 		}
 
+		// 4. Load Caveman mode if enabled
+		cavemanMode := os.Getenv("CAVEMAN_MODE")
+		if cavemanMode == "" {
+			setup, err := config.LoadSetup()
+			if err == nil {
+				cavemanMode = setup.Defaults.CavemanMode
+			}
+		}
+		if cavemanMode != "" && cavemanMode != "off" {
+			cavemanSkill := b.SkillsLoader.LoadByName("caveman")
+			if cavemanSkill != "" {
+				rendered := renderTemplate(cavemanSkill, map[string]interface{}{
+					"Level": cavemanMode,
+				})
+				if rendered != "" {
+					skillContents = append(skillContents, fmt.Sprintf("## Caveman Optimization Mode\n\n%s", rendered))
+				}
+			}
+		}
+
 		// Combine all skills
 		if len(skillContents) > 0 {
 			combined := ""
@@ -136,4 +160,16 @@ func mustReadFile(path string) string {
 
 type MemoryStore interface {
 	LastRelevant(lang string) string
+}
+
+func renderTemplate(tmplStr string, data interface{}) string {
+	tmpl, err := template.New("tmpl").Parse(tmplStr)
+	if err != nil {
+		return tmplStr
+	}
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return tmplStr
+	}
+	return buf.String()
 }

@@ -68,6 +68,8 @@ func getNestedValue(setup *Setup, key string) (interface{}, error) {
 			return setup.Defaults.MaxCostPerTask, nil
 		case "monthly_budget":
 			return setup.Defaults.MonthlyBudget, nil
+		case "caveman_mode":
+			return setup.Defaults.CavemanMode, nil
 		default:
 			return nil, fmt.Errorf("unknown defaults field: %s", parts[1])
 		}
@@ -183,6 +185,16 @@ func setNestedValue(setup *Setup, key, value string) error {
 				return fmt.Errorf("monthly_budget must be non-negative")
 			}
 			setup.Defaults.MonthlyBudget = f
+		case "caveman_mode":
+			val := strings.ToLower(value)
+			if val == "on" {
+				val = "full"
+			}
+			if val != "off" && val != "" && val != "lite" && val != "full" && val != "ultra" &&
+				val != "wenyan-lite" && val != "wenyan-full" && val != "wenyan-ultra" {
+				return fmt.Errorf("caveman_mode must be one of: off, lite, full, ultra, wenyan-lite, wenyan-full, wenyan-ultra")
+			}
+			setup.Defaults.CavemanMode = val
 		default:
 			return fmt.Errorf("unknown defaults field: %s", parts[1])
 		}

@@ -19,6 +19,7 @@ func TestModelSelectorScoring(t *testing.T) {
 			BudgetMode         bool    `yaml:"budget_mode,omitempty"`
 			MaxCostPerTask     float64 `yaml:"max_cost_per_task,omitempty"`
 			MonthlyBudget      float64 `yaml:"monthly_budget,omitempty"`
+			CavemanMode        string  `yaml:"caveman_mode,omitempty"`
 		}{
 			Mode:    "cloud",
 			Backend: "openrouter",

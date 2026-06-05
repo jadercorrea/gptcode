@@ -225,6 +225,32 @@ func (r *ChatREPL) handleCommand(cmd string) (bool, bool) {
 		r.showHistory()
 		return true, false
 
+	case "/caveman":
+		if len(parts) < 2 {
+			val, err := config.GetConfig("defaults.caveman_mode")
+			if err != nil || val == "<nil>" || val == "" {
+				val = "off"
+			}
+			fmt.Printf("Caveman Mode is currently: %s\n", val)
+			return true, false
+		}
+		level := strings.ToLower(parts[1])
+		if level == "on" {
+			level = "full"
+		}
+		if level != "off" && level != "lite" && level != "full" && level != "ultra" &&
+			level != "wenyan-lite" && level != "wenyan-full" && level != "wenyan-ultra" {
+			fmt.Println("Invalid level. Choose one of: off, lite, full, ultra, wenyan-lite, wenyan-full, wenyan-ultra")
+			return true, false
+		}
+		err := config.SetConfig("defaults.caveman_mode", level)
+		if err != nil {
+			fmt.Printf("Failed to set caveman mode: %v\n", err)
+		} else {
+			fmt.Printf("Caveman Mode set to: %s\n", level)
+		}
+		return true, false
+
 	default:
 		fmt.Printf("Unknown command: %s (type /help for available commands)\n", parts[0])
 		return true, false
@@ -281,6 +307,7 @@ func (r *ChatREPL) showHelp() {
 	fmt.Println("  /context       - Show context statistics")
 	fmt.Println("  /files         - List files in context")
 	fmt.Println("  /history       - Show conversation history")
+	fmt.Println("  /caveman [lvl] - Set Caveman Mode (off, lite, full, ultra, wenyan-lite/full/ultra)")
 	fmt.Println("  /help          - Show this help")
 	fmt.Println("")
 	fmt.Println("All other input will be processed as a chat message.")
