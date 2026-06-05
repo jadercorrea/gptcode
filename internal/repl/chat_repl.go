@@ -72,12 +72,14 @@ func NewChatREPL(maxTokens, maxMessages int) (*ChatREPL, error) {
 
 	ctxMgr := NewContextManager(maxTokens, maxMessages)
 
-	return &ChatREPL{
+	repl := &ChatREPL{
 		rl:      rl,
 		ctxMgr:  ctxMgr,
 		builder: builder,
 		model:   model,
-	}, nil
+	}
+	repl.updatePrompt()
+	return repl, nil
 }
 
 // filterInput prevents REPL from treating certain runes as special
@@ -248,6 +250,7 @@ func (r *ChatREPL) handleCommand(cmd string) (bool, bool) {
 			fmt.Printf("Failed to set caveman mode: %v\n", err)
 		} else {
 			fmt.Printf("Caveman Mode set to: %s\n", level)
+			r.updatePrompt()
 		}
 		return true, false
 
@@ -403,4 +406,13 @@ func RunSingleShot(input string, args []string) error {
 	}
 	modes.Chat(input, args)
 	return nil
+}
+
+func (r *ChatREPL) updatePrompt() {
+	setup, err := config.LoadSetup()
+	promptStr := "> "
+	if err == nil && setup.Defaults.CavemanMode != "" && setup.Defaults.CavemanMode != "off" {
+		promptStr = fmt.Sprintf("(caveman:%s) > ", setup.Defaults.CavemanMode)
+	}
+	r.rl.SetPrompt(promptStr)
 }
