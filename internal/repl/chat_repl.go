@@ -11,6 +11,7 @@ import (
 	"gptcode/internal/config"
 	"gptcode/internal/llm"
 	"gptcode/internal/modes"
+	"gptcode/internal/observability"
 	"gptcode/internal/prompt"
 )
 
@@ -411,8 +412,23 @@ func RunSingleShot(input string, args []string) error {
 func (r *ChatREPL) updatePrompt() {
 	setup, err := config.LoadSetup()
 	promptStr := "> "
+
+	// Try loading lifetime savings
+	savingsStr := ""
+	if tokens, _, err := observability.GetLifetimeSavings(); err == nil && tokens > 0 {
+		if tokens >= 1000000 {
+			savingsStr = fmt.Sprintf(" | ⛏%.1fM", float64(tokens)/1000000.0)
+		} else if tokens >= 1000 {
+			savingsStr = fmt.Sprintf(" | ⛏%.1fk", float64(tokens)/1000.0)
+		} else {
+			savingsStr = fmt.Sprintf(" | ⛏%d", tokens)
+		}
+	}
+
 	if err == nil && setup.Defaults.CavemanMode != "" && setup.Defaults.CavemanMode != "off" {
-		promptStr = fmt.Sprintf("(caveman:%s) > ", setup.Defaults.CavemanMode)
+		promptStr = fmt.Sprintf("(caveman:%s%s) > ", setup.Defaults.CavemanMode, savingsStr)
+	} else if savingsStr != "" {
+		promptStr = fmt.Sprintf("(%s) > ", strings.TrimPrefix(savingsStr, " | "))
 	}
 	r.rl.SetPrompt(promptStr)
 }

@@ -19,6 +19,8 @@ type SavingsRecord struct {
 	CostSaved   float64 `json:"cost_saved"`
 }
 
+var shareFlag bool
+
 var gainCmd = &cobra.Command{
 	Use:   "gain",
 	Short: "Show cumulative token and cost savings from command optimization",
@@ -74,6 +76,19 @@ and count of commands optimized by the GPTCode output filtering engine (adapted 
 			return err
 		}
 
+		if shareFlag {
+			savingsStr := ""
+			if totalTokensSaved >= 1000000 {
+				savingsStr = fmt.Sprintf("%.1fM", float64(totalTokensSaved)/1000000.0)
+			} else if totalTokensSaved >= 1000 {
+				savingsStr = fmt.Sprintf("%.1fk", float64(totalTokensSaved)/1000.0)
+			} else {
+				savingsStr = fmt.Sprintf("%d", totalTokensSaved)
+			}
+			fmt.Printf("⛏ saved %s tokens ($%.4f) using @gptcode token optimization! why use many token when few do trick\n", savingsStr, totalCostSaved)
+			return nil
+		}
+
 		fmt.Println("============================================================")
 		fmt.Println("                GPTCode Token Savings Report")
 		fmt.Println("============================================================")
@@ -93,4 +108,8 @@ and count of commands optimized by the GPTCode output filtering engine (adapted 
 
 		return nil
 	},
+}
+
+func init() {
+	gainCmd.Flags().BoolVarP(&shareFlag, "share", "s", false, "Print a shareable/tweetable savings badge line")
 }

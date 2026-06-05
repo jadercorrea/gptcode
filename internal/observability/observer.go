@@ -1,6 +1,7 @@
 package observability
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -603,4 +604,33 @@ func (o *AgentObserver) recordSavingsToDisk(toolName string, tokensSaved int, co
 	defer f.Close()
 
 	_, _ = f.Write(append(data, '\n'))
+}
+
+// GetLifetimeSavings parses the savings file and aggregates tokens and cost saved
+func GetLifetimeSavings() (int, float64, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return 0, 0, err
+	}
+	savingsFile := filepath.Join(home, ".gptcode", "savings.jsonl")
+	file, err := os.Open(savingsFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, 0, nil
+		}
+		return 0, 0, err
+	}
+	defer file.Close()
+
+	var totalTokens int
+	var totalCost float64
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var record SavingsRecord
+		if err := json.Unmarshal([]byte(scanner.Text()), &record); err == nil {
+			totalTokens += record.TokensSaved
+			totalCost += record.CostSaved
+		}
+	}
+	return totalTokens, totalCost, scanner.Err()
 }
