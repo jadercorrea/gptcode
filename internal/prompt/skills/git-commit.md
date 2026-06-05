@@ -65,3 +65,13 @@ git commit -m $'paragraph 1\n\nparagraph 2\n- bullet point\n- bullet point'
 ```
 
 Once you commit, let me know what the commit title was.
+
+## Caveman Mode Override
+
+If Caveman Mode is active (enabled in defaults/config):
+- Keep conventional structure but drop all filler, hedging, and articles.
+- Keep sentences telegraphic and extremely short. Focus strictly on "why" over "what".
+- Example P1: "Agent output verbose. Bloat context window. Increase cost."
+- Example P2: "Impl filter engine in filter.go. Compress test, install, git output. Add Tee cache for failed commands. Save savings statistics to disk."
+- Example P3: "Ideal: user configure custom filter rules via config file."
+

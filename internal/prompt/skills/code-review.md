@@ -69,4 +69,15 @@ Rules for comments:
 # Code Review
 
 [Comments numbered [1], [2], etc.]
+```
+
+## Caveman Mode Override
+
+If Caveman Mode is active (enabled in defaults/config):
+- Make comments telegraphic, dropping filler, hedging, and articles.
+- Keep comments to a single line where possible.
+- Format: `[line]: 🔴 bug/warning: [issue]. [fix].`
+- Example: `L42: 🔴 bug: user null. Add guard.`
+- Example: `L84: ⚠️ warning: load all records into memory. 10k+ records will OOM. Use pagination.`
+
 

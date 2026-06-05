@@ -54,7 +54,7 @@ var cavemanCompressCmd = &cobra.Command{
 	Long: `Reads the target file and uses the LLM to rewrite its natural language prose
 in a highly compressed Caveman format. Saves a backup of the original file
 as <filename>.original.<ext>. Code blocks, URLs, and file paths are preserved byte-for-byte.`,
-	Args:  cobra.ExactArgs(1),
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		data, err := os.ReadFile(path)
