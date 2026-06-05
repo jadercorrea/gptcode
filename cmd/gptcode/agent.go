@@ -106,7 +106,8 @@ func runAgent(cmd *cobra.Command, args []string) error {
 	}
 
 	var prompt string
-	if agentType == "sentry" {
+	switch agentType {
+	case "sentry":
 		sentryTitle := os.Getenv("SENTRY_TITLE")
 		sentryStack := os.Getenv("SENTRY_STACKTRACE")
 
@@ -149,7 +150,8 @@ RULES:
 			sentryTitle, sentryStack,
 			branchName, sentryTitle, branchName,
 			sentryTitle, sentryTitle, defaultBranch)
-	} else if agentType == "hermes" {
+
+	case "hermes":
 		targetGoal := os.Getenv("HERMES_GOAL")
 		if targetGoal == "" {
 			targetGoal = "Explore the workspace, discover high-friction developer experience bottlenecks, write local tools or scripts to automate them, and document your learnings."
@@ -189,7 +191,8 @@ RULES:
 - Distill exactly ONE clean skill file per successful workflow.
 - You have full shell execution capabilities via run_command to deploy scripts, run test suites, or interact with external APIs, but do not exceed your allocated budget limit.`,
 			targetNiche, targetGoal, maxBudget, runID, targetGoal, runID, targetGoal, targetGoal, branch)
-	} else {
+
+	default:
 		// Default to CI pipeline logic
 		prompt = fmt.Sprintf(`The CI pipeline just failed for this repository on branch '%s'.
 The failing commit is %s.

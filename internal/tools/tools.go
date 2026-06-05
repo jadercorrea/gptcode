@@ -31,6 +31,7 @@ type ToolResult struct {
 	Result        string   `json:"result"`
 	Error         string   `json:"error,omitempty"`
 	ModifiedFiles []string `json:"modified_files,omitempty"`
+	TokensSaved   int      `json:"tokens_saved,omitempty"`
 }
 
 func GetAvailableTools() []map[string]interface{} {
@@ -379,9 +380,21 @@ func runCommand(call ToolCall, workdir string) ToolResult {
 	cmd.Dir = workdir
 	output, err := cmd.CombinedOutput()
 
+	exitCode := 0
+	if err != nil {
+		exitCode = 1
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		}
+	}
+
+	fe := NewFilterEngine()
+	filterRes := fe.Filter(command, string(output), exitCode)
+
 	result := ToolResult{
-		Tool:   "run_command",
-		Result: string(output),
+		Tool:        "run_command",
+		Result:      filterRes.FilteredOutput,
+		TokensSaved: filterRes.TokensSaved,
 	}
 
 	if err != nil {
@@ -501,12 +514,13 @@ func ExecuteToolWithObserver(call LLMToolCall, workdir string, observer observab
 		}
 
 		observer.Emit(&observability.ToolCallEvent{
-			BaseEvent: observability.BaseEvent{Time: time.Now()},
-			Name:      call.Name,
-			Arguments: call.Arguments,
-			Result:    truncatedResult,
-			Duration:  time.Since(start),
-			Error:     result.Error,
+			BaseEvent:   observability.BaseEvent{Time: time.Now()},
+			Name:        call.Name,
+			Arguments:   call.Arguments,
+			Result:      truncatedResult,
+			Duration:    time.Since(start),
+			Error:       result.Error,
+			TokensSaved: result.TokensSaved,
 		})
 
 		// Emit file modification events

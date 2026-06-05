@@ -215,6 +215,7 @@ func init() {
 	rootCmd.AddCommand(logoutCmd)
 	rootCmd.AddCommand(trainingCmd)
 	rootCmd.AddCommand(monitorCmd)
+	rootCmd.AddCommand(gainCmd)
 }
 
 // monitorCmd scans local AI agent logs and reports real API usage to the Live Dashboard

@@ -128,12 +128,18 @@ func (c *Conductor) sendProgress(phase string, details string) {
 
 	// Send via WebSocket (real-time)
 	if c.liveClient != nil {
-		c.liveClient.SendExecutionStep(phase, details, map[string]interface{}{
+		meta := map[string]interface{}{
 			"phase":      phase,
 			"details":    details,
 			"progress":   progressPct,
 			"quota_used": quotaUsed,
-		})
+		}
+		if c.Observer != nil {
+			sum := c.Observer.Summary()
+			meta["tokens_saved"] = sum.TokensSaved
+			meta["cost_saved"] = sum.CostSaved
+		}
+		c.liveClient.SendExecutionStep(phase, details, meta)
 	}
 
 	// Call progress callback
@@ -158,11 +164,17 @@ func (c *Conductor) sendError(phase string, errMsg string) {
 
 	// Send via WebSocket
 	if c.liveClient != nil {
-		c.liveClient.SendExecutionStep("error", errMsg, map[string]interface{}{
+		meta := map[string]interface{}{
 			"phase":      phase,
 			"error":      errMsg,
 			"quota_used": quotaUsed,
-		})
+		}
+		if c.Observer != nil {
+			sum := c.Observer.Summary()
+			meta["tokens_saved"] = sum.TokensSaved
+			meta["cost_saved"] = sum.CostSaved
+		}
+		c.liveClient.SendExecutionStep("error", errMsg, meta)
 	}
 }
 
@@ -189,12 +201,18 @@ func (c *Conductor) sendComplete(success bool, summary string) {
 
 	// Send via WebSocket
 	if c.liveClient != nil {
-		c.liveClient.SendExecutionStep(stepType, summary, map[string]interface{}{
+		meta := map[string]interface{}{
 			"success":    success,
 			"summary":    summary,
 			"progress":   100,
 			"quota_used": quotaUsed,
-		})
+		}
+		if c.Observer != nil {
+			sum := c.Observer.Summary()
+			meta["tokens_saved"] = sum.TokensSaved
+			meta["cost_saved"] = sum.CostSaved
+		}
+		c.liveClient.SendExecutionStep(stepType, summary, meta)
 	}
 }
 

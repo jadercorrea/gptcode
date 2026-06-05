@@ -1,10 +1,15 @@
 package observability
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"gptcode/internal/intelligence"
 )
 
 // Event is the base interface for all observer events
@@ -23,11 +28,13 @@ func (e BaseEvent) Timestamp() time.Time { return e.Time }
 // ToolCallEvent is emitted when a tool is called
 type ToolCallEvent struct {
 	BaseEvent
-	Name      string        `json:"name"`
-	Arguments string        `json:"arguments"`
-	Result    string        `json:"result"`
-	Duration  time.Duration `json:"duration_ms"`
-	Error     string        `json:"error,omitempty"`
+	Name        string        `json:"name"`
+	Arguments   string        `json:"arguments"`
+	Result      string        `json:"result"`
+	Duration    time.Duration `json:"duration_ms"`
+	Error       string        `json:"error,omitempty"`
+	TokensSaved int           `json:"tokens_saved,omitempty"`
+	CostSaved   float64       `json:"cost_saved,omitempty"`
 }
 
 func (e ToolCallEvent) EventType() string { return "tool_call" }
@@ -100,6 +107,8 @@ type ExecutionSummary struct {
 	TotalCost     float64        `json:"total_cost"`
 	Errors        []string       `json:"errors"`
 	Success       bool           `json:"success"`
+	TokensSaved   int            `json:"tokens_saved,omitempty"`
+	CostSaved     float64        `json:"cost_saved,omitempty"`
 }
 
 // Observer is the interface for tracking agent activity
@@ -139,6 +148,10 @@ type AgentObserver struct {
 	totalCost     float64
 	errors        []string
 	success       bool
+	tokensSaved   int
+	costSaved     float64
+	activeModel   string
+	activeBackend string
 }
 
 // NewObserver creates a new AgentObserver
@@ -167,6 +180,25 @@ func (o *AgentObserver) Emit(event Event) {
 	switch e := event.(type) {
 	case *ToolCallEvent:
 		o.toolCalls[e.Name]++
+
+		// If the tool event didn't calculate cost saved, let's do it based on active model
+		if e.TokensSaved > 0 && e.CostSaved == 0 {
+			costPerToken := 0.000015 // Default fallback (Claude 3.5 Sonnet level)
+			if o.activeModel != "" {
+				catalog := intelligence.NewModelCatalog()
+				modelInfo := catalog.GetModelInfo(o.activeBackend, o.activeModel)
+				costPerToken = modelInfo.CostPer1M / 1000000.0
+			}
+			e.CostSaved = float64(e.TokensSaved) * costPerToken
+		}
+
+		o.tokensSaved += e.TokensSaved
+		o.costSaved += e.CostSaved
+
+		if e.TokensSaved > 0 {
+			o.recordSavingsToDisk(e.Name, e.TokensSaved, e.CostSaved)
+		}
+
 		if e.Error != "" {
 			o.errors = append(o.errors, e.Error)
 		}
@@ -184,6 +216,8 @@ func (o *AgentObserver) Emit(event Event) {
 		o.tokensIn += e.TokensIn
 		o.tokensOut += e.TokensOut
 		o.totalCost += e.Cost
+		o.activeModel = e.Model
+		o.activeBackend = e.Backend
 		if e.Error != "" {
 			o.errors = append(o.errors, e.Error)
 		}
@@ -287,6 +321,8 @@ func (o *AgentObserver) Summary() *ExecutionSummary {
 		TotalCost:     o.totalCost,
 		Errors:        o.errors,
 		Success:       o.success && len(o.errors) == 0,
+		TokensSaved:   o.tokensSaved,
+		CostSaved:     o.costSaved,
 	}
 }
 
@@ -461,6 +497,10 @@ func (o *AgentObserver) PrintSummary() {
 		fmt.Printf("  Tokens Out:         %s\n", formatNumber(summary.TokensOut))
 		fmt.Printf("  Total Tokens:       %s\n", formatNumber(summary.TokensIn+summary.TokensOut))
 		fmt.Printf("  Total Cost:         $%.4f\n", summary.TotalCost)
+		if summary.TokensSaved > 0 {
+			fmt.Printf("  Tokens Saved (RTK): %s\n", formatNumber(summary.TokensSaved))
+			fmt.Printf("  Cost Saved (RTK):   $%.4f\n", summary.CostSaved)
+		}
 	} else {
 		fmt.Println("  No LLM calls recorded")
 	}
@@ -513,4 +553,54 @@ func formatNumber(n int) string {
 		return fmt.Sprintf("%.1fK", float64(n)/1000)
 	}
 	return fmt.Sprintf("%.1fM", float64(n)/1000000)
+}
+
+type SavingsRecord struct {
+	Timestamp   string  `json:"timestamp"`
+	Tool        string  `json:"tool"`
+	Command     string  `json:"command"`
+	TokensSaved int     `json:"tokens_saved"`
+	CostSaved   float64 `json:"cost_saved"`
+}
+
+func (o *AgentObserver) recordSavingsToDisk(toolName string, tokensSaved int, costSaved float64) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	gptcodeDir := filepath.Join(home, ".gptcode")
+	_ = os.MkdirAll(gptcodeDir, 0755)
+
+	record := SavingsRecord{
+		Timestamp:   time.Now().Format(time.RFC3339),
+		Tool:        toolName,
+		TokensSaved: tokensSaved,
+		CostSaved:   costSaved,
+	}
+
+	// Try parsing command from Arguments if available in the last event
+	if len(o.events) > 0 {
+		if lastEvent, ok := o.events[len(o.events)-1].(*ToolCallEvent); ok {
+			var args map[string]interface{}
+			if err := json.Unmarshal([]byte(lastEvent.Arguments), &args); err == nil {
+				if cmd, ok := args["command"].(string); ok {
+					record.Command = cmd
+				}
+			}
+		}
+	}
+
+	data, err := json.Marshal(record)
+	if err != nil {
+		return
+	}
+
+	savingsFile := filepath.Join(gptcodeDir, "savings.jsonl")
+	f, err := os.OpenFile(savingsFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	_, _ = f.Write(append(data, '\n'))
 }
