@@ -247,11 +247,10 @@ jobs:
           git tag -a "$VERSION" -m "Release $VERSION" || echo "Tag already exists"
           git push origin "$VERSION" || echo "Tag already pushed"
       
-      - name: Create GitHub Release on public repo
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          repository: gptcode-cloud/cli-releases
-          token: ${{ secrets.RELEASES_REPO_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.version.outputs.tag }}
           name: GPTCode ${{ steps.version.outputs.tag }}
           body: |
@@ -262,7 +261,7 @@ jobs:
             
             ### Quick Install (macOS/Linux)
             ```bash
-            curl -sSL https://raw.githubusercontent.com/gptcode-cloud/cli-releases/main/install.sh | sh
+            curl -sSL https://raw.githubusercontent.com/jadercorrea/gptcode/main/install.sh | sh
             ```
             
             ### Manual Download

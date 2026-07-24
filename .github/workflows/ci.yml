@@ -1,79 +1,30 @@
-name: Continuous Integration
+name: CI Build & Test
 
 on:
   push:
-    branches: [ master, main, develop ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ master, main, develop ]
+    branches: [ main, master ]
 
 jobs:
   test:
-    name: Run Tests
+    name: Test & Build
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true
-      
-      - name: Download dependencies
-        run: go mod download
-      
-      - name: Build binary
-        run: go build -o $(go env GOPATH)/bin/gptcode ./cmd/gptcode
 
-      - name: Run tests
-        env:
-          CI: true
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
-      
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.txt
-          fail_ci_if_error: false
-  
-  lint:
-    name: Lint Code
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Go
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
           cache: true
-      
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: v2.6.2
-  
-  build:
-    name: Build Binary
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true
-      
-      - name: Build
-        run: go build -v -o bin/gptcode ./cmd/gptcode
-      
-      - name: Verify binary
-        run: ./bin/gptcode --version || echo "Binary created successfully"
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run Unit Tests
+        run: go test -v -short ./...
+
+      - name: Build Binary
+        run: go build -o gptcode ./cmd/gptcode

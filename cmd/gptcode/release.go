@@ -63,7 +63,7 @@ var releaseCmd = &cobra.Command{
 ✅ Release %s created and pushed!
 
 The release will be built and published automatically.
-Check https://github.com/gptcode-cloud/cli/releases
+Check https://github.com/jadercorrea/gptcode/releases
 `, newVersion)
 
 		return nil

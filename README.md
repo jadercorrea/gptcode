@@ -2,6 +2,37 @@
 
 > Autonomous AI Coding Assistant — **$0-5/month** vs $20-30/month subscriptions
 
+[![CI Build & Test](https://github.com/jadercorrea/gptcode/actions/workflows/ci.yml/badge.svg)](https.github.com/jadercorrea/gptcode/actions)
+[![Go Version](https://img.shields.io/badge/Go-1.24-00ADD8?style=flat&logo=go)](https://go.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+## System Architecture
+
+```mermaid
+graph TD
+    A["User Interfaces (CLI TUI / Neovim RPC Plugin)"] --> B["Command & Intent Dispatcher"]
+    B --> C["ML Model Router & Recommendation Engine"]
+    
+    subgraph Agent System
+        D["Query Agent (Intent Analysis)"]
+        E["Research Agent (Codebase Exploration)"]
+        F["Editor Agent (Code Implementation)"]
+        G["Validator Agent (Linter & Test Verification)"]
+    end
+
+    C --> D
+    C --> E
+    C --> F
+    C --> G
+
+    D --> H["Multi-Provider LLM Engine (OpenRouter, Gemini, Ollama, OpenAI)"]
+    E --> H
+    F --> H
+
+    G --> I["Verification Layer (go test, golangci-lint, AST parser)"]
+    I --> J["Telemetry & Cost Observability Dashboard"]
+```
+
 ## Quick Start (30 seconds)
 
 ```bash

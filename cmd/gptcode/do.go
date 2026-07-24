@@ -42,10 +42,10 @@ Examples:
 		}
 
 		if dryRun {
-			return runDoAnalysis(task, verbose)
+			return runDoAnalysis(cmd.Context(), task, verbose)
 		}
 
-		return runDoExecutionWithRetry(task, verbose, maxAttempts, supervised, interactive)
+		return runDoExecutionWithRetry(cmd.Context(), task, verbose, maxAttempts, supervised, interactive)
 	},
 }
 
@@ -59,7 +59,7 @@ func init() {
 	doCmd.Flags().BoolP("interactive", "i", false, "Prompt for model selection when multiple options are similar")
 }
 
-func runDoAnalysis(task string, verbose bool) error {
+func runDoAnalysis(ctx context.Context, task string, verbose bool) error {
 	setup, err := config.LoadSetup()
 	if err != nil {
 		return fmt.Errorf("failed to load setup: %w", err)
@@ -91,7 +91,7 @@ Task: %s
 
 Provide a brief analysis.`, task)
 
-	resp, err := provider.Chat(context.Background(), llm.ChatRequest{
+	resp, err := provider.Chat(ctx, llm.ChatRequest{
 		SystemPrompt: "You analyze tasks to determine requirements and complexity.",
 		UserPrompt:   analysisPrompt,
 		Model:        queryModel,
@@ -108,7 +108,7 @@ Provide a brief analysis.`, task)
 	return nil
 }
 
-func runDoExecutionWithRetry(task string, verbose bool, maxAttempts int, supervised bool, interactive bool) error {
+func runDoExecutionWithRetry(ctx context.Context, task string, verbose bool, maxAttempts int, supervised bool, interactive bool) error {
 	setup, err := config.LoadSetup()
 	if err != nil {
 		return fmt.Errorf("failed to load setup: %w", err)
@@ -161,7 +161,7 @@ func runDoExecutionWithRetry(task string, verbose bool, maxAttempts int, supervi
 		}
 
 		startTime := time.Now()
-		err := runDoExecution(task, verbose, supervised, setup, currentBackend, currentEditorModel)
+		err := runDoExecution(ctx, task, verbose, supervised, setup, currentBackend, currentEditorModel)
 		elapsed := time.Since(startTime).Milliseconds()
 
 		if err == nil {
@@ -304,7 +304,7 @@ func runDoExecutionWithRetry(task string, verbose bool, maxAttempts int, supervi
 	return fmt.Errorf("task failed after %d attempts", maxAttempts)
 }
 
-func runDoExecution(task string, verbose bool, supervised bool, setup *config.Setup, backendName string, editorModel string) error {
+func runDoExecution(ctx context.Context, task string, verbose bool, supervised bool, setup *config.Setup, backendName string, editorModel string) error {
 	backendCfg := setup.Backend[backendName]
 
 	cwd, _ := os.Getwd()
@@ -362,7 +362,7 @@ func runDoExecution(task string, verbose bool, supervised bool, setup *config.Se
 		}
 
 		executor := modes.NewAutonomousExecutorWithLive(queryProvider, cwd, queryModel, language, liveClient, reportConfig, backendName)
-		return executor.Execute(context.Background(), task)
+		return executor.Execute(ctx, task)
 	}
 
 	// Supervised mode: use guided workflow
@@ -373,7 +373,7 @@ func runDoExecution(task string, verbose bool, supervised bool, setup *config.Se
 			fmt.Fprintf(os.Stderr, "Creating plan...\n")
 		}
 
-		planContent, err := guided.ExecuteAndReturnPlan(context.Background(), task)
+		planContent, err := guided.ExecuteAndReturnPlan(ctx, task)
 		if err != nil {
 			return fmt.Errorf("plan creation failed: %w", err)
 		}
@@ -384,7 +384,7 @@ func runDoExecution(task string, verbose bool, supervised bool, setup *config.Se
 
 		guidedWithCustomEditor := modes.NewGuidedModeWithCustomModel(orchestrator, provider, cwd, queryModel, editorModel)
 
-		if err := guidedWithCustomEditor.Implement(context.Background(), planContent); err != nil {
+		if err := guidedWithCustomEditor.Implement(ctx, planContent); err != nil {
 			return fmt.Errorf("implementation failed: %w", err)
 		}
 	} else {
@@ -394,7 +394,7 @@ func runDoExecution(task string, verbose bool, supervised bool, setup *config.Se
 			fmt.Fprintf(os.Stderr, "Using orchestrated mode with decomposed agents...\n")
 		}
 
-		if err := orchestrated.Execute(context.Background(), task); err != nil {
+		if err := orchestrated.Execute(ctx, task); err != nil {
 			return fmt.Errorf("orchestrated execution failed: %w", err)
 		}
 	}
