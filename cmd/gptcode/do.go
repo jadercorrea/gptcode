@@ -14,6 +14,8 @@ import (
 	"gptcode/internal/live"
 	"gptcode/internal/llm"
 	"gptcode/internal/modes"
+
+	"golang.org/x/term"
 )
 
 var doCmd = &cobra.Command{
@@ -114,36 +116,16 @@ func runDoExecutionWithRetry(ctx context.Context, task string, verbose bool, max
 		return fmt.Errorf("failed to load setup: %w", err)
 	}
 
-	var editorBackend, editorModel, editorReason string
-	var queryBackend, queryModel, queryReason string
-
-	profileName := setup.Defaults.Profile
-	if profileName != "" {
-		editorBackend = setup.Defaults.Backend
-		queryBackend = setup.Defaults.Backend
-		backendCfg := setup.Backend[editorBackend]
-		editorModel = backendCfg.GetModelForAgentWithProfile("editor", profileName)
-		queryModel = backendCfg.GetModelForAgentWithProfile("query", profileName)
-		editorReason = fmt.Sprintf("Using profile: %s/%s", editorBackend, profileName)
-		queryReason = fmt.Sprintf("Using profile: %s/%s", queryBackend, profileName)
-	} else {
-		var err error
-		editorBackend, editorModel, editorReason, err = intelligence.SelectBestModelForAgent(setup, "editor")
-		if err != nil {
-			editorBackend = setup.Defaults.Backend
-			backendCfg := setup.Backend[editorBackend]
-			editorModel = backendCfg.GetModelForAgent("editor")
-			editorReason = "Fallback to default"
-		}
-
-		queryBackend, queryModel, queryReason, err = intelligence.SelectBestModelForAgent(setup, "query")
-		if err != nil {
-			queryBackend = setup.Defaults.Backend
-			backendCfg := setup.Backend[queryBackend]
-			queryModel = backendCfg.GetModelForAgent("query")
-			queryReason = "Fallback to default"
-		}
+	selection, err := selectDoModels(setup)
+	if err != nil {
+		return err
 	}
+	editorBackend := selection.editorBackend
+	editorModel := selection.editorModel
+	editorReason := selection.editorReason
+	queryBackend := selection.queryBackend
+	queryModel := selection.queryModel
+	queryReason := selection.queryReason
 
 	if verbose {
 		fmt.Fprintf(os.Stderr, "Auto-selected models:\n")
@@ -202,7 +184,7 @@ func runDoExecutionWithRetry(ctx context.Context, task string, verbose bool, max
 
 		if attempt >= maxAttempts {
 			// If we hit max attempts with API errors, offer to try a different backend
-			if looksLikeAPIError {
+			if looksLikeAPIError && shouldPromptForRetry(interactive) {
 				fmt.Fprintf(os.Stderr, "\n  All %d attempts failed with API/rate limit errors.\n", maxAttempts)
 				fmt.Fprintf(os.Stderr, "\nAvailable backends:\n")
 				var backends []string
@@ -246,6 +228,9 @@ func runDoExecutionWithRetry(ctx context.Context, task string, verbose bool, max
 
 		recommendations, err := intelligence.RecommendModelForRetry(setup, "editor", currentBackend, currentEditorModel, task)
 		if err != nil || len(recommendations) == 0 {
+			if !shouldPromptForRetry(interactive) {
+				return fmt.Errorf("task failed: no automatic retry model available: %w", err)
+			}
 			// No automatic recommendations - ask user
 			fmt.Fprintf(os.Stderr, "\n  No suitable models found automatically.\n")
 			fmt.Fprintf(os.Stderr, "\nAvailable backends:\n")
@@ -302,6 +287,48 @@ func runDoExecutionWithRetry(ctx context.Context, task string, verbose bool, max
 	}
 
 	return fmt.Errorf("task failed after %d attempts", maxAttempts)
+}
+
+type doModelSelection struct {
+	editorBackend string
+	editorModel   string
+	editorReason  string
+	queryBackend  string
+	queryModel    string
+	queryReason   string
+}
+
+func selectDoModels(setup *config.Setup) (doModelSelection, error) {
+	backendName := setup.Defaults.Backend
+	backendCfg, ok := setup.Backend[backendName]
+	if !ok {
+		return doModelSelection{}, fmt.Errorf("backend %q is not configured", backendName)
+	}
+
+	profileName := setup.Defaults.Profile
+	editorModel := backendCfg.GetModelForAgentWithProfile("editor", profileName)
+	queryModel := backendCfg.GetModelForAgentWithProfile("query", profileName)
+	if editorModel == "" || queryModel == "" {
+		return doModelSelection{}, fmt.Errorf("backend %q has incomplete agent model configuration", backendName)
+	}
+
+	reason := "Using configured agent model"
+	if profileName != "" {
+		reason = fmt.Sprintf("Using profile: %s/%s", backendName, profileName)
+	}
+
+	return doModelSelection{
+		editorBackend: backendName,
+		editorModel:   editorModel,
+		editorReason:  reason,
+		queryBackend:  backendName,
+		queryModel:    queryModel,
+		queryReason:   reason,
+	}, nil
+}
+
+func shouldPromptForRetry(interactive bool) bool {
+	return interactive && term.IsTerminal(int(os.Stdin.Fd()))
 }
 
 func runDoExecution(ctx context.Context, task string, verbose bool, supervised bool, setup *config.Setup, backendName string, editorModel string) error {

@@ -297,7 +297,7 @@ func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity str
 	// Initialize centralized Claude Code-style loop detector
 	// Intent is derived from complexity: complex tasks are "edit", simple are "query"
 	intent := "edit"
-	if c.isQueryTask(plan, nil) {
+	if c.isQueryTask(task, plan, nil) {
 		intent = "query"
 	}
 	c.loopDetector = llm.NewLoopDetector(intent)
@@ -415,7 +415,7 @@ func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity str
 		}
 
 		// Check if this is a query-only task (no validation needed)
-		if c.isQueryTask(plan, modifiedFiles) {
+		if c.isQueryTask(task, plan, modifiedFiles) {
 			c.recordFeedback(editBackend, editModel, "editor", task, true, "")
 
 			fmt.Printf("\n[OK] Task complete!\n")
@@ -759,9 +759,23 @@ func (c *Conductor) formatValidationIssues(issues []string) string {
 }
 
 // isQueryTask checks if task is query-only (no validation needed)
-func (c *Conductor) isQueryTask(plan string, modifiedFiles []string) bool {
+func (c *Conductor) isQueryTask(task, plan string, modifiedFiles []string) bool {
 	if len(modifiedFiles) > 0 {
 		return false
+	}
+
+	taskLower := strings.ToLower(strings.TrimSpace(task))
+	editIndicators := []string{
+		"fix ", "implement ", "change ", "modify ", "update ", "add ",
+		"remove ", "delete ", "refactor ", "create ",
+		"corrija ", "corrigir ", "implemente ", "implementar ", "mude ",
+		"modifique ", "atualize ", "adicione ", "remova ", "delete ",
+		"refatore ", "crie ",
+	}
+	for _, indicator := range editIndicators {
+		if strings.Contains(taskLower, indicator) {
+			return false
+		}
 	}
 
 	lower := strings.ToLower(plan)

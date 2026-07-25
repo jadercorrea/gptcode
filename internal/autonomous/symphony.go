@@ -80,9 +80,11 @@ func (e *Executor) Execute(ctx context.Context, task string) error {
 		return e.executeDirect(ctx, task, analysis)
 	}
 
-	// 3. If simple (complexity <= 5 from ML analysis), execute directly
-	if analysis.Complexity <= 5 {
-		fmt.Println("\nExecuting directly (simple task)...")
+	// Maestro already performs plan, edit, review, and verification. Keep ordinary
+	// fixes in that single coherent workflow; Symphony is reserved for genuinely
+	// large tasks with multiple independently useful movements.
+	if !shouldUseSymphony(analysis) {
+		fmt.Println("\nExecuting directly...")
 		return e.executeDirect(ctx, task, analysis)
 	}
 
@@ -141,6 +143,13 @@ func (e *Executor) Execute(ctx context.Context, task string) error {
 
 	fmt.Println("[OK] Symphony complete!")
 	return nil
+}
+
+func shouldUseSymphony(analysis *TaskAnalysis) bool {
+	return analysis != nil &&
+		analysis.Intent != "query" &&
+		analysis.Complexity >= 9 &&
+		len(analysis.Movements) > 1
 }
 
 // executeDirect executes a simple task without decomposition

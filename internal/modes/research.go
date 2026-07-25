@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -80,15 +81,15 @@ func RunResearch(args []string) error {
 	queryModel := backendCfg.GetModelForAgent("query")
 	queryAgent := agents.NewQuery(customExec, cwd, queryModel)
 
-	codebasePrompt := fmt.Sprintf(`Brief codebase overview:
+	evidence, err := collectRepositoryEvidence(cwd)
+	if err != nil {
+		return fmt.Errorf("collect repository evidence: %w", err)
+	}
+	codebasePrompt := buildCodebaseResearchPrompt(question, evidence)
+	researchCtx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
 
-1. List root directory files (use list_files on ".")
-2. Identify main language/framework
-3. Suggest 2-3 key directories for: %s
-
-Keep response under 150 words.`, question)
-
-	codebaseAnalysis, err := queryAgent.Execute(context.Background(), []llm.ChatMessage{{Role: "user", Content: codebasePrompt}}, nil)
+	codebaseAnalysis, err := queryAgent.Execute(researchCtx, []llm.ChatMessage{{Role: "user", Content: codebasePrompt}}, nil)
 	if err != nil {
 		return fmt.Errorf("codebase analysis failed: %w", err)
 	}
@@ -133,6 +134,119 @@ Keep response under 150 words.`, question)
 	}
 
 	return nil
+}
+
+type repositoryEvidence struct {
+	Language string
+	Files    []string
+	Contents map[string]string
+}
+
+func collectRepositoryEvidence(cwd string) (repositoryEvidence, error) {
+	const maxCollectedContentBytes = 64 * 1024
+	evidence := repositoryEvidence{
+		Language: "Unknown",
+		Contents: make(map[string]string),
+	}
+	collectedContentBytes := 0
+	switch {
+	case fileExists(filepath.Join(cwd, "go.mod")):
+		evidence.Language = "Go"
+	case fileExists(filepath.Join(cwd, "mix.exs")):
+		evidence.Language = "Elixir"
+	case fileExists(filepath.Join(cwd, "Cargo.toml")):
+		evidence.Language = "Rust"
+	case fileExists(filepath.Join(cwd, "package.json")):
+		evidence.Language = "JavaScript/TypeScript"
+	case fileExists(filepath.Join(cwd, "pyproject.toml")) || fileExists(filepath.Join(cwd, "requirements.txt")):
+		evidence.Language = "Python"
+	case fileExists(filepath.Join(cwd, "Gemfile")):
+		evidence.Language = "Ruby"
+	}
+
+	err := filepath.WalkDir(cwd, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			if path != cwd && (entry.Name() == ".git" || entry.Name() == "node_modules" || entry.Name() == "vendor") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		relative, err := filepath.Rel(cwd, path)
+		if err != nil {
+			return err
+		}
+		relative = filepath.ToSlash(relative)
+		evidence.Files = append(evidence.Files, relative)
+		if shouldIncludeResearchContent(relative) && collectedContentBytes < maxCollectedContentBytes {
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			remaining := maxCollectedContentBytes - collectedContentBytes
+			if len(content) <= remaining {
+				evidence.Contents[relative] = string(content)
+				collectedContentBytes += len(content)
+			}
+		}
+		return nil
+	})
+	sort.Strings(evidence.Files)
+	if len(evidence.Files) > 200 {
+		evidence.Files = evidence.Files[:200]
+	}
+	return evidence, err
+}
+
+func shouldIncludeResearchContent(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".go", ".ex", ".exs", ".rs", ".py", ".rb", ".js", ".jsx", ".ts", ".tsx", ".java", ".md":
+		return true
+	default:
+		return path == "go.mod" || path == "Cargo.toml" || path == "Gemfile" || path == "mix.exs"
+	}
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
+}
+
+func buildCodebaseResearchPrompt(question string, evidence repositoryEvidence) string {
+	var groundedFiles strings.Builder
+	for _, path := range evidence.Files {
+		content, ok := evidence.Contents[path]
+		if !ok {
+			continue
+		}
+		fmt.Fprintf(&groundedFiles, "\n<file path=%q>\n%s\n</file>\n", path, content)
+	}
+
+	return fmt.Sprintf(`Research this repository question:
+%s
+
+Deterministic repository evidence:
+- Main language detected deterministically: %s
+- Files:
+%s
+
+Inspected repository contents:
+%s
+
+Grounding requirements:
+1. Base every technical claim on the inspected contents below and cite exact file paths.
+2. Use read_file only if a necessary listed file was omitted from the inspected contents.
+3. State the verification command defined by the repository or tests.
+4. Do not speculate, use "likely", or mention identifiers absent from the inspected contents.
+5. If evidence is insufficient, say exactly what could not be established.
+6. Contracts and tests describe expectations; they do not prove the implementation satisfies them.
+7. Compare stated expectations with implementation details and report contradictions explicitly.
+8. Concurrency claims require synchronization in the implementation (for example locks, atomics, channels, or documented confinement). A WaitGroup or goroutines in a test exercise concurrency; they do not make shared state safe.
+9. If mutable shared state has no visible synchronization, state that concurrent access is unsafe and recommend running the repository's race/concurrency verification.
+
+Return concise sections: Findings, Evidence, Verification.`, question, evidence.Language, strings.Join(evidence.Files, "\n"), groundedFiles.String())
 }
 
 func extractURLs(text string) []string {

@@ -15,7 +15,10 @@ engineering portfolio.
 - [x] Publish a real terminal recording of repository detection, active skills, and executable verification.
 - [x] Refine the first fold with a paced terminal demo, evidence preview, and explicit five-stage rationale.
 - [x] Publish the anchor essay explaining why the workflow is the source of truth.
-- [ ] Correct `research` repository grounding and make model-backed commands fail fast on timeouts before recording the full agent workflow.
+- [x] Ground `research` in repository contents and bound model-backed research/review calls with explicit timeouts.
+- [x] Validate `do` against a real Go data race: preserve the public API, add internal synchronization, and pass `go test -race ./...`.
+- [x] Validate `research` and `review` against both vulnerable and corrected implementations.
+- [ ] Record the full real workflow: diagnose with `research`, confirm with `review`, fix with `do`, and show race verification passing.
 - [ ] Publish the site changes to the `main` branch.
 - [ ] Move authoritative DNS for `gptcode.dev` from GoDaddy to Cloudflare.
 - [ ] Configure GitHub Pages to use `gptcode.dev` and verify HTTPS.

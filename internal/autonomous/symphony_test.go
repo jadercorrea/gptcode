@@ -38,6 +38,50 @@ func TestSymphonyExecution(t *testing.T) {
 	_ = analyzer
 }
 
+func TestShouldUseSymphony(t *testing.T) {
+	tests := []struct {
+		name     string
+		analysis TaskAnalysis
+		want     bool
+	}{
+		{
+			name: "ordinary complex fix stays in one maestro workflow",
+			analysis: TaskAnalysis{
+				Intent:     "edit",
+				Complexity: 8,
+				Movements:  []Movement{{Goal: "inspect"}, {Goal: "implement"}, {Goal: "verify"}},
+			},
+			want: false,
+		},
+		{
+			name: "large multi-part change uses symphony",
+			analysis: TaskAnalysis{
+				Intent:     "edit",
+				Complexity: 9,
+				Movements:  []Movement{{Goal: "change service A"}, {Goal: "change service B"}},
+			},
+			want: true,
+		},
+		{
+			name: "single movement never needs orchestration",
+			analysis: TaskAnalysis{
+				Intent:     "edit",
+				Complexity: 10,
+				Movements:  []Movement{{Goal: "implement the fix"}},
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := shouldUseSymphony(&tt.analysis); got != tt.want {
+				t.Fatalf("shouldUseSymphony() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 // Mock provider for symphony tests
 type mockSymphonyProvider struct {
 	complexity int

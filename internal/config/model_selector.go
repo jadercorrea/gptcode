@@ -400,6 +400,17 @@ func (ms *ModelSelector) SelectModel(action ActionType, language string, complex
 		return "", "", fmt.Errorf("all approved models failed for action=%s (check setup.yaml and models_catalog.json)", action)
 	}
 
+	if backendCfg, ok := ms.setup.Backend[defaultBackend]; ok {
+		configuredModel := configuredModelForAction(backendCfg, ms.setup.Defaults.Profile, action)
+		if configuredModel != "" {
+			if os.Getenv("GPTCODE_DEBUG") == "1" {
+				fmt.Fprintf(os.Stderr, "[MODEL_SELECTOR] Using configured model for action=%s: %s/%s\n",
+					action, defaultBackend, configuredModel)
+			}
+			return defaultBackend, configuredModel, nil
+		}
+	}
+
 	type scoredModel struct {
 		backend string
 		model   string
@@ -461,9 +472,10 @@ func (ms *ModelSelector) SelectModel(action ActionType, language string, complex
 		}
 	}
 
-	// EXPLORATION: 10% chance to pick from top 5 models to try new ones
+	// Exploration is opt-in. Production task routing must be deterministic;
+	// silently choosing a lower-ranked model makes executions irreproducible.
 	best := scored[0]
-	if len(scored) > 1 && rand.Float64() < 0.10 {
+	if os.Getenv("GPTCODE_MODEL_EXPLORATION") == "1" && len(scored) > 1 && rand.Float64() < 0.10 {
 		// Pick randomly from top 5 (or however many we have)
 		topN := 5
 		if len(scored) < topN {
@@ -484,6 +496,19 @@ func (ms *ModelSelector) SelectModel(action ActionType, language string, complex
 	return best.backend, best.model, nil
 }
 
+func configuredModelForAction(backend BackendConfig, profile string, action ActionType) string {
+	switch action {
+	case ActionEdit:
+		return backend.GetModelForAgentWithProfile("editor", profile)
+	case ActionResearch:
+		return backend.GetModelForAgentWithProfile("research", profile)
+	case ActionPlan, ActionReview, ActionRoute:
+		return backend.GetModelForAgentWithProfile("query", profile)
+	default:
+		return ""
+	}
+}
+
 // trySelectApprovedModel attempts to select a specific approved model
 func (ms *ModelSelector) trySelectApprovedModel(modelID string, action ActionType, language string, complexity string) (backend string, model string, err error) {
 	// Parse model ID to find backend (e.g., "google/gemini-2.5-flash-lite" -> backend "openrouter")
@@ -492,8 +517,23 @@ func (ms *ModelSelector) trySelectApprovedModel(modelID string, action ActionTyp
 		return "", "", fmt.Errorf("invalid model ID format: %s", modelID)
 	}
 
-	// Try to find the backend that has this model
-	for backend, models := range ms.catalog {
+	// Prefer configured backends. Provider-qualified model IDs such as
+	// "openai/o3-mini" are also valid OpenRouter model IDs and must not be sent
+	// to an unconfigured provider merely because its prefix happens to match.
+	configuredBackends := make([]string, 0, len(ms.setup.Backend))
+	if defaultBackend := ms.setup.Defaults.Backend; defaultBackend != "" {
+		if _, ok := ms.setup.Backend[defaultBackend]; ok {
+			configuredBackends = append(configuredBackends, defaultBackend)
+		}
+	}
+	for backend := range ms.setup.Backend {
+		if backend != ms.setup.Defaults.Backend {
+			configuredBackends = append(configuredBackends, backend)
+		}
+	}
+
+	for _, backend := range configuredBackends {
+		models := ms.catalog[backend]
 		for _, modelInfo := range models {
 			if modelInfo.ID == modelID {
 				// Check if model supports tools for edit/review actions

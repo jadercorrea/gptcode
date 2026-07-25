@@ -4,6 +4,61 @@ import (
 	"testing"
 )
 
+func TestSelectModelPrefersConfiguredEditor(t *testing.T) {
+	setup := &Setup{
+		Backend: map[string]BackendConfig{
+			"openrouter": {
+				DefaultModel: "google/gemini-2.5-flash-lite",
+				AgentModels: AgentModels{
+					Editor: "google/gemini-2.5-pro",
+				},
+			},
+		},
+	}
+	setup.Defaults.Backend = "openrouter"
+
+	selector := &ModelSelector{setup: setup}
+	backend, model, err := selector.SelectModel(ActionEdit, "go", "complex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if backend != "openrouter" || model != "google/gemini-2.5-pro" {
+		t.Fatalf("selected %s/%s, want configured editor", backend, model)
+	}
+}
+
+func TestApprovedOpenRouterModelUsesConfiguredBackend(t *testing.T) {
+	setup := &Setup{
+		Backend: map[string]BackendConfig{
+			"openrouter": {DefaultModel: "google/gemini-2.5-flash-lite"},
+		},
+		ApprovedModels: []ApprovedModel{
+			{Model: "openai/o3-mini", ForActions: []string{string(ActionResearch)}},
+		},
+	}
+	setup.Defaults.Backend = "openrouter"
+
+	selector := &ModelSelector{
+		setup: setup,
+		catalog: map[string][]ModelInfo{
+			"openai": {
+				{ID: "openai/o3-mini"},
+			},
+			"openrouter": {
+				{ID: "openai/o3-mini"},
+			},
+		},
+	}
+
+	backend, model, err := selector.SelectModel(ActionResearch, "go", "complex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if backend != "openrouter" || model != "openai/o3-mini" {
+		t.Fatalf("selected %s/%s, want openrouter/openai/o3-mini", backend, model)
+	}
+}
+
 func TestModelSelectorScoring(t *testing.T) {
 	setup := &Setup{
 		Defaults: struct {
