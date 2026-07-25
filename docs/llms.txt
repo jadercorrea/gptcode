@@ -1,0 +1,27 @@
+---
+layout: null
+---
+# GPTCode
+
+> GPTCode is an open-source coding agent for repository-native, multi-model engineering workflows with executable verification.
+
+GPTCode treats language models as interchangeable reasoning engines, repositories as the source of constraints, and deterministic checks as the source of truth.
+
+## Primary resources
+
+- [Overview]({{ site.url }}{{ '/' | relative_url }}): Product thesis, real terminal workflow, architecture, and installation.
+- [Documentation]({{ site.url }}{{ '/reference/commands' | relative_url }}): Commands and usage.
+- [Skills]({{ site.url }}{{ '/skills' | relative_url }}): Version-controlled engineering instructions.
+- [Essays]({{ site.url }}{{ '/blog' | relative_url }}): Writing about reliable AI-assisted software engineering.
+- [Source](https://github.com/jadercorrea/gptcode): MIT-licensed Go implementation.
+
+## Core thesis
+
+- Models generate possibilities.
+- Repositories define constraints.
+- Verification establishes truth.
+- The workflow is the source of truth; models are interchangeable execution engines.
+
+## Creator
+
+Created by [Jader Correa](https://jader-correa.com), a principal engineer building AI agents, developer tools, and distributed systems.

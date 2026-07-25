@@ -66,6 +66,17 @@ class SiteIdentityTest < Minitest::Test
     assert_includes File.read(File.join(DOCS_ROOT, "_config.yml")), "  - test"
   end
 
+  def test_site_exposes_search_and_answer_engine_metadata
+    layout = File.read(File.join(DOCS_ROOT, "_layouts", "default.html"))
+    config = File.read(File.join(DOCS_ROOT, "_config.yml"))
+
+    assert_includes layout, "{% seo %}"
+    assert_includes config, "jekyll-sitemap"
+    assert_includes config, "https://www.linkedin.com/in/jadercorrea"
+    assert_path_exists File.join(DOCS_ROOT, "robots.txt")
+    assert_path_exists File.join(DOCS_ROOT, "llms.txt")
+  end
+
   def test_footer_connects_the_project_to_its_creator
     layout = File.read(File.join(DOCS_ROOT, "_layouts", "default.html"))
 
@@ -84,10 +95,14 @@ class SiteIdentityTest < Minitest::Test
     assert_path_exists File.join(DOCS_ROOT, "assets", "gptcode-workflow.gif")
     assert_path_exists File.join(DOCS_ROOT, "assets", "gptcode-workflow.mp4")
     assert_path_exists File.join(DOCS_ROOT, "assets", "gptcode-workflow.cast")
-    assert_includes recording, "TestStoreRejectsExpiredSession"
-    assert_includes recording, "Repository detected"
+    assert_includes recording, "TestStoreSupportsConcurrentAccess"
+    assert_includes recording, "go test -race ./..."
+    assert_includes recording, "Verification passed"
+    assert_includes recording, "evidence-driven repair"
+    assert_includes recording, "public API"
     assert_includes recording, '"x", "0"'
     refute_includes recording, "package errors is not in std"
+    refute_includes homepage, "repository detection and skills"
   end
 
   def test_anchor_essay_is_published_and_evidence_driven

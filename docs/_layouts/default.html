@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ site.lang | default: 'en' }}">
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ page.title }} - gptcode</title>
-  <meta name="description" content="{{ page.description | default: site.description }}" />
+  {% seo %}
+  <meta name="theme-color" content="#0b0f14" />
+  <meta name="application-name" content="GPTCode" />
   {% assign bust = site.github.build_revision | default: site.time | date: '%s' %}
   <link rel="icon" type="image/svg+xml" href="{{ '/assets/gptcode.svg' | relative_url }}?v={{ bust }}" />
   <link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/gptcode.svg' | relative_url }}?v={{ bust }}" />

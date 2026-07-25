@@ -30,7 +30,7 @@ description: An open-source coding CLI for multi-model, repository-native, verif
       <img src="{{ '/assets/gptcode-workflow.gif' | relative_url }}?v=race-repair" alt="GPTCode researches and reviews a Go data race, repairs it without changing the public API, and verifies the result with the race detector.">
     </video>
   </div>
-  <p class="recording-caption">Real capture · GPTCode repository detection and skills · Go verification executed by the repository</p>
+  <p class="recording-caption">Real capture · Research and review grounded in repository evidence · Public API preserved · Go race detector passed</p>
   <div class="workflow-signature" id="workflow-title">
     <span>Investigate</span><b>→</b><span>Plan</span><b>→</b><span>Implement</span><b>→</b><span>Review</span><b>→</b><span>Verify</span>
   </div>

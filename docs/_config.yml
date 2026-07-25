@@ -1,7 +1,20 @@
 title: GPTCode
-description: Independent open-source AI coding CLI by Jader Correa.
+description: Open-source coding agent for repository-native, multi-model workflows with executable verification.
 baseurl: ""
 url: "https://gptcode.dev"
+lang: en
+locale: en_US
+logo: /assets/gptcode.png
+
+author:
+  name: Jader Correa
+  url: https://jader-correa.com
+
+social:
+  name: Jader Correa
+  links:
+    - https://github.com/jadercorrea
+    - https://www.linkedin.com/in/jadercorrea
 
 # theme: minima  # Disabled - using custom Tokyo Night CSS
 
@@ -26,6 +39,7 @@ google_analytics: G-PBKPBY1N9H
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
+  - jekyll-sitemap
 
 # Server configuration
 port: 4040
