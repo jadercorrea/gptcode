@@ -36,3 +36,22 @@ func TestBuildCodebaseResearchPromptRequiresGroundedEvidence(t *testing.T) {
 		}
 	}
 }
+
+func TestResearchDetectsUnsupportedConcurrencySafetyClaim(t *testing.T) {
+	evidence := repositoryEvidence{
+		Files: []string{"session/store.go"},
+		Contents: map[string]string{
+			"session/store.go": "type Store struct { sessions map[string]Session }\nfunc (s *Store) Put(v Session) { s.sessions[v.Token] = v }",
+		},
+	}
+
+	if !requiresUnsafeConcurrencyFinding(evidence) {
+		t.Fatal("expected mutable unsynchronized map evidence to require an unsafe finding")
+	}
+	if !contradictsUnsafeConcurrencyEvidence("Concurrent access to Store is safe.", evidence) {
+		t.Fatal("expected unsupported safety claim to be rejected")
+	}
+	if contradictsUnsafeConcurrencyEvidence("Concurrent access is not safe because the map has no lock.", evidence) {
+		t.Fatal("a grounded unsafe finding must be accepted")
+	}
+}

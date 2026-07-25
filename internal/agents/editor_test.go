@@ -88,10 +88,6 @@ func TestEditor_CreateFileTask_ExecutesAndReturns(t *testing.T) {
 					},
 				},
 			},
-			// Second call: return without tool calls (done)
-			{
-				Text: "File created successfully",
-			},
 		},
 	}
 
@@ -104,20 +100,19 @@ func TestEditor_CreateFileTask_ExecutesAndReturns(t *testing.T) {
 
 	// Expected behavior:
 	// - Should call write_file tool
-	// - Should return after LLM says done (no more tool calls)
-	// - Result should be success message
+	// - Should return as soon as the write succeeds; Maestro owns validation
 	// - modifiedFiles should include the created file
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	if result != "File created successfully" {
+	if result != "Changes applied; validation delegated to Maestro" {
 		t.Errorf("Expected success message, got: %q", result)
 	}
 	if len(modifiedFiles) != 1 || modifiedFiles[0] != "output.txt" {
 		t.Errorf("Expected modifiedFiles=['output.txt'], got: %v", modifiedFiles)
 	}
-	if mock.callCount != 2 {
-		t.Errorf("Expected 2 LLM calls, got: %d", mock.callCount)
+	if mock.callCount != 1 {
+		t.Errorf("Expected 1 LLM call, got: %d", mock.callCount)
 	}
 
 	// Verify file was actually created
@@ -284,10 +279,6 @@ func TestEditor_EditTask_ContinuesUntilDone(t *testing.T) {
 					},
 				},
 			},
-			// Done
-			{
-				Text: "Patch applied successfully",
-			},
 		},
 	}
 
@@ -317,11 +308,11 @@ func TestEditor_EditTask_ContinuesUntilDone(t *testing.T) {
 	if result == "package main\n\nfunc old() {}\n" {
 		t.Skip("KNOWN ISSUE: read_file returns early even for edit tasks. Need to fix: only return early for pure query tasks.")
 	}
-	if result != "Patch applied successfully" {
-		t.Errorf("Expected 'Patch applied successfully', got: %q", result)
+	if result != "Changes applied; validation delegated to Maestro" {
+		t.Errorf("Expected editor completion after patch, got: %q", result)
 	}
-	if mock.callCount != 3 {
-		t.Errorf("Expected 3 LLM calls (read, patch, done), got: %d", mock.callCount)
+	if mock.callCount != 2 {
+		t.Errorf("Expected 2 LLM calls (read, patch), got: %d", mock.callCount)
 	}
 }
 

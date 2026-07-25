@@ -421,6 +421,9 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 						fmt.Fprintf(os.Stderr, "[EDITOR] Executed %s: %s\n", tc.Name, result.Result[:min(50, len(result.Result))])
 					}
 				}
+				if len(modifiedFiles) > 0 {
+					return "Changes applied; validation delegated to Maestro", modifiedFiles, nil
+				}
 				continue
 			}
 			return resp.Text, modifiedFiles, nil
@@ -510,6 +513,9 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 			if os.Getenv("GPTCODE_DEBUG") == "1" {
 				fmt.Fprintf(os.Stderr, "[EDITOR] Executed %s: %s\n", tc.Name, result.Result[:min(50, len(result.Result))])
 			}
+		}
+		if len(modifiedFiles) > 0 {
+			return "Changes applied; validation delegated to Maestro", modifiedFiles, nil
 		}
 	}
 

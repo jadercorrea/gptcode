@@ -236,6 +236,15 @@ func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity str
 		fmt.Fprintf(os.Stderr, "[MAESTRO] ExecuteTask called: task=%s complexity=%s lang=%s\n", task, complexity, c.language)
 	}
 
+	var publicAPIBaseline map[string]string
+	if requiresStablePublicAPI(task) && strings.EqualFold(c.language, "go") {
+		var snapshotErr error
+		publicAPIBaseline, snapshotErr = snapshotGoPublicAPI(c.cwd)
+		if snapshotErr != nil {
+			return fmt.Errorf("snapshot public API: %w", snapshotErr)
+		}
+	}
+
 	// Begin tracing session
 	sessionID := uuid.New().String()
 	if c.Tracer != nil {
@@ -290,8 +299,25 @@ func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity str
 	}
 
 	// Build conversation history
+	repositoryContext, err := buildEditorRepositoryContext(c.cwd, c.language, 32*1024)
+	if err != nil {
+		return fmt.Errorf("build editor repository context: %w", err)
+	}
 	history := []llm.ChatMessage{
-		{Role: "user", Content: plan},
+		{
+			Role: "user",
+			Content: fmt.Sprintf(`## Original task
+%s
+
+## Implementation plan
+%s
+
+## Current repository evidence
+%s
+
+Follow the original task when the plan conflicts with repository evidence.
+Do not add, remove, or rename exported symbols when API stability is required.`, task, plan, repositoryContext),
+		},
 	}
 
 	// Initialize centralized Claude Code-style loop detector
@@ -431,6 +457,45 @@ func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity str
 			// Record success metrics
 			if c.Tracer != nil {
 				_ = c.Tracer.End(true)
+			}
+			return nil
+		}
+
+		if publicAPIBaseline != nil {
+			currentPublicAPI, snapshotErr := snapshotGoPublicAPI(c.cwd)
+			if snapshotErr != nil {
+				return fmt.Errorf("validate public API: %w", snapshotErr)
+			}
+			if changes := publicAPIChanges(publicAPIBaseline, currentPublicAPI); len(changes) > 0 {
+				issues := strings.Join(changes, "\n")
+				fmt.Printf("[WARNING] Public API contract changed:\n%s\n", issues)
+				history = append(history, llm.ChatMessage{
+					Role: "user",
+					Content: "Deterministic public API validation failed. Restore the original exported API while preserving the requested internal fix:\n" +
+						issues,
+				})
+				continue
+			}
+		}
+
+		if verificationCommand := requestedVerificationCommand(task); len(verificationCommand) > 0 {
+			fmt.Printf("Verifying: %s\n", strings.Join(verificationCommand, " "))
+			verificationOutput, verificationErr := runRequestedVerification(ctx, c.cwd, verificationCommand)
+			if verificationErr != nil {
+				fmt.Printf("[WARNING] Deterministic verification failed:\n%s\n", verificationOutput)
+				history = append(history, llm.ChatMessage{
+					Role: "user",
+					Content: fmt.Sprintf("Deterministic verification failed. Fix the implementation and rerun the required check.\nCommand: %s\nOutput:\n%s",
+						strings.Join(verificationCommand, " "), verificationOutput),
+				})
+				continue
+			}
+
+			c.recordFeedback(editBackend, editModel, "editor", task, true, "")
+			fmt.Printf("[OK] Verification passed\n")
+			fmt.Printf("\n[OK] Task complete!\n")
+			if result != "" {
+				fmt.Printf("   %s\n", result)
 			}
 			return nil
 		}

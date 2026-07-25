@@ -93,6 +93,22 @@ func RunResearch(args []string) error {
 	if err != nil {
 		return fmt.Errorf("codebase analysis failed: %w", err)
 	}
+	if contradictsUnsafeConcurrencyEvidence(codebaseAnalysis, evidence) {
+		correctionPrompt := codebasePrompt + `
+
+Mandatory correction:
+The inspected implementation contains a mutable map and no synchronization primitive.
+The previous draft incorrectly called concurrent access safe. Rewrite the answer and
+state explicitly that concurrent access is unsafe; tests and documentation do not
+override the implementation evidence.`
+		codebaseAnalysis, err = queryAgent.Execute(researchCtx, []llm.ChatMessage{{Role: "user", Content: correctionPrompt}}, nil)
+		if err != nil {
+			return fmt.Errorf("correct unsupported research conclusion: %w", err)
+		}
+		if contradictsUnsafeConcurrencyEvidence(codebaseAnalysis, evidence) {
+			return fmt.Errorf("codebase analysis contradicted deterministic concurrency evidence")
+		}
+	}
 
 	home, _ := os.UserHomeDir()
 	researchDir := filepath.Join(home, ".gptcode", "research")
@@ -134,6 +150,35 @@ func RunResearch(args []string) error {
 	}
 
 	return nil
+}
+
+func requiresUnsafeConcurrencyFinding(evidence repositoryEvidence) bool {
+	for _, content := range evidence.Contents {
+		lower := strings.ToLower(content)
+		hasMutableMap := strings.Contains(lower, "map[") &&
+			(strings.Contains(lower, "sessions[") || strings.Contains(lower, "delete("))
+		hasSynchronization := strings.Contains(lower, "sync.mutex") ||
+			strings.Contains(lower, "sync.rwmutex") ||
+			strings.Contains(lower, ".lock()") ||
+			strings.Contains(lower, ".rlock()")
+		if hasMutableMap && !hasSynchronization {
+			return true
+		}
+	}
+	return false
+}
+
+func contradictsUnsafeConcurrencyEvidence(analysis string, evidence repositoryEvidence) bool {
+	if !requiresUnsafeConcurrencyFinding(evidence) {
+		return false
+	}
+	lower := strings.ToLower(analysis)
+	claimsSafe := strings.Contains(lower, "concurrent access") &&
+		(strings.Contains(lower, "is safe") || strings.Contains(lower, "are safe"))
+	acknowledgesUnsafe := strings.Contains(lower, "not safe") ||
+		strings.Contains(lower, "unsafe") ||
+		strings.Contains(lower, "not thread-safe")
+	return claimsSafe && !acknowledgesUnsafe
 }
 
 type repositoryEvidence struct {

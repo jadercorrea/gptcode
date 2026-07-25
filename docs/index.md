@@ -25,9 +25,9 @@ description: An open-source coding CLI for multi-model, repository-native, verif
       <span></span><span></span><span></span>
       <strong>gptcode — real terminal capture</strong>
     </div>
-    <video class="terminal-recording" autoplay muted loop playsinline controls poster="{{ '/assets/gptcode-workflow.gif' | relative_url }}" aria-label="Real terminal recording: GPTCode detects a Go repository, displays its active Go engineering skill, and the repository test suite passes.">
+    <video class="terminal-recording" autoplay muted loop playsinline controls poster="{{ '/assets/gptcode-workflow.gif' | relative_url }}" aria-label="Real terminal recording: GPTCode researches and reviews a Go data race, repairs it without changing the public API, and verifies the result with the race detector.">
       <source src="{{ '/assets/gptcode-workflow.mp4' | relative_url }}" type="video/mp4">
-      <img src="{{ '/assets/gptcode-workflow.gif' | relative_url }}" alt="GPTCode detects a Go repository, displays its active Go engineering skill, and the repository test suite passes.">
+      <img src="{{ '/assets/gptcode-workflow.gif' | relative_url }}" alt="GPTCode researches and reviews a Go data race, repairs it without changing the public API, and verifies the result with the race detector.">
     </video>
   </div>
   <p class="recording-caption">Real capture · GPTCode repository detection and skills · Go verification executed by the repository</p>
