@@ -34,7 +34,11 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v4
-      
+
+      - name: Verify public site identity
+        working-directory: ./docs
+        run: ruby test/site_identity_test.rb
+
       - name: Build with Jekyll
         working-directory: ./docs
         run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"

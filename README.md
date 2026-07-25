@@ -2,7 +2,7 @@
 
 > Autonomous AI Coding Assistant — **$0-5/month** vs $20-30/month subscriptions
 
-[![CI Build & Test](https://github.com/jadercorrea/gptcode/actions/workflows/ci.yml/badge.svg)](https.github.com/jadercorrea/gptcode/actions)
+[![CI Build & Test](https://github.com/jadercorrea/gptcode/actions/workflows/ci.yml/badge.svg)](https://github.com/jadercorrea/gptcode/actions)
 [![Go Version](https://img.shields.io/badge/Go-1.24-00ADD8?style=flat&logo=go)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -57,7 +57,7 @@ gt run "hello"
 curl -sSL https://gptcode.dev/install.sh | bash
 
 # Or using go install
-go install github.com/gptcode/cli/cmd/gptcode@latest
+go install github.com/jadercorrea/gptcode/cmd/gptcode@latest
 
 # Guided setup
 gt setup

@@ -132,7 +132,7 @@ Real-world refactor (Simon Willis case): Same velocity as Sonnet post-preview (4
 
 ---
 
-*Have questions about Claude Opus 4.5 or model selection? Join our [GitHub Discussions](https://github.com/gptcode-cloud/cli/issues)*
+*Have questions about Claude Opus 4.5 or model selection? Join our [GitHub Discussions](https://github.com/jadercorrea/gptcode/issues)*
 
 ## See Also
 

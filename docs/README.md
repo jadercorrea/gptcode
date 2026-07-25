@@ -53,8 +53,8 @@ Technical specifications:
 - **Current:** v0.x (MVP)
 - **Docs Version:** December 2025
 
-For older versions, check [git history](https://github.com/gptcode-cloud/cli/commits/main/docs).
+For older versions, check [git history](https://github.com/jadercorrea/gptcode/commits/main/docs).
 
 ## Feedback
 
-Found an issue with the docs? [Open an issue](https://github.com/gptcode-cloud/cli/issues/new?labels=documentation) or [start a discussion](https://github.com/gptcode-cloud/cli/issues).
+Found an issue with the docs? [Open an issue](https://github.com/jadercorrea/gptcode/issues/new?labels=documentation) or [start a discussion](https://github.com/jadercorrea/gptcode/issues).

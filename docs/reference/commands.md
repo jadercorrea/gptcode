@@ -143,14 +143,14 @@ gt do "optimize database queries" --interactive
 
 ### `gt login`
 
-**NEW**: Connect and authenticate your compiled CLI binary with your active **gptcode live** subscription.
+Authenticate optional integrations used by the CLI.
 
 ```bash
 gt login --token <your-live-token>
 ```
 
 **What it does:**
-- Validates your subscription entitlement with `gptcode.live`.
+- Stores integration credentials in the local GPTCode configuration.
 - Retrieves your organization's custom coding guidelines, blocked-command patterns, and budget caps.
 - Installs local credentials to securely stream task execution metrics.
 

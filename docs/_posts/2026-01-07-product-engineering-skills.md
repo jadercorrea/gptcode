@@ -54,6 +54,7 @@ And now, we have **Product Skills**:
 
 When you're building UI, the AI doesn't just create a button:
 
+{% raw %}
 ```tsx
 // Without skill: Whatever works
 <button style={{background: 'blue', padding: '10px'}}>Submit</button>
@@ -61,6 +62,7 @@ When you're building UI, the AI doesn't just create a button:
 // With design-system skill: Atomic design + tokens
 <Button variant="primary" size="md">Submit</Button>
 ```
+{% endraw %}
 
 The skill teaches:
 - **Atomic Design** (atoms → molecules → organisms)
@@ -271,8 +273,8 @@ gt do "add user authentication with proper tracking and error handling"
 gt skills list
 ```
 
-**Explore all skills:** [gptcode.cloud/skills](/skills)
+**Explore all skills:** [gptcode.dev/skills](/skills)
 
 ---
 
-*What product engineering patterns should we add next? [Open an issue](https://github.com/gptcode-cloud/cli/issues) with your suggestions.*
+*What product engineering patterns should we add next? [Open an issue](https://github.com/jadercorrea/gptcode/issues) with your suggestions.*

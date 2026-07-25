@@ -214,6 +214,7 @@ app.use((req, res, next) => {
 
 ### React - dangerouslySetInnerHTML
 
+{% raw %}
 ```tsx
 // GOOD - sanitize before rendering
 import DOMPurify from 'dompurify';
@@ -231,6 +232,7 @@ function RichContent({ html }: { html: string }) {
 // BAD - raw HTML
 <div dangerouslySetInnerHTML={{ __html: userContent }} />
 ```
+{% endraw %}
 
 ## CSRF Protection
 

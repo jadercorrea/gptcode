@@ -460,4 +460,4 @@ A: We recommend:
 
 ## Feedback
 
-Found a bug or have a suggestion? [Open an issue](https://github.com/gptcode-cloud/cli/issues/new)!
+Found a bug or have a suggestion? [Open an issue](https://github.com/jadercorrea/gptcode/issues/new)!

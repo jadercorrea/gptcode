@@ -272,7 +272,7 @@ gt do "add user authentication"
 
 ---
 
-*Have questions about agent routing vs tool search? Join our [GitHub Discussions](https://github.com/gptcode-cloud/cli/issues)*
+*Have questions about agent routing vs tool search? Join our [GitHub Discussions](https://github.com/jadercorrea/gptcode/issues)*
 
 ## See Also
 

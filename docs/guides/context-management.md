@@ -644,4 +644,4 @@ Currently: `shared.md`, `next.md`, `roadmap.md`.
 
 ---
 
-**Questions? Issues?** Open an issue on [GitHub](https://github.com/gptcode-cloud/cli/issues)
+**Questions? Issues?** Open an issue on [GitHub](https://github.com/jadercorrea/gptcode/issues)

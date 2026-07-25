@@ -107,6 +107,7 @@ jobs:
 
 ### CD with environment protection
 
+{% raw %}
 ```yaml
 name: Deploy
 
@@ -127,9 +128,11 @@ jobs:
         run: |
           ./deploy.sh
 ```
+{% endraw %}
 
 ### Caching for speed
 
+{% raw %}
 ```yaml
 - name: Cache dependencies
   uses: actions/cache@v4
@@ -144,6 +147,7 @@ jobs:
     path: .next/cache
     key: nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.ts') }}
 ```
+{% endraw %}
 
 ## Kubernetes
 
@@ -292,6 +296,7 @@ module "vpc" {
 
 ### Never commit secrets
 
+{% raw %}
 ```yaml
 # GOOD - use secrets
 env:
@@ -301,6 +306,7 @@ env:
 env:
   DATABASE_URL: postgres://user:password@host/db
 ```
+{% endraw %}
 
 ### Rotate secrets regularly
 

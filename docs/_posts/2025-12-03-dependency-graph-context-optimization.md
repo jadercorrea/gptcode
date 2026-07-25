@@ -424,7 +424,7 @@ gt chat "your question about the codebase"
 
 ---
 
-*Have questions about dependency graphs? Join our [GitHub Discussions](https://github.com/gptcode-cloud/cli/issues)*
+*Have questions about dependency graphs? Join our [GitHub Discussions](https://github.com/jadercorrea/gptcode/issues)*
 
 ## See Also
 

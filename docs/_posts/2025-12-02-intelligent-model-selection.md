@@ -214,7 +214,7 @@ gptcode stats
 
 ---
 
-*Have questions about model selection? Join our [GitHub Discussions](https://github.com/gptcode-cloud/cli/issues)*
+*Have questions about model selection? Join our [GitHub Discussions](https://github.com/jadercorrea/gptcode/issues)*
 
 ## See Also
 

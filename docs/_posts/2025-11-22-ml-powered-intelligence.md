@@ -357,7 +357,7 @@ But the foundation is here today: fast, cheap, accurate routing powered by embed
 
 ---
 
-*Have questions about the ML system? Check out the [full documentation](../ml-features) or ask in [GitHub Discussions](https://github.com/gptcode-cloud/cli/issues)!*
+*Have questions about the ML system? Check out the [full documentation](../ml-features) or ask in [GitHub Discussions](https://github.com/jadercorrea/gptcode/issues)!*
 
 ## References
 

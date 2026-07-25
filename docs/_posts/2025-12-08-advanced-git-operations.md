@@ -492,7 +492,7 @@ gptcode upgrade
 
 Or install for the first time:
 ```bash
-go install github.com/gptcode-ai/gptcode@latest
+go install github.com/jadercorrea/gptcode@latest
 ```
 
 Full documentation: [Git Operations Guide](/docs/guides/git-operations.html)
@@ -514,4 +514,4 @@ The AI coding assistant that was already helping you write code can now handle t
 
 ---
 
-*Questions or feedback? Open an issue on [GitHub](https://github.com/gptcode-ai/gptcode) or join our [Discord](https://discord.gg/gptcode).*
+*Questions or feedback? Open an issue on [GitHub](https://github.com/jadercorrea/gptcode) or join our [Discord](https://discord.gg/gptcode).*

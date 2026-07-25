@@ -1,7 +1,7 @@
 title: GPTCode
-description: AI-powered product engineering assistant. Ship production-ready code with built-in design systems, metrics, and quality guardrails.
+description: Independent open-source AI coding CLI by Jader Correa.
 baseurl: ""
-url: "https://gptcode.cloud"
+url: "https://gptcode.dev"
 
 # theme: minima  # Disabled - using custom Tokyo Night CSS
 
@@ -52,3 +52,4 @@ exclude:
   - README.md
   - install.sh
   - install_nvim_plugin.sh
+  - test

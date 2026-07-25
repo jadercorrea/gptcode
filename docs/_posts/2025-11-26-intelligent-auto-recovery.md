@@ -522,7 +522,7 @@ We'd love to hear:
 - Which model combinations work best?
 - What confidence threshold feels right for auto-retry?
 
-Open an issue or discussion on [GitHub](https://github.com/gptcode-cloud/cli).
+Open an issue or discussion on [GitHub](https://github.com/jadercorrea/gptcode).
 
 ---
 

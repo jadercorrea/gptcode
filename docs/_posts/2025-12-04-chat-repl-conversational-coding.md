@@ -619,7 +619,7 @@ gt chat
 
 ---
 
-*Have questions about Chat REPL? Join our [GitHub Discussions](https://github.com/gptcode-cloud/cli/issues)*
+*Have questions about Chat REPL? Join our [GitHub Discussions](https://github.com/jadercorrea/gptcode/issues)*
 
 ## See Also
 

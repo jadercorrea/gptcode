@@ -6,7 +6,7 @@ description: Built-in features and execution capabilities of the pre-compiled Li
 
 # Core Agent Features
 
-The **gptcode CLI agent** (`gt`) is a pre-compiled, high-performance binary engineered to run complex autonomous coding loops directly on your machine or host server. It combines localized intelligence with active control policies streamed from your **gptcode live** subscription.
+The **GPTCode CLI agent** (`gt`) is an open-source Go application for running coding workflows directly on your machine. It combines local repository tools with configurable LLM providers and project-specific instructions.
 
 ---
 
@@ -50,7 +50,7 @@ Security is baked directly into the pre-compiled binary. The agent cannot run wi
 
 *   **File Sandbox Validation**: The **Editor** agent is strictly confined. It can *only* modify files explicitly approved by the **Planner** agent during the plan phase. The binary rejects any attempt to touch unauthorized system directories, hidden scripts, or cross-project files.
 *   **Self-Healing Test Cycles**: The **Validator** agent automatically compiles code, runs language-specific tests, evaluates linters, and retries if compilation or tests fail. If self-healing fails after maximum attempts, `gt` automatically rolls back the workspace to its clean git HEAD state.
-*   **Active Interception Policies**: Centrally managed rules from your **gptcode live** dashboard are pushed to the binary in real time. If the agent attempts a command blocked in your organization’s `agentops.yml`, the process is actively aborted.
+*   **Local execution controls**: Tool permissions and project instructions can constrain which commands the agent is expected to run. Review high-impact commands before approving them.
 
 ---
 
@@ -91,7 +91,7 @@ To avoid feeding massive codebases into LLM context windows (which causes high c
 
 ## 5. Centralized Cost & Model Governance
 
-Although the compiled agent executes code locally with total privacy, its model usage and telemetry are managed centrally via **gptcode live**.
+The CLI executes tools locally. Prompts and selected context are sent to the model provider you configure; review that provider's data policy before using private code.
 
 *   **Bring Your Own Keys (BYOK)**: Connect your own corporate API keys (OpenAI, Anthropic, DeepSeek, Groq, OpenRouter) safely through the Live Control Plane.
 *   **Centralized Budget Caps**: Configure hard spending limits per user, repository, or workspace. If a local execution loop gets stuck, the Live policy engine triggers a remote `SIGTERM` interrupt automatically.

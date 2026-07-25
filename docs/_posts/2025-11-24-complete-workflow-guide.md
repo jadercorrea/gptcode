@@ -248,4 +248,4 @@ Implementation itself works for any language (LLM-based), but build/test verific
 
 ---
 
-**Questions or issues?** [Open an issue on GitHub](https://github.com/gptcode-cloud/cli/issues)
+**Questions or issues?** [Open an issue on GitHub](https://github.com/jadercorrea/gptcode/issues)

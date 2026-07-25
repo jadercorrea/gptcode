@@ -108,7 +108,7 @@ GPTCode isn't trying to replace paid tools for everyone. If Cursor works for you
 
 ```bash
 # Install
-go install github.com/gptcode-cloud/cli/cmd/gptcode@latest
+go install github.com/jadercorrea/gptcode/cmd/gptcode@latest
 
 # Configure (use free Groq or local Ollama)
 gt setup
@@ -123,7 +123,7 @@ Join us in making AI coding assistance accessible to everyone.
 
 ---
 
-*Have questions? Join our [GitHub Discussions](https://github.com/gptcode-cloud/cli/issues)*
+*Have questions? Join our [GitHub Discussions](https://github.com/jadercorrea/gptcode/issues)*
 
 ## See Also
 

@@ -312,8 +312,8 @@ gt models update
 
 ## Community Recommendations
 
-Share your Ollama configuration on [GitHub Discussions](https://github.com/gptcode-cloud/cli/issues) and help others find the best setup for their hardware!
+Share your Ollama configuration on [GitHub Discussions](https://github.com/jadercorrea/gptcode/issues) and help others find the best setup for their hardware!
 
 ---
 
-*Running into issues? Ask in [GitHub Discussions](https://github.com/gptcode-cloud/cli/issues)*
+*Running into issues? Ask in [GitHub Discussions](https://github.com/jadercorrea/gptcode/issues)*

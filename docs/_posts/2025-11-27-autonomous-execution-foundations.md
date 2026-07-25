@@ -403,7 +403,7 @@ We're building autonomous execution **with** the community. We'd love to hear:
 - Should we prioritize GitHub integration or local improvements first?
 - What telemetry data would be most valuable?
 
-Join the discussion on [GitHub](https://github.com/gptcode-cloud/cli/issues).
+Join the discussion on [GitHub](https://github.com/jadercorrea/gptcode/issues).
 
 ---
 

@@ -151,6 +151,7 @@ function SearchInput({ onSearch, placeholder }) {
 
 ### Write comprehensive stories
 
+{% raw %}
 ```tsx
 // Button.stories.tsx
 import type { Meta, StoryObj } from '@storybook/react';
@@ -192,6 +193,7 @@ export const AllVariants: Story = {
   ),
 };
 ```
+{% endraw %}
 
 ### Document with MDX
 

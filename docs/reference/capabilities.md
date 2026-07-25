@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Agent Capabilities & Technical Constraints
-description: Official capabilities guide for the compiled gptcode Live CLI Agent. Detailed specification of supported autonomous loops, git operations, migrations, and test validations.
+description: Capabilities guide for the open-source GPTCode CLI, including autonomous loops, git operations, migrations, and test validation.
 permalink: /reference/capabilities/
 ---
 

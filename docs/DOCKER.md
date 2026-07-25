@@ -96,6 +96,6 @@ docker run -v ~/.gptcode:/home/gptcode/.gptcode \
 
 ## Links
 
-- [GitHub Repository](https://github.com/gptcode-cloud/cli)
+- [GitHub Repository](https://github.com/jadercorrea/gptcode)
 - [Documentation](https://gptcode.app/docs)
 - [Get Your Token](https://gptcode.app/login)

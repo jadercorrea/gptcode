@@ -181,14 +181,14 @@ Honestly, try Cursor first. No hard feelings.
 
 ```bash
 # Try it yourself
-go install github.com/gptcode-cloud/cli/cmd/gptcode@latest
+go install github.com/jadercorrea/gptcode/cmd/gptcode@latest
 gt setup
 
 # See exactly what's broken
 go test ./tests/e2e/...
 
 # Fix something
-git clone https://github.com/gptcode-cloud/cli
+git clone https://github.com/jadercorrea/gptcode
 cd gptcode
 # internal/agents/reviewer.go is a good place to start
 ```
@@ -199,7 +199,7 @@ We're here to be **different**. **Transparent**. **Yours**.
 
 ---
 
-*Disagree? Have ideas? [Join the discussion](https://github.com/gptcode-cloud/cli/issues)*
+*Disagree? Have ideas? [Join the discussion](https://github.com/jadercorrea/gptcode/issues)*
 
 ## See Also
 
