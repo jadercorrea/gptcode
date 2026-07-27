@@ -47,6 +47,53 @@ func TestDetectLanguage(t *testing.T) {
 	}
 }
 
+func TestResolveVersionUsesGoModuleBuildInfo(t *testing.T) {
+	tests := []struct {
+		name          string
+		injected      string
+		moduleVersion string
+		want          string
+	}{
+		{
+			name:          "go install module version",
+			injected:      "dev",
+			moduleVersion: "v0.0.105",
+			want:          "v0.0.105",
+		},
+		{
+			name:          "goreleaser injected version",
+			injected:      "0.0.105",
+			moduleVersion: "v0.0.105",
+			want:          "0.0.105",
+		},
+		{
+			name:          "local development",
+			injected:      "dev",
+			moduleVersion: "(devel)",
+			want:          "dev",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := resolveVersion(tt.injected, tt.moduleVersion); got != tt.want {
+				t.Fatalf("resolveVersion(%q, %q) = %q, want %q", tt.injected, tt.moduleVersion, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRootHelpReflectsVerifiableWorkflowPositioning(t *testing.T) {
+	if !strings.Contains(rootCmd.Long, "evidence, not just answers") {
+		t.Fatal("root help must state the evidence-driven thesis")
+	}
+	for _, rejected := range []string{"$0-5/month", "COPILOT (Autonomous)"} {
+		if strings.Contains(rootCmd.Long, rejected) {
+			t.Fatalf("root help contains retired positioning %q", rejected)
+		}
+	}
+}
+
 func TestFeedbackCommandsRegistered(t *testing.T) {
 	tests := []struct {
 		name     string

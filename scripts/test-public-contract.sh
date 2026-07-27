@@ -29,6 +29,8 @@ assert_contains go.mod "module github.com/jadercorrea/gptcode"
 assert_not_contains README.md '$0-5/month'
 assert_not_contains README.md "Autonomous AI Coding Assistant"
 assert_not_contains README.md "Your code never stored on our servers"
+assert_not_contains cmd/gptcode/main.go '$0-5/month'
+assert_contains cmd/gptcode/main.go "evidence, not just answers"
 
 assert_contains Makefile "evidence:"
 assert_contains Makefile "verify:"

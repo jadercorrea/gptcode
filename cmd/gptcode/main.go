@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -45,19 +46,38 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
+	version = resolveVersion(version, moduleVersion())
 	rootCmd.Version = version
 	rootCmd.SetVersionTemplate("GPTCode version {{.Version}}\n")
 }
 
+func moduleVersion() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return ""
+	}
+	return info.Main.Version
+}
+
+func resolveVersion(injected, module string) string {
+	if injected != "" && injected != "dev" {
+		return injected
+	}
+	if module != "" && module != "(devel)" {
+		return module
+	}
+	return "dev"
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "gptcode",
-	Short: "GPTCode – AI Coding Assistant with Specialized Agents",
-	Long: `GPTCode – AI Coding Assistant with Specialized Agents
+	Short: "Verifiable AI coding workflows from the terminal",
+	Long: `GPTCode – Verifiable AI coding workflows
 
-Autonomous execution with validation. Analyzer → Planner → Editor → Validator.
-$0-5/month vs $20-30/month subscriptions.
+AI coding agents should produce evidence, not just answers.
+Research → Plan → Implement → Review → Verify.
 
-## COPILOT (Autonomous)
+## AGENTIC EXECUTION
   gptcode do "task" [--supervised] [--interactive]  - Autonomous execution with agent orchestration
 
 ## INTERACTIVE (Conversational)
