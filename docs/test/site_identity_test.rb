@@ -179,4 +179,23 @@ class SiteIdentityTest < Minitest::Test
     assert_includes content, "What this does not prove"
     assert_includes content, "examples/sessionstore"
   end
+
+  def test_repository_boundary_case_study_is_reproducible
+    article = File.join(
+      DOCS_ROOT,
+      "_posts",
+      "2026-07-27-the-agent-said-success-the-tests-said-otherwise.md"
+    )
+
+    assert_path_exists article
+
+    content = File.read(article)
+    assert_includes content, "The Agent Said Success. The Tests Said Otherwise."
+    assert_includes content, "issue #17"
+    assert_includes content, "internal/tools/tools.go"
+    assert_includes content, "go test -race -cover ./internal/tools"
+    assert_includes content, "34.8% of statements"
+    assert_includes content, "time-of-check/time-of-use"
+    assert_includes content, "Verification establishes truth."
+  end
 end
