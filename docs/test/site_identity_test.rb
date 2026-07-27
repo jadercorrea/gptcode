@@ -157,4 +157,26 @@ class SiteIdentityTest < Minitest::Test
     blog = File.read(File.join(DOCS_ROOT, "blog.html"))
     assert_includes blog, "Essays on reliable AI agents"
   end
+
+  def test_data_race_case_study_is_reproducible
+    article = File.join(
+      DOCS_ROOT,
+      "_posts",
+      "2026-07-27-how-gptcode-found-and-fixed-a-go-data-race.md"
+    )
+
+    assert_path_exists article
+
+    content = File.read(article)
+    assert_includes content, "How GPTCode Found and Fixed a Real Go Data Race"
+    assert_includes content, "The first answer was wrong"
+    assert_includes content, "go test -race"
+    assert_includes content, "WARNING: DATA RACE"
+    assert_includes content, "sync.RWMutex"
+    assert_includes content, "make evidence"
+    assert_includes content, "100.0%"
+    assert_includes content, "What this proves"
+    assert_includes content, "What this does not prove"
+    assert_includes content, "examples/sessionstore"
+  end
 end

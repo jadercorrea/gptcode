@@ -33,5 +33,6 @@ engineering portfolio.
 - [x] Exercise the new release workflow with an intentional semantic-version tag and validate its artifacts.
 - [x] Align the Go module path with the public repository so `go install ...@latest` is supported.
 - [x] Report module versions correctly for both GoReleaser and `go install`, and keep Go/Actions dependencies monitored.
+- [x] Publish a reproducible engineering case study of the Go data-race workflow.
 - [ ] Retire or isolate the legacy Live, training, Supabase, and experimental command surfaces with compatibility tests.
 - [ ] Raise coverage in legacy workflow packages without presenting the public fixture as repository-wide coverage.
