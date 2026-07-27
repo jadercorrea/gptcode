@@ -1,44 +1,45 @@
 # Contributing to GPTCode
 
-Thank you for considering contributing to GPTCode! This document provides guidelines and information for contributors.
+Thank you for considering contributing to GPTCode. The project explores
+repository-centered, verifiable AI coding workflows.
 
 ## Code of Conduct
 
-Please be respectful, inclusive, and constructive in all interactions. We're building a tool for developers who can't afford expensive subscriptions—let's keep the community welcoming.
+Keep technical discussion respectful, specific, inclusive, and evidence-based.
 
 ## How Can I Contribute?
 
 ### Reporting Bugs
 
 Before creating a bug report:
-1. Check [existing issues](https://github.com/gptcode-cloud/cli/issues)
+1. Check [existing issues](https://github.com/jadercorrea/gptcode/issues)
 2. Use the latest version of GPTCode
 
 When reporting:
 - Use a clear, descriptive title
 - Describe exact steps to reproduce
-- Include your OS, Go version, Neovim version
+- Include your OS and Go version
 - Include relevant config files (`~/.gptcode/setup.yaml`)
 - Paste error messages and logs
 
 ### Suggesting Features
 
 We love feature ideas! Before suggesting:
-1. Check [Discussions](https://github.com/gptcode-cloud/cli/issues) for similar ideas
-2. Consider if it aligns with GPTCode's goals (affordable, TDD-first, terminal-native)
+1. Check [Discussions](https://github.com/jadercorrea/gptcode/discussions) for similar ideas
+2. Explain how it strengthens explicit workflows, repository context, or executable verification
 
 When suggesting:
 - Use a clear, descriptive title
 - Explain the problem you're solving
 - Describe the solution you envision
-- Consider cost implications (we prioritize affordability)
+- Describe how the behavior can be verified
 
 ### Pull Requests
 
 1. **Fork and clone**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/cli
-   cd cli
+   git clone https://github.com/YOUR_USERNAME/gptcode
+   cd gptcode
    ```
 
 2. **Create a branch**
@@ -53,9 +54,7 @@ When suggesting:
 
 4. **Test your changes**
    ```bash
-   go test ./...
-   go install ./cmd/gptcode
-   gptcode setup  # test CLI
+   make verify
    ```
 
 5. **Commit with clear messages**
@@ -75,9 +74,8 @@ When suggesting:
 
 ### Prerequisites
 
-- Go 1.22+
-- Neovim 0.9+
-- Ollama (for local testing)
+- Go 1.24
+- A provider key or Ollama only when exercising a real model integration
 
 ### Project Structure
 
@@ -91,8 +89,6 @@ gptcode/
 │   ├── modes/            # Chat, Research, Plan, Implement
 │   ├── agents/           # Router, Query, Editor, Research agents
 │   └── tools/            # Tool implementations (read_file, etc)
-├── neovim/               # Neovim plugin (Lua)
-│   └── lua/gptcode/
 └── docs/                 # Documentation and blog
 ```
 
@@ -110,11 +106,14 @@ make install        # Builds and installs to $GOPATH/bin
 go build -o bin/gptcode ./cmd/gptcode
 go install ./cmd/gptcode
 
-# Run tests
-go test ./...
+# Run the same quality gate used by CI
+make verify
+```
 
-# Test Neovim plugin
-nvim  # with plugin configured
+To run that gate automatically before each commit:
+
+```bash
+git config core.hooksPath .githooks
 ```
 
 ### Testing LLM Providers
