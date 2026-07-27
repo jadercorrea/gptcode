@@ -67,3 +67,6 @@ training-sandbox/
 
 # Test workspaces
 chu-test-workspace/
+
+# Local Cloudflare CLI state
+.wrangler/

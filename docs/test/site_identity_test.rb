@@ -50,6 +50,7 @@ class SiteIdentityTest < Minitest::Test
     assert_includes homepage, "Reliable AI systems are built on explicit constraints, not optimistic prompts."
     assert_includes homepage, "One model rarely excels at every task."
     assert_includes homepage, "GPTCode decomposes software development into explicit stages"
+    assert_includes homepage, "Race detector · 100% statement coverage"
     refute_match(/not presented as|not a hosted/i, homepage)
     refute_includes homepage, "One tool, multiple models"
   end
@@ -105,6 +106,19 @@ class SiteIdentityTest < Minitest::Test
     refute_includes homepage, "repository detection and skills"
   end
 
+  def test_public_example_is_executable_evidence
+    homepage = File.read(File.join(DOCS_ROOT, "index.md"))
+    workflow = File.read(File.join(REPO_ROOT, ".github", "workflows", "ci.yml"))
+    verifier = File.read(File.join(REPO_ROOT, "scripts", "verify-public-examples.sh"))
+
+    assert_path_exists File.join(REPO_ROOT, "examples", "sessionstore", "store.go")
+    assert_path_exists File.join(REPO_ROOT, "examples", "sessionstore", "store_test.go")
+    assert_includes homepage, "examples/sessionstore"
+    assert_includes workflow, "scripts/verify-public-examples.sh"
+    assert_includes verifier, "go test -race"
+    assert_includes verifier, 'coverage" != "100.0"'
+  end
+
   def test_anchor_essay_is_published_and_evidence_driven
     article = File.join(
       DOCS_ROOT,
@@ -119,10 +133,13 @@ class SiteIdentityTest < Minitest::Test
     assert_includes content, "Models generate possibilities."
     assert_includes content, "Repositories define constraints."
     assert_includes content, "Verification establishes truth."
-    assert_includes content, "The experiment failed"
+    assert_includes content, "The first experiment failed"
     assert_includes content, "likely Python"
     assert_includes content, "fail fast"
     assert_includes content, "Research → Plan → Implement → Review → Verify"
+    assert_includes content, "Turning the failure into an executable contract"
+    assert_includes content, "scripts/verify-public-examples.sh"
+    assert_includes content, "100%"
     assert_includes content, "gptcode.dev"
 
     blog = File.read(File.join(DOCS_ROOT, "blog.html"))

@@ -186,18 +186,18 @@ changed through the same process as other engineering decisions.
 They are still instructions, not proof. A skill may tell an agent to run
 `mix test`; only the test process can establish whether the suite passed.
 
-## The experiment failed
+## The first experiment failed
 
 While preparing the terminal demonstration for the
 [GPTCode homepage](https://gptcode.dev), I created a deliberately small Go
 fixture.
 
-The repository contained:
+The fixture contained:
 
 - a Go module;
 - an in-memory session store;
 - explicit expiration behavior;
-- two tests covering expired and active sessions;
+- behavior and concurrency tests;
 - a short README describing the package.
 
 The deterministic language detector inspected the repository and reported:
@@ -232,22 +232,8 @@ producing a useful result and had to be interrupted. A model-backed command
 without a meaningful timeout or progress contract is not a reliable workflow
 stage.
 
-Finally, I ran the repository's deterministic verification:
-
-```text
-=== RUN   TestStoreRejectsExpiredSession
---- PASS: TestStoreRejectsExpiredSession
-=== RUN   TestStoreReturnsActiveSession
---- PASS: TestStoreReturnsActiveSession
-PASS
-```
-
-That is the interaction shown on the homepage: GPTCode detects the repository,
-exposes the active engineering skill, and the repository establishes the
-behavior through its own tests.
-
-I did not record a fictional `Research → Plan → Implement → Review → Verify`
-success story. The software did not earn that demonstration yet.
+I did not publish that run as a success story. The software had not earned the
+demonstration yet.
 
 ## Failure is useful when the boundary is visible
 
@@ -309,6 +295,51 @@ writing a confident summary. It should stop.
 
 Reliable systems need explicit disagreement states.
 
+## Turning the failure into an executable contract
+
+The failed run became a set of implementation requirements:
+
+- research must receive repository evidence and reject contradictions;
+- review must inspect the requested file and preserve the original focus;
+- implementation must retain the original task and repository constraints;
+- exported Go APIs must be compared before and after a change;
+- requested verification commands must be explicitly allowed and executed by
+  the system rather than merely suggested by a model.
+
+After implementing those boundaries, I repeated the experiment with an
+intentionally unsafe in-memory session store.
+
+Research located the unsynchronized map and cited the implementation and
+concurrency test. Review independently identified the same defect. The
+implementation stage added a private `sync.RWMutex`, preserving every exported
+type and method. The system then executed the requested verification:
+
+```text
+Verifying: go test -race ./...
+[OK] Verification passed
+
+diff --git a/session/store.go b/session/store.go
++       mu       sync.RWMutex
++       s.mu.Lock()
++       defer s.mu.Unlock()
++       s.mu.RLock()
++       defer s.mu.RUnlock()
+
+ok      example.com/sessionstore/session
+✓ Diagnosed · reviewed · repaired · verified
+```
+
+The terminal recording on the homepage is that real run. The public
+[session-store fixture](https://github.com/jadercorrea/gptcode/tree/main/examples/sessionstore)
+keeps the example auditable and adds a stronger repository contract:
+
+```bash
+scripts/verify-public-examples.sh
+```
+
+That command runs the behavior suite with Go's race detector and rejects the
+example unless statement coverage remains exactly 100%.
+
 ## What “source of truth” means
 
 Calling the workflow the source of truth does not mean the workflow is always
@@ -363,15 +394,16 @@ not the control plane.
 GPTCode is not proof that this problem has been solved. It is the tool I use to
 make the hypothesis testable.
 
-Its current strengths and failures are both valuable:
+Its current strengths and remaining limitations are both valuable:
 
 - multi-provider workflows test whether models can remain replaceable;
 - repository-native skills test whether engineering knowledge can live with
   the code;
 - explicit stages test whether agent work can remain inspectable;
 - deterministic commands test where model authority should end;
-- failed grounding and missing timeout behavior reveal where the contracts are
-  still too weak.
+- the public repair fixture makes the core claim independently reproducible;
+- low coverage in legacy packages remains visible work rather than a hidden
+  marketing claim.
 
 That is what I mean by an idea in executable form.
 
@@ -380,14 +412,9 @@ The code, tests, skills, and current limitations are available in the
 homepage at [gptcode.dev](https://gptcode.dev) presents the architecture and a
 real terminal recording.
 
-The next milestone is not a more impressive demo. It is making the full demo
-truthful:
-
-```text
-Research → Plan → Implement → Review → Verify
-```
-
-Only then should the recording show all five stages.
+The next milestone is not a more impressive demo. It is applying the same
+quality bar—explicit contracts, race-safe code, executable checks, and useful
+coverage—to more of the legacy codebase.
 
 ---
 

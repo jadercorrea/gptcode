@@ -38,7 +38,7 @@ description: An open-source coding CLI for multi-model, repository-native, verif
   <div class="evidence-links">
     <span>Inspect the evidence</span>
     <a href="https://github.com/jadercorrea/gptcode/tree/main/cmd/gptcode"><b>✓</b><strong>Workflow implementation</strong><small>Inspect the execution code</small></a>
-    <a href="https://github.com/jadercorrea/gptcode/tree/main/tests"><b>✓</b><strong>Verification commands</strong><small>Inspect the test suite</small></a>
+    <a href="https://github.com/jadercorrea/gptcode/tree/main/examples/sessionstore"><b>✓</b><strong>Verified example</strong><small>Race detector · 100% statement coverage</small></a>
     <a href="https://github.com/jadercorrea/gptcode/tree/main/cmd/gptcode/skills"><b>✓</b><strong>Repository skills</strong><small>Inspect engineering rules</small></a>
   </div>
 </section>

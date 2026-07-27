@@ -19,6 +19,9 @@ engineering portfolio.
 - [x] Validate `do` against a real Go data race: preserve the public API, add internal synchronization, and pass `go test -race ./...`.
 - [x] Validate `research` and `review` against both vulnerable and corrected implementations.
 - [x] Record the full real workflow: diagnose with `research`, confirm with `review`, fix with `do`, and show race verification passing.
-- [ ] Publish the site changes to the `main` branch.
-- [ ] Move authoritative DNS for `gptcode.dev` from GoDaddy to Cloudflare.
-- [ ] Configure GitHub Pages to use `gptcode.dev` and verify HTTPS.
+- [x] Publish the site changes to the `main` branch.
+- [x] Move authoritative DNS for `gptcode.dev` from GoDaddy to Cloudflare.
+- [x] Associate `gptcode.dev` and `www.gptcode.dev` with Cloudflare Pages.
+- [x] Publish a race-safe example with behavior tests and 100% statement coverage enforced in CI.
+- [ ] Verify custom-domain certificate activation and HTTPS after DNS propagation.
+- [ ] Raise coverage in legacy workflow packages without presenting the public fixture as repository-wide coverage.
