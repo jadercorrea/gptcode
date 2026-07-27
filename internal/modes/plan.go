@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -136,15 +138,14 @@ Create a structured plan with:
 ### Changes Required
 
 #### 1. [Component/File Group]
-**File**: path/to/file.ext
+**Existing file**: path/to/existing_file.ext
+**New file**: path/to/new_file.ext
 **Changes**: [Summary of changes]
 
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Tests pass: make test
-- [ ] Linting passes: make lint
-- [ ] Build succeeds: make build
+- [ ] Use only commands and Make targets verified in this repository
 
 #### Manual Verification:
 - [ ] Feature works as expected when tested
@@ -160,13 +161,42 @@ Create a structured plan with:
 [What to test and how]
 
 ## References
-[Links to research, similar code, etc.]`, task, codebaseAnalysis, externalContext)
+[Links to research, similar code, etc.]
+
+Grounding requirements:
+- Mark every path as either **Existing file** or **New file**.
+- Existing files must exist in the repository. Never invent a path.
+- Verification commands and Make targets must exist in the repository.
+- If repository evidence is insufficient, state what must be inspected instead of guessing.`, task, codebaseAnalysis, externalContext)
 
 	editorModel := backendCfg.GetModelForAgent("editor")
 	editorAgent := agents.NewEditor(customExec, cwd, editorModel)
 	planResult, _, err := editorAgent.Execute(context.Background(), []llm.ChatMessage{{Role: "user", Content: planPrompt}}, nil)
 	if err != nil {
 		return fmt.Errorf("plan generation failed: %w", err)
+	}
+	if problems := validatePlanEvidence(planResult, cwd); len(problems) > 0 {
+		correctionPrompt := fmt.Sprintf(`The previous plan failed deterministic repository validation:
+
+%s
+
+Rewrite the plan. Preserve the task and useful reasoning, but remove invented
+files and commands. Mark planned files as **New file** and cite existing paths
+only when they exist. Return only the corrected plan.
+
+Previous plan:
+%s`, strings.Join(problems, "\n"), planResult)
+		planResult, _, err = editorAgent.Execute(
+			context.Background(),
+			[]llm.ChatMessage{{Role: "user", Content: correctionPrompt}},
+			nil,
+		)
+		if err != nil {
+			return fmt.Errorf("correct ungrounded plan: %w", err)
+		}
+		if remaining := validatePlanEvidence(planResult, cwd); len(remaining) > 0 {
+			return fmt.Errorf("generated plan failed repository validation: %s", strings.Join(remaining, "; "))
+		}
 	}
 
 	home, _ := os.UserHomeDir()
@@ -199,4 +229,63 @@ Create a structured plan with:
 	}
 
 	return nil
+}
+
+var makeCommandPattern = regexp.MustCompile(`\bmake\s+([A-Za-z0-9_.-]+)`)
+
+func validatePlanEvidence(plan, repository string) []string {
+	var problems []string
+	for _, line := range strings.Split(plan, "\n") {
+		path, existing := planExistingFile(line)
+		if !existing {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(repository, filepath.FromSlash(path))); err != nil {
+			problems = append(problems, fmt.Sprintf("existing file does not exist: %s", path))
+		}
+	}
+
+	targets := repositoryMakeTargets(repository)
+	for _, match := range makeCommandPattern.FindAllStringSubmatch(plan, -1) {
+		target := match[1]
+		if !targets[target] {
+			problems = append(problems, fmt.Sprintf("Make target does not exist: make %s", target))
+		}
+	}
+
+	sort.Strings(problems)
+	return problems
+}
+
+func planExistingFile(line string) (string, bool) {
+	trimmed := strings.TrimSpace(line)
+	for _, prefix := range []string{"**Existing file**:", "**File**:"} {
+		if !strings.HasPrefix(trimmed, prefix) {
+			continue
+		}
+		path := strings.TrimSpace(strings.TrimPrefix(trimmed, prefix))
+		path = strings.Trim(path, "` ")
+		return path, path != ""
+	}
+	return "", false
+}
+
+func repositoryMakeTargets(repository string) map[string]bool {
+	targets := make(map[string]bool)
+	content, err := os.ReadFile(filepath.Join(repository, "Makefile"))
+	if err != nil {
+		return targets
+	}
+	for _, line := range strings.Split(string(content), "\n") {
+		if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") || !strings.Contains(line, ":") {
+			continue
+		}
+		names := strings.Fields(strings.SplitN(line, ":", 2)[0])
+		for _, name := range names {
+			if name != ".PHONY" && !strings.ContainsAny(name, "$%") {
+				targets[name] = true
+			}
+		}
+	}
+	return targets
 }

@@ -81,7 +81,7 @@ func RunResearch(args []string) error {
 	queryModel := backendCfg.GetModelForAgent("query")
 	queryAgent := agents.NewQuery(customExec, cwd, queryModel)
 
-	evidence, err := collectRepositoryEvidence(cwd)
+	evidence, err := collectRepositoryEvidence(cwd, question)
 	if err != nil {
 		return fmt.Errorf("collect repository evidence: %w", err)
 	}
@@ -187,13 +187,14 @@ type repositoryEvidence struct {
 	Contents map[string]string
 }
 
-func collectRepositoryEvidence(cwd string) (repositoryEvidence, error) {
+func collectRepositoryEvidence(cwd string, questions ...string) (repositoryEvidence, error) {
 	const maxCollectedContentBytes = 64 * 1024
 	evidence := repositoryEvidence{
 		Language: "Unknown",
 		Contents: make(map[string]string),
 	}
-	collectedContentBytes := 0
+	question := strings.Join(questions, " ")
+	var contentCandidates []string
 	switch {
 	case fileExists(filepath.Join(cwd, "go.mod")):
 		evidence.Language = "Go"
@@ -228,24 +229,75 @@ func collectRepositoryEvidence(cwd string) (repositoryEvidence, error) {
 		}
 		relative = filepath.ToSlash(relative)
 		evidence.Files = append(evidence.Files, relative)
-		if shouldIncludeResearchContent(relative) && collectedContentBytes < maxCollectedContentBytes {
-			content, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-			remaining := maxCollectedContentBytes - collectedContentBytes
-			if len(content) <= remaining {
-				evidence.Contents[relative] = string(content)
-				collectedContentBytes += len(content)
-			}
+		if shouldIncludeResearchContent(relative) {
+			contentCandidates = append(contentCandidates, relative)
 		}
 		return nil
 	})
-	sort.Strings(evidence.Files)
+	if err != nil {
+		return evidence, err
+	}
+
+	sortResearchPaths(evidence.Files, question)
 	if len(evidence.Files) > 200 {
 		evidence.Files = evidence.Files[:200]
 	}
-	return evidence, err
+	sortResearchPaths(contentCandidates, question)
+
+	collectedContentBytes := 0
+	for _, relative := range contentCandidates {
+		if collectedContentBytes >= maxCollectedContentBytes {
+			break
+		}
+		content, readErr := os.ReadFile(filepath.Join(cwd, filepath.FromSlash(relative)))
+		if readErr != nil {
+			return evidence, readErr
+		}
+		remaining := maxCollectedContentBytes - collectedContentBytes
+		if len(content) > remaining {
+			continue
+		}
+		evidence.Contents[relative] = string(content)
+		collectedContentBytes += len(content)
+	}
+
+	return evidence, nil
+}
+
+func sortResearchPaths(paths []string, question string) {
+	sort.SliceStable(paths, func(i, j int) bool {
+		leftScore := researchPathScore(paths[i], question)
+		rightScore := researchPathScore(paths[j], question)
+		if leftScore != rightScore {
+			return leftScore > rightScore
+		}
+		return paths[i] < paths[j]
+	})
+}
+
+func researchPathScore(path, question string) int {
+	lowerPath := strings.ToLower(path)
+	score := 0
+	for _, term := range strings.FieldsFunc(strings.ToLower(question), func(r rune) bool {
+		return (r < 'a' || r > 'z') && (r < '0' || r > '9')
+	}) {
+		if len(term) >= 3 && strings.Contains(lowerPath, term) {
+			score += 10
+		}
+	}
+	if isImplementationResearchPath(path) {
+		score++
+	}
+	return score
+}
+
+func isImplementationResearchPath(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".go", ".ex", ".exs", ".rs", ".py", ".rb", ".js", ".jsx", ".ts", ".tsx", ".java":
+		return true
+	default:
+		return false
+	}
 }
 
 func shouldSkipResearchDirectory(name string) bool {
@@ -304,9 +356,10 @@ Grounding requirements:
 4. Do not speculate, use "likely", or mention identifiers absent from the inspected contents.
 5. If evidence is insufficient, say exactly what could not be established.
 6. Contracts and tests describe expectations; they do not prove the implementation satisfies them.
-7. Compare stated expectations with implementation details and report contradictions explicitly.
-8. Concurrency claims require synchronization in the implementation (for example locks, atomics, channels, or documented confinement). A WaitGroup or goroutines in a test exercise concurrency; they do not make shared state safe.
-9. If mutable shared state has no visible synchronization, state that concurrent access is unsafe and recommend running the repository's race/concurrency verification.
+7. Behavioral conclusions require implementation evidence. Documentation, plans, and quality claims are not implementation evidence.
+8. Compare stated expectations with implementation details and report contradictions explicitly.
+9. Concurrency claims require synchronization in the implementation (for example locks, atomics, channels, or documented confinement). A WaitGroup or goroutines in a test exercise concurrency; they do not make shared state safe.
+10. If mutable shared state has no visible synchronization, state that concurrent access is unsafe and recommend running the repository's race/concurrency verification.
 
 Return concise sections: Findings, Evidence, Verification.`, question, evidence.Language, strings.Join(evidence.Files, "\n"), groundedFiles.String())
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jadercorrea/gptcode/internal/llm"
 	"github.com/jadercorrea/gptcode/internal/tools"
@@ -167,6 +168,9 @@ func (r *ReviewAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 		}
 
 		if len(resp.ToolCalls) == 0 {
+			if strings.TrimSpace(resp.Text) == "" {
+				return "", fmt.Errorf("review provider returned an empty response")
+			}
 			return resp.Text, nil
 		}
 
@@ -212,7 +216,10 @@ func (r *ReviewAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 		Model:        r.model,
 	})
 	if err != nil {
-		return "Review completed but failed to generate final summary", nil
+		return "", fmt.Errorf("generate final review synthesis: %w", err)
+	}
+	if strings.TrimSpace(finalResp.Text) == "" {
+		return "", fmt.Errorf("review provider returned an empty final synthesis")
 	}
 	return finalResp.Text, nil
 }

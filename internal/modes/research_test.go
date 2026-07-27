@@ -76,6 +76,7 @@ func TestBuildCodebaseResearchPromptRequiresGroundedEvidence(t *testing.T) {
 		"Do not speculate",
 		"verification command",
 		"Contracts and tests describe expectations",
+		"Behavioral conclusions require implementation evidence",
 		"report contradictions",
 		"Concurrency claims require synchronization in the implementation",
 		"WaitGroup or goroutines in a test exercise concurrency",
@@ -83,6 +84,31 @@ func TestBuildCodebaseResearchPromptRequiresGroundedEvidence(t *testing.T) {
 		if !strings.Contains(prompt, required) {
 			t.Fatalf("research prompt missing %q:\n%s", required, prompt)
 		}
+	}
+}
+
+func TestCollectRepositoryEvidencePrioritizesQuestionRelevantImplementation(t *testing.T) {
+	repository := t.TempDir()
+	writeTestFile(t, filepath.Join(repository, "go.mod"), "module example.com/repository\n")
+	writeTestFile(t, filepath.Join(repository, "README.md"), strings.Repeat("documented contract\n", 4_000))
+	writeTestFile(t, filepath.Join(repository, "internal", "unrelated", "large.go"), "package unrelated\n"+strings.Repeat("// filler\n", 8_000))
+	target := filepath.Join(repository, "internal", "tools", "tools.go")
+	writeTestFile(t, target, "package tools\nfunc readFile() { /* implementation evidence */ }\n")
+
+	evidence, err := collectRepositoryEvidence(
+		repository,
+		"Can model-invoked file tools escape the repository?",
+	)
+	if err != nil {
+		t.Fatalf("collect repository evidence: %v", err)
+	}
+
+	content, ok := evidence.Contents["internal/tools/tools.go"]
+	if !ok {
+		t.Fatal("question-relevant implementation was omitted from bounded evidence")
+	}
+	if !strings.Contains(content, "implementation evidence") {
+		t.Fatalf("unexpected relevant evidence: %q", content)
 	}
 }
 

@@ -422,7 +422,7 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 					}
 				}
 				if len(modifiedFiles) > 0 {
-					return "Changes applied; validation delegated to Maestro", modifiedFiles, nil
+					return "Changes applied; awaiting deterministic validation", modifiedFiles, nil
 				}
 				continue
 			}
@@ -515,7 +515,7 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 			}
 		}
 		if len(modifiedFiles) > 0 {
-			return "Changes applied; validation delegated to Maestro", modifiedFiles, nil
+			return "Changes applied; awaiting deterministic validation", modifiedFiles, nil
 		}
 	}
 

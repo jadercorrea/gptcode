@@ -478,27 +478,26 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 			}
 		}
 
-		if verificationCommand := requestedVerificationCommand(task); len(verificationCommand) > 0 {
-			fmt.Printf("Verifying: %s\n", strings.Join(verificationCommand, " "))
-			verificationOutput, verificationErr := runRequestedVerification(ctx, c.cwd, verificationCommand)
-			if verificationErr != nil {
-				fmt.Printf("[WARNING] Deterministic verification failed:\n%s\n", verificationOutput)
-				history = append(history, llm.ChatMessage{
-					Role: "user",
-					Content: fmt.Sprintf("Deterministic verification failed. Fix the implementation and rerun the required check.\nCommand: %s\nOutput:\n%s",
-						strings.Join(verificationCommand, " "), verificationOutput),
-				})
-				continue
-			}
-
-			c.recordFeedback(editBackend, editModel, "editor", task, true, "")
-			fmt.Printf("[OK] Verification passed\n")
-			fmt.Printf("\n[OK] Task complete!\n")
-			if result != "" {
-				fmt.Printf("   %s\n", result)
-			}
-			return nil
+		verificationCommand := requestedVerificationCommand(task)
+		if len(verificationCommand) == 0 {
+			verificationCommand = repositoryVerificationCommand(c.cwd)
 		}
+		if len(verificationCommand) == 0 {
+			return fmt.Errorf("cannot declare task complete: no deterministic repository verification command was found")
+		}
+
+		fmt.Printf("Verifying: %s\n", strings.Join(verificationCommand, " "))
+		verificationOutput, verificationErr := runRequestedVerification(ctx, c.cwd, verificationCommand)
+		if verificationErr != nil {
+			fmt.Printf("[WARNING] Deterministic verification failed:\n%s\n", verificationOutput)
+			history = append(history, llm.ChatMessage{
+				Role: "user",
+				Content: fmt.Sprintf("Deterministic verification failed. Fix the implementation and rerun the required check.\nCommand: %s\nOutput:\n%s",
+					strings.Join(verificationCommand, " "), verificationOutput),
+			})
+			continue
+		}
+		fmt.Printf("[OK] Deterministic verification passed\n")
 
 		// Select model for review
 		reviewBackend, reviewModel, err := c.selector.SelectModel(config.ActionReview, c.language, complexity)
@@ -514,11 +513,16 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 		reviewProvider := c.createProvider(reviewBackend)
 		reviewer := agents.NewReviewer(reviewProvider, c.cwd, reviewModel)
 
-		// Skip validation for Sentry agents (CI/CD will validate)
+		// Allow callers to skip the model review, but never the deterministic gate above.
 		if os.Getenv("SKIP_VALIDATION") == "1" {
-			fmt.Println("Skipping validation (SKIP_VALIDATION=1)...")
-			c.ReportProgress("validation", "Skipped (CI/CD will validate)")
-			break
+			fmt.Println("Skipping model review (SKIP_VALIDATION=1)...")
+			c.ReportProgress("validation", "Deterministic verification passed; model review skipped")
+			c.recordFeedback(editBackend, editModel, "editor", task, true, "")
+			fmt.Printf("\n[OK] Task complete!\n")
+			if result != "" {
+				fmt.Printf("   %s\n", result)
+			}
+			return nil
 		}
 
 		// Validate
@@ -640,7 +644,6 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 		return nil
 	}
 
-	return nil
 }
 
 func errorMsg(err error) string {

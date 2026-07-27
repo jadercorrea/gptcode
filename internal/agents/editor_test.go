@@ -105,7 +105,7 @@ func TestEditor_CreateFileTask_ExecutesAndReturns(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	if result != "Changes applied; validation delegated to Maestro" {
+	if result != "Changes applied; awaiting deterministic validation" {
 		t.Errorf("Expected success message, got: %q", result)
 	}
 	if len(modifiedFiles) != 1 || modifiedFiles[0] != "output.txt" {
@@ -308,7 +308,7 @@ func TestEditor_EditTask_ContinuesUntilDone(t *testing.T) {
 	if result == "package main\n\nfunc old() {}\n" {
 		t.Skip("KNOWN ISSUE: read_file returns early even for edit tasks. Need to fix: only return early for pure query tasks.")
 	}
-	if result != "Changes applied; validation delegated to Maestro" {
+	if result != "Changes applied; awaiting deterministic validation" {
 		t.Errorf("Expected editor completion after patch, got: %q", result)
 	}
 	if mock.callCount != 2 {
