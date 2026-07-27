@@ -1,158 +1,198 @@
-# GPTCode CLI
+# GPTCode
 
-> Autonomous AI Coding Assistant — **$0-5/month** vs $20-30/month subscriptions
+> **AI coding agents should produce evidence, not just answers.**
 
-[![CI Build & Test](https://github.com/jadercorrea/gptcode/actions/workflows/ci.yml/badge.svg)](https://github.com/jadercorrea/gptcode/actions)
+GPTCode is an open-source coding CLI for investigating, planning, implementing,
+reviewing, and verifying software with multiple AI models. It keeps repository
+knowledge, engineering constraints, and executable verification close to the
+code.
+
+[![CI Build & Test](https://github.com/jadercorrea/gptcode/actions/workflows/ci.yml/badge.svg)](https://github.com/jadercorrea/gptcode/actions/workflows/ci.yml)
+[![Release](https://github.com/jadercorrea/gptcode/actions/workflows/cd.yml/badge.svg)](https://github.com/jadercorrea/gptcode/actions/workflows/cd.yml)
 [![Go Version](https://img.shields.io/badge/Go-1.24-00ADD8?style=flat&logo=go)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## System Architecture
+[Website](https://gptcode.dev) ·
+[Architecture](https://gptcode.dev/#architecture) ·
+[Documentation](https://gptcode.dev/guides/getting-started) ·
+[Engineering essay](https://gptcode.dev/blog/the-workflow-is-the-source-of-truth/)
 
-```mermaid
-graph TD
-    A["User Interfaces (CLI TUI / Neovim RPC Plugin)"] --> B["Command & Intent Dispatcher"]
-    B --> C["ML Model Router & Recommendation Engine"]
-    
-    subgraph Agent System
-        D["Query Agent (Intent Analysis)"]
-        E["Research Agent (Codebase Exploration)"]
-        F["Editor Agent (Code Implementation)"]
-        G["Validator Agent (Linter & Test Verification)"]
-    end
+<p align="center">
+  <a href="https://gptcode.dev">
+    <img
+      src="https://gptcode.dev/assets/gptcode-workflow.gif"
+      alt="GPTCode investigates, reviews, repairs, and verifies a real Go concurrency defect"
+      width="960"
+    />
+  </a>
+</p>
 
-    C --> D
-    C --> E
-    C --> F
-    C --> G
+## The thesis
 
-    D --> H["Multi-Provider LLM Engine (OpenRouter, Gemini, Ollama, OpenAI)"]
-    E --> H
-    F --> H
+Language models generate possibilities. Repositories define constraints.
+Verification establishes truth.
 
-    G --> I["Verification Layer (go test, golangci-lint, AST parser)"]
-    I --> J["Telemetry & Cost Observability Dashboard"]
+GPTCode separates those responsibilities into explicit, inspectable stages:
+
+```text
+Repository knowledge
+  Skills · contracts · tests · documentation
+                    │
+                    ▼
+Research → Plan → Implement → Review → Verify
+                    │
+                    ▼
+OpenAI · Gemini · Groq · OpenRouter · Ollama
 ```
 
-## Quick Start (30 seconds)
+The workflow is the source of truth. Models are interchangeable execution
+engines.
+
+## Install
+
+GPTCode requires Go 1.24 or newer:
 
 ```bash
-# 1. Install
-curl -sSL https://gptcode.dev/install.sh | bash
-
-# 2. Quick setup (recommended)
-gt setup -y
-
-# 3. Add your free API key
-gt key openrouter
-# (paste key from https://openrouter.ai/keys)
-
-# 4. Test it!
-gt run "hello"
-```
-
-## Alternative: Manual Setup
-
-```bash
-# Install
-curl -sSL https://gptcode.dev/install.sh | bash
-
-# Or using go install
 go install github.com/jadercorrea/gptcode/cmd/gptcode@latest
-
-# Guided setup
-gt setup
-# Choose "1) Quick Start" and paste your API key
+gptcode setup
 ```
 
-## Usage
-
-Use `gptcode` or the short alias `gt`:
+Connect a provider:
 
 ```bash
-# Quick AI answers (no tool loop - fastest)
-gt go "what is Go language"
-gt go "write hello world in Python"
-
-# Autonomous mode - AI completes the task with tools
-gt do "add user authentication"
-
-# Interactive chat
-gt chat
-
-# Code review
-gt review
-
-# Research mode
-gt research "how does the payment system work?"
+gptcode key openrouter
 ```
 
-## Commands
+Provider credentials remain local to your GPTCode configuration. Review the
+commands and provider policies before using the CLI with confidential code.
 
-| Command | Description |
-|---------|-------------|
-| `gt go "question"` | Quick AI answer (no tools) - fastest |
-| `gt do "task"` | Autonomous task completion with tools |
-| `gt chat` | Interactive code conversation |
-| `gt run "task"` | Execute with follow-up |
-| `gt research "question"` | Document codebase/architecture |
-| `gt plan "task"` | Create implementation plan |
-| `gt implement plan.md` | Execute plan step-by-step |
-| `gt review` | Code review for bugs/security |
-| `gt tdd` | Test-driven development mode |
-| `gt feature "desc"` | Generate tests + implementation |
-
-## Tools Available
-
-When using autonomous modes (`gt do`, `gt run`, `gt chat`), these tools are available:
-
-| Tool | Description |
-|------|-------------|
-| `read_file` | Read file contents |
-| `list_files` | List files with pattern filter |
-| `search_code` | Regex search in code |
-| `find_relevant_files` | AI-powered file discovery |
-| `write_file` | Create/edit files |
-| `apply_patch` | Replace text blocks |
-| `run_command` | Execute shell commands |
-| `project_map` | Project structure tree |
-| `web_search` | Web lookup (requires EXA_API_KEY) |
-
-## Skills
-
-Language-specific guidelines injected into prompts:
+## A real workflow
 
 ```bash
-gt skills list              # List available skills
-gt skills install ruby      # Install Ruby skill
-gt skills install-all       # Install all skills
-gt skills show go           # View skill content
+gptcode research \
+  "How does session expiration work, and is concurrent access safe?"
+
+gptcode review session/store.go \
+  --focus "concurrency correctness and public API stability"
+
+gptcode do \
+  "Fix the session store concurrency bug without changing its public API. Verify with go test -race ./..."
 ```
 
-Available: Go, Elixir, Ruby, Rails, Python, TypeScript, JavaScript, Rust
+The published demonstration uses a real Go fixture and ends with executable
+evidence rather than a model assertion:
 
-## Configuration
+```text
+Research   → identifies the shared-state boundary
+Review     → confirms unsynchronized map access
+Implement  → preserves the public API and adds synchronization
+Verify     → go test -race ./...
+```
+
+See the [auditable fixture](examples/sessionstore) and the
+[recording source](docs/assets/record-gptcode-workflow.zsh).
+
+## Verify the evidence
+
+Run the same deterministic checks used in CI:
 
 ```bash
-gt setup                    # Initialize ~/.gptcode
-gt key groq                 # Set API key
-gt backend use groq         # Switch backend
-gt profile use groq.speed   # Switch profile
+make evidence
 ```
 
-## Why GPTCode?
+This executes the public fixture with Go's race detector and fails unless it
+retains 100% statement coverage:
 
-- **Cost**: $0-5/month using Groq/OpenRouter free tiers
-- **Model Selection**: Intelligent routing to best model per task
-- **Skills**: Language-specific guidelines for idiomatic code
-- **E2E Encryption**: Your code never stored on our servers
+```text
+ok  gptcode/examples/sessionstore  coverage: 100.0% of statements
+public examples verified: race detector passed; statement coverage 100.0%
+```
 
-## Documentation
+To run the complete repository quality gate:
 
-- [Installation Guide](https://gptcode.dev/guides/installation)
-- [Configuration](https://gptcode.dev/guides/configuration)
-- [Skills Index](https://gptcode.dev/skills)
-- [API Reference](https://gptcode.dev/reference)
+```bash
+make verify
+```
+
+That gate builds the CLI, runs `go vet`, executes the short test suite, checks
+the public project contract, and runs the race/coverage evidence.
+
+The complete claim-to-evidence matrix is documented in
+[QUALITY.md](QUALITY.md).
+
+## Repository-native skills
+
+Skills are version-controlled engineering instructions loaded from the
+repository. They can define language conventions, architectural boundaries,
+testing practices, and review criteria:
+
+```bash
+gptcode skills list
+gptcode skills show go
+gptcode skills install ruby
+```
+
+## Core commands
+
+| Command | Purpose |
+| --- | --- |
+| `gptcode research "question"` | Investigate code and produce repository-grounded findings |
+| `gptcode plan "task"` | Turn ambiguity into an inspectable implementation plan |
+| `gptcode do "task"` | Implement a bounded change with tool-backed verification |
+| `gptcode review [path]` | Review correctness, security, and contract stability |
+| `gptcode chat` | Explore a repository interactively |
+| `gptcode skills list` | Inspect repository-native engineering guidance |
+
+Use `gptcode --help` for the complete command surface.
+
+## Design principles
+
+- **Repository-centered:** project constraints outrank temporary prompt context.
+- **Explicit stages:** research, planning, implementation, review, and
+  verification remain inspectable.
+- **Provider-independent:** route work according to capability, latency, cost,
+  and privacy requirements.
+- **Executable evidence:** tests, linters, race detection, and project commands
+  decide whether a change is acceptable.
+- **Honest boundaries:** model output is a proposal, never proof of correctness.
+
+## Limitations
+
+GPTCode is an independent research-driven project, not a hosted service or a
+guarantee that model-generated changes are correct.
+
+- Model-backed workflows require credentials for a supported provider.
+- Results vary by model and repository context.
+- The 100% coverage claim applies to the published `sessionstore` fixture, not
+  to the entire legacy codebase.
+- Some experimental command surfaces predate the current repository-centered
+  architecture and are being evaluated or retired.
+- Always review changes and run the repository's own verification commands.
+
+## Development
+
+```bash
+git clone https://github.com/jadercorrea/gptcode.git
+cd gptcode
+make verify
+```
+
+Releases are intentional: pushing a version tag runs the full verification gate
+before GoReleaser publishes checksums and platform archives to GitHub.
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md), [SUPPORT.md](SUPPORT.md), and
+[SECURITY.md](SECURITY.md) before opening a contribution or reporting a
+vulnerability.
+
+## Project status
+
+GPTCode is actively maintained as an open-source engineering laboratory for
+reliable AI-assisted software development. The roadmap is public in
+[_roadmap.md](_roadmap.md).
+
+Created by [Jader Correa](https://jader-correa.com), a principal engineer
+building AI agents, developer tools, and distributed systems.
 
 ## License
 
-MIT
+[MIT](LICENSE)

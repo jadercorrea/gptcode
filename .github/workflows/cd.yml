@@ -25,16 +25,8 @@ jobs:
           go-version: "1.24"
           cache: true
 
-      - name: Build CLI for tests
-        run: |
-          go build -o "$RUNNER_TEMP/gptcode" ./cmd/gptcode
-          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
-
-      - name: Run test suite
-        run: go test -v -short ./...
-
-      - name: Verify public examples
-        run: scripts/verify-public-examples.sh
+      - name: Run repository quality gate
+        run: make verify
 
       - name: Publish GitHub release
         uses: goreleaser/goreleaser-action@v6

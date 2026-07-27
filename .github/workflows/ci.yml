@@ -23,13 +23,5 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
-      - name: Build Binary
-        run: |
-          go build -o gptcode ./cmd/gptcode
-          echo "$GITHUB_WORKSPACE" >> "$GITHUB_PATH"
-
-      - name: Run Unit Tests
-        run: go test -v -short ./...
-
-      - name: Verify public examples
-        run: scripts/verify-public-examples.sh
+      - name: Run repository quality gate
+        run: make verify

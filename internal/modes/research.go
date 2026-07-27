@@ -214,9 +214,12 @@ func collectRepositoryEvidence(cwd string) (repositoryEvidence, error) {
 			return walkErr
 		}
 		if entry.IsDir() {
-			if path != cwd && (entry.Name() == ".git" || entry.Name() == "node_modules" || entry.Name() == "vendor") {
+			if path != cwd && shouldSkipResearchDirectory(entry.Name()) {
 				return filepath.SkipDir
 			}
+			return nil
+		}
+		if entry.Type()&os.ModeSymlink != 0 || shouldSkipResearchFile(entry.Name()) {
 			return nil
 		}
 		relative, err := filepath.Rel(cwd, path)
@@ -243,6 +246,20 @@ func collectRepositoryEvidence(cwd string) (repositoryEvidence, error) {
 		evidence.Files = evidence.Files[:200]
 	}
 	return evidence, err
+}
+
+func shouldSkipResearchDirectory(name string) bool {
+	switch name {
+	case ".git", ".gptcode", ".idea", ".vscode",
+		"bin", "build", "coverage", "dist", "node_modules", "vendor":
+		return true
+	default:
+		return false
+	}
+}
+
+func shouldSkipResearchFile(name string) bool {
+	return name == ".env" || strings.HasPrefix(name, ".env.")
 }
 
 func shouldIncludeResearchContent(path string) bool {

@@ -15,6 +15,12 @@ chu
 
 # Test binaries
 *.test
+/gt-test
+/gt-live-test
+
+# Generated traces and local scratch files
+/trace_*.json
+/test.txt
 
 # Go workspace file
 go.work

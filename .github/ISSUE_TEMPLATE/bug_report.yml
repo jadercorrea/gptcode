@@ -1,0 +1,63 @@
+name: Bug report
+description: Report a reproducible GPTCode defect
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve GPTCode. Never include API keys, private source code, or personal data.
+  - type: input
+    id: version
+    attributes:
+      label: GPTCode version
+      description: Output from `gptcode --version`.
+      placeholder: v0.0.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, architecture, and Go version when relevant.
+      placeholder: macOS 15, arm64, Go 1.24
+    validations:
+      required: true
+  - type: input
+    id: provider
+    attributes:
+      label: Provider and model
+      description: Omit secrets. Write “not applicable” for deterministic commands.
+      placeholder: OpenRouter / model-name
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Provide the smallest sequence of commands that reproduces the problem.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and sanitized output
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Verification
+      options:
+        - label: I removed credentials, private code, and personal data.
+          required: true
+        - label: I searched existing issues for this defect.
+          required: true

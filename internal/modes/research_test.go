@@ -1,6 +1,8 @@
 package modes
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -54,4 +56,65 @@ func TestResearchDetectsUnsupportedConcurrencySafetyClaim(t *testing.T) {
 	if contradictsUnsafeConcurrencyEvidence("Concurrent access is not safe because the map has no lock.", evidence) {
 		t.Fatal("a grounded unsafe finding must be accepted")
 	}
+}
+
+func TestCollectRepositoryEvidenceStaysInsidePublicRepositoryContext(t *testing.T) {
+	repository := t.TempDir()
+	outside := t.TempDir()
+
+	writeTestFile(t, filepath.Join(repository, "go.mod"), "module example.com/repository\n")
+	writeTestFile(t, filepath.Join(repository, "main.go"), "package main\n")
+	writeTestFile(t, filepath.Join(repository, ".gptcode", "private.go"), "package private\n")
+	writeTestFile(t, filepath.Join(repository, "dist", "generated.go"), "package generated\n")
+	writeTestFile(t, filepath.Join(outside, "secret.go"), "package secret\n")
+
+	if err := os.Symlink(
+		filepath.Join(outside, "secret.go"),
+		filepath.Join(repository, "linked-secret.go"),
+	); err != nil {
+		t.Fatalf("create fixture symlink: %v", err)
+	}
+
+	evidence, err := collectRepositoryEvidence(repository)
+	if err != nil {
+		t.Fatalf("collect repository evidence: %v", err)
+	}
+
+	if evidence.Language != "Go" {
+		t.Fatalf("language = %q, want Go", evidence.Language)
+	}
+	for _, rejected := range []string{
+		".gptcode/private.go",
+		"dist/generated.go",
+		"linked-secret.go",
+	} {
+		if containsString(evidence.Files, rejected) {
+			t.Errorf("evidence must not list %q", rejected)
+		}
+		if _, ok := evidence.Contents[rejected]; ok {
+			t.Errorf("evidence must not read %q", rejected)
+		}
+	}
+	if !containsString(evidence.Files, "main.go") {
+		t.Fatal("evidence must include repository source files")
+	}
+}
+
+func writeTestFile(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("create fixture directory: %v", err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+}
+
+func containsString(values []string, expected string) bool {
+	for _, value := range values {
+		if value == expected {
+			return true
+		}
+	}
+	return false
 }

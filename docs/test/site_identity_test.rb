@@ -114,7 +114,7 @@ class SiteIdentityTest < Minitest::Test
     assert_path_exists File.join(REPO_ROOT, "examples", "sessionstore", "store.go")
     assert_path_exists File.join(REPO_ROOT, "examples", "sessionstore", "store_test.go")
     assert_includes homepage, "examples/sessionstore"
-    assert_includes workflow, "scripts/verify-public-examples.sh"
+    assert_includes workflow, "make verify"
     assert_includes verifier, "go test -race"
     assert_includes verifier, 'coverage" != "100.0"'
   end
@@ -124,8 +124,7 @@ class SiteIdentityTest < Minitest::Test
     goreleaser = File.read(File.join(REPO_ROOT, ".goreleaser.yml"))
 
     assert_includes workflow, 'tags:'
-    assert_includes workflow, 'go test -v -short ./...'
-    assert_includes workflow, 'scripts/verify-public-examples.sh'
+    assert_includes workflow, 'make verify'
     assert_includes workflow, 'args: release --clean'
     refute_includes workflow, 'schedule:'
     refute_includes workflow, 'gptcode-cloud'
