@@ -19,8 +19,7 @@ func TestBreakingChangesDetection(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cmd := exec.Command("git", "init")
-	cmd.Dir = tmpDir
+	cmd := isolatedGitCommand(tmpDir, "init")
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("failed to init git: %v", err)
 	}
@@ -36,17 +35,19 @@ func ProcessRequest(data string) string {
 		t.Fatalf("failed to write api.go: %v", err)
 	}
 
-	cmd = exec.Command("git", "add", "api.go")
-	cmd.Dir = tmpDir
+	cmd = isolatedGitCommand(tmpDir, "add", "api.go")
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("failed to git add: %v", err)
 	}
 
-	exec.Command("git", "config", "user.name", "Test").Run()
-	exec.Command("git", "config", "user.email", "test@test.com").Run()
+	if err := isolatedGitCommand(tmpDir, "config", "user.name", "Test").Run(); err != nil {
+		t.Fatalf("configure git user name: %v", err)
+	}
+	if err := isolatedGitCommand(tmpDir, "config", "user.email", "test@test.com").Run(); err != nil {
+		t.Fatalf("configure git user email: %v", err)
+	}
 
-	cmd = exec.Command("git", "commit", "-m", "initial")
-	cmd.Dir = tmpDir
+	cmd = isolatedGitCommand(tmpDir, "commit", "-m", "initial")
 	if err := cmd.Run(); err != nil {
 		t.Skipf("git commit failed (expected in test env): %v", err)
 	}
@@ -128,4 +129,19 @@ if err != nil {
 	if !strings.Contains(result.MigrationPlan, "Migration Plan") {
 		t.Errorf("migration plan format unexpected: %s", result.MigrationPlan)
 	}
+}
+
+func isolatedGitCommand(dir string, args ...string) *exec.Cmd {
+	cmd := exec.Command("git", args...)
+	cmd.Dir = dir
+	cmd.Env = make([]string, 0, len(os.Environ()))
+	for _, variable := range os.Environ() {
+		if strings.HasPrefix(variable, "GIT_INDEX_FILE=") ||
+			strings.HasPrefix(variable, "GIT_DIR=") ||
+			strings.HasPrefix(variable, "GIT_WORK_TREE=") {
+			continue
+		}
+		cmd.Env = append(cmd.Env, variable)
+	}
+	return cmd
 }
