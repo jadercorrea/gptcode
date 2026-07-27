@@ -1,9 +1,0 @@
-Error: LLM error: API error: 'messages.15' : for 'role:tool' the following must be satisfied[('messages.15.content' : property 'content' is missing)]
-Usage:
-  gptcode run [task] [flags]
-
-Flags:
-  -h, --help   help for run
-      --once   Run single-shot mode
-      --raw    Run direct command REPL mode (no AI)
-

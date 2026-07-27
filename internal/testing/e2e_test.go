@@ -142,13 +142,6 @@ func TestGTGitHelp(t *testing.T) {
 	AssertSuccess(t, result)
 }
 
-func TestGTWatchHelp(t *testing.T) {
-	cli := NewCLI("gptcode")
-	result := cli.Run("watch", "--help")
-
-	AssertSuccess(t, result)
-}
-
 func TestGTContextHelp(t *testing.T) {
 	cli := NewCLI("gptcode")
 	result := cli.Run("context", "--help")
@@ -219,20 +212,6 @@ func TestGTEvolveHelp(t *testing.T) {
 	AssertSuccess(t, result)
 }
 
-func TestGTLoginHelp(t *testing.T) {
-	cli := NewCLI("gptcode")
-	result := cli.Run("login", "--help")
-
-	AssertSuccess(t, result)
-}
-
-func TestGTLogoutHelp(t *testing.T) {
-	cli := NewCLI("gptcode")
-	result := cli.Run("logout", "--help")
-
-	AssertSuccess(t, result)
-}
-
 func TestGTProfileHelp(t *testing.T) {
 	cli := NewCLI("gptcode")
 	result := cli.Run("profile", "--help")
@@ -254,23 +233,9 @@ func TestGTFeedbackHelp(t *testing.T) {
 	AssertSuccess(t, result)
 }
 
-func TestGTTrainingHelp(t *testing.T) {
-	cli := NewCLI("gptcode")
-	result := cli.Run("training", "--help")
-
-	AssertSuccess(t, result)
-}
-
 func TestGTDetectHelp(t *testing.T) {
 	cli := NewCLI("gptcode")
 	result := cli.Run("detect", "--help")
-
-	AssertSuccess(t, result)
-}
-
-func TestGTMLHelp(t *testing.T) {
-	cli := NewCLI("gptcode")
-	result := cli.Run("ml", "--help")
 
 	AssertSuccess(t, result)
 }

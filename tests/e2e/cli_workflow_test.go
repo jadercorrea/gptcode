@@ -18,30 +18,12 @@ func setupTestConfig(t *testing.T) func() {
 		t.Skip("Skipping: GROQ_API_KEY not set")
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		t.Fatalf("Failed to get home dir: %v", err)
-	}
+	homeDir := t.TempDir()
+	t.Setenv("HOME", homeDir)
 
 	gptcodeDir := filepath.Join(homeDir, ".gptcode")
 	configFile := filepath.Join(gptcodeDir, "config.yml")
 	keysFile := filepath.Join(gptcodeDir, "keys.yaml")
-
-	// Backup existing config if exists
-	var backupConfig []byte
-	hadConfig := false
-	if content, err := os.ReadFile(configFile); err == nil {
-		backupConfig = content
-		hadConfig = true
-	}
-
-	// Backup existing keys if exists
-	var backupKeys []byte
-	hadKeys := false
-	if content, err := os.ReadFile(keysFile); err == nil {
-		backupKeys = content
-		hadKeys = true
-	}
 
 	// Create .gptcode directory
 	os.MkdirAll(gptcodeDir, 0755)
@@ -65,19 +47,7 @@ backend:
 		t.Fatalf("Failed to write keys: %v", err)
 	}
 
-	// Return cleanup function
-	return func() {
-		if hadConfig {
-			os.WriteFile(configFile, backupConfig, 0644)
-		} else {
-			os.Remove(configFile)
-		}
-		if hadKeys {
-			os.WriteFile(keysFile, backupKeys, 0600)
-		} else {
-			os.Remove(keysFile)
-		}
-	}
+	return func() {}
 }
 
 func TestCLIWorkflowPlanImplement(t *testing.T) {

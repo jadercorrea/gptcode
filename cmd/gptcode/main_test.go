@@ -94,6 +94,77 @@ func TestRootHelpReflectsVerifiableWorkflowPositioning(t *testing.T) {
 	}
 }
 
+func TestPublicCommandSurfaceHidesLegacyCommands(t *testing.T) {
+	configurePublicCommandSurface()
+
+	legacy := []string{
+		"acp",
+		"agent",
+		"caveman",
+		"cfg",
+		"context",
+		"coverage",
+		"demo",
+		"detect-language",
+		"docs",
+		"evolve",
+		"feedback",
+		"feature",
+		"gen",
+		"git",
+		"go",
+		"graph",
+		"issue",
+		"login",
+		"logout",
+		"ml",
+		"mem",
+		"merge",
+		"monitor",
+		"perf",
+		"pr",
+		"profiles",
+		"refactor",
+		"release",
+		"security",
+		"status",
+		"test",
+		"tdd",
+		"training",
+		"watch",
+	}
+
+	for _, name := range legacy {
+		command, _, err := rootCmd.Find([]string{name})
+		if err != nil || command == rootCmd {
+			continue
+		}
+		if !command.Hidden {
+			t.Errorf("legacy command %q must be hidden from the maintained CLI surface", name)
+		}
+	}
+
+	for _, name := range []string{
+		"do",
+		"implement",
+		"plan",
+		"research",
+		"review",
+		"run",
+		"setup",
+		"skills",
+	} {
+		command, _, err := rootCmd.Find([]string{name})
+		if err != nil || command == rootCmd {
+			t.Errorf("maintained command %q is not registered", name)
+			continue
+		}
+		if command.Hidden {
+			t.Errorf("maintained command %q must remain visible", name)
+		}
+	}
+}
+
 func TestFeedbackCommandsRegistered(t *testing.T) {
 	tests := []struct {
 		name     string

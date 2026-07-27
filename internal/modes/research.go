@@ -313,7 +313,11 @@ Return concise sections: Findings, Evidence, Verification.`, question, evidence.
 
 func extractURLs(text string) []string {
 	urlRegex := regexp.MustCompile(`https?://[^\s]+`)
-	return urlRegex.FindAllString(text, -1)
+	urls := urlRegex.FindAllString(text, -1)
+	for index, url := range urls {
+		urls[index] = strings.TrimRight(url, ".,;:!?)]}")
+	}
+	return urls
 }
 
 func sanitizeFilename(question string) string {
@@ -331,6 +335,9 @@ func sanitizeFilename(question string) string {
 	}, question)
 	if len(sanitized) > 50 {
 		sanitized = sanitized[:50]
+	}
+	if sanitized == "" {
+		return "research"
 	}
 	return sanitized
 }

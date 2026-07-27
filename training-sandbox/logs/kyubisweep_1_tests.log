@@ -1,9 +1,0 @@
-# github.com/tanmayshahane/kyubisweep/cmd/sweep
-cmd/sweep/main.go:60:37: undefined: version
-FAIL	github.com/tanmayshahane/kyubisweep/cmd/sweep [build failed]
-ok  	github.com/tanmayshahane/kyubisweep/pkg/analyzer	(cached)
-?   	github.com/tanmayshahane/kyubisweep/pkg/common	[no test files]
-ok  	github.com/tanmayshahane/kyubisweep/pkg/quarantine	0.713s
-?   	github.com/tanmayshahane/kyubisweep/pkg/reporter	[no test files]
-ok  	github.com/tanmayshahane/kyubisweep/pkg/scanner	(cached)
-FAIL

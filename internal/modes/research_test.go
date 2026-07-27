@@ -3,9 +3,56 @@ package modes
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
+
+func TestResearchEvidenceFilters(t *testing.T) {
+	for _, directory := range []string{".git", ".gptcode", "build", "dist", "node_modules", "vendor"} {
+		if !shouldSkipResearchDirectory(directory) {
+			t.Errorf("should skip directory %q", directory)
+		}
+	}
+	if shouldSkipResearchDirectory("internal") {
+		t.Error("should inspect source directories")
+	}
+
+	for _, file := range []string{".env", ".env.production", ".env.example"} {
+		if !shouldSkipResearchFile(file) {
+			t.Errorf("should skip secret file %q", file)
+		}
+	}
+
+	for _, path := range []string{"main.go", "lib/app.ex", "README.md", "go.mod", "Cargo.toml", "Gemfile", "mix.exs"} {
+		if !shouldIncludeResearchContent(path) {
+			t.Errorf("should include research content %q", path)
+		}
+	}
+	if shouldIncludeResearchContent("logo.png") {
+		t.Error("should not load binary assets into research evidence")
+	}
+}
+
+func TestSanitizeFilenameHasStableFallback(t *testing.T) {
+	tests := map[string]string{
+		"How Does Auth Work?": "how-does-auth-work",
+		"???":                 "research",
+	}
+	for input, expected := range tests {
+		if actual := sanitizeFilename(input); actual != expected {
+			t.Errorf("sanitizeFilename(%q) = %q, want %q", input, actual, expected)
+		}
+	}
+}
+
+func TestExtractURLsTrimsSentencePunctuation(t *testing.T) {
+	actual := extractURLs("See https://example.com/docs). Then https://go.dev/test, please.")
+	expected := []string{"https://example.com/docs", "https://go.dev/test"}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("extractURLs() = %#v, want %#v", actual, expected)
+	}
+}
 
 func TestBuildCodebaseResearchPromptRequiresGroundedEvidence(t *testing.T) {
 	prompt := buildCodebaseResearchPrompt(

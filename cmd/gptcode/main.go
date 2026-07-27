@@ -30,6 +30,7 @@ import (
 )
 
 func main() {
+	configurePublicCommandSurface()
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
@@ -69,6 +70,52 @@ func resolveVersion(injected, module string) string {
 	return "dev"
 }
 
+func configurePublicCommandSurface() {
+	legacyCommands := []string{
+		"acp",
+		"agent",
+		"caveman",
+		"cfg",
+		"context",
+		"coverage",
+		"demo",
+		"detect-language",
+		"docs",
+		"evolve",
+		"feedback",
+		"feature",
+		"gen",
+		"git",
+		"go",
+		"graph",
+		"issue",
+		"login",
+		"logout",
+		"ml",
+		"mem",
+		"merge",
+		"monitor",
+		"perf",
+		"pr",
+		"profiles",
+		"refactor",
+		"release",
+		"security",
+		"status",
+		"test",
+		"tdd",
+		"training",
+		"watch",
+	}
+
+	for _, name := range legacyCommands {
+		command, _, err := rootCmd.Find([]string{name})
+		if err == nil && command != rootCmd {
+			command.Hidden = true
+		}
+	}
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "gptcode",
 	Short: "Verifiable AI coding workflows from the terminal",
@@ -77,73 +124,24 @@ var rootCmd = &cobra.Command{
 AI coding agents should produce evidence, not just answers.
 Research → Plan → Implement → Review → Verify.
 
-## AGENTIC EXECUTION
-  gptcode do "task" [--supervised] [--interactive]  - Autonomous execution with agent orchestration
+CORE WORKFLOW
+  gptcode research "question"  Investigate the repository and save evidence
+  gptcode plan "task"          Create an inspectable implementation plan
+  gptcode do "task"            Implement and verify a change
+  gptcode review [target]      Review code with repository context
 
-## INTERACTIVE (Conversational)
-  gptcode chat                - Code-focused conversation (CLI or Neovim)
-  gptcode run "task"          - Execute tasks with follow-up
+INTERACTIVE
+  gptcode chat                 Start a code-focused conversation
+  gptcode run "task"           Execute a task with follow-up
 
-## WORKFLOW (Manual Control)
-  gptcode research "question" - Document codebase and architecture
-  gptcode plan "task"         - Create implementation plan
-  gptcode implement plan.md   - Execute plan step-by-step
+CONFIGURATION
+  gptcode setup                Configure GPTCode
+  gptcode key [backend]        Add or update a provider key
+  gptcode backend              Inspect or select a provider
+  gptcode profile              Inspect or select a model profile
+  gptcode skills               Inspect repository-native skills
 
-## SPECIALIZED TOOLS
-  gptcode gen test <file>        - Generate unit tests for a file
-  gptcode gen integration <pkg>  - Generate integration tests for a package
-  gptcode gen snapshot <file>    - Generate snapshot tests for regression
-  gptcode gen mock <file>        - Generate mocks for interfaces
-  gptcode gen migration <name>   - Generate DB migration from model changes
-  gptcode gen changelog          - Generate CHANGELOG from git commits
-  gptcode docs update            - Update README based on changes
-  gptcode docs api               - Generate API docs (Markdown/OpenAPI/Postman)
-  gptcode coverage [pkg]         - Analyze test coverage gaps
-  gptcode tdd                    - Test-driven development mode
-  gptcode feature "desc"      - Generate tests + implementation
-  gptcode review [target]     - Code review for bugs, security, improvements
-
-## MODEL MANAGEMENT
-  gptcode model list [--recommended]   - List models from catalog
-  gptcode model recommend [agent]      - Get model recommendations
-  gptcode model install <model>        - Install Ollama model
-  gptcode model update [--all]         - Update catalog from providers
-
-## CONFIGURATION
-  gptcode setup                - Initialize ~/.gptcode configuration
-  gptcode key [backend]        - Add/update API key
-  gptcode backend              - Show current backend
-  gptcode backend list         - List all backends
-  gptcode backend use <name>   - Switch backend
-  gptcode profile              - Show current profile
-  gptcode profile list         - List all profiles
-  gptcode profile use <backend>.<profile> - Switch profile
-
-## REFACTORING
-  gptcode refactor api              - Coordinate API changes (routes, handlers, tests)
-  gptcode refactor signature <func> - Change function signature and update all call sites
-  gptcode refactor breaking         - Detect breaking changes and update all consumers
-  gptcode refactor type <name>      - Refactor type definition and propagate changes
-  gptcode refactor compat <old> <new> - Add backward compatibility wrapper
-
-## SECURITY
-  gptcode security scan             - Scan for vulnerabilities
-  gptcode security scan --fix       - Scan and auto-fix vulnerabilities
-
-## CONFIGURATION
-  gptcode cfg list                  - List configuration files
-  gptcode cfg update KEY VALUE      - Update config value across environments
-
-## PERFORMANCE
-  gptcode perf profile [target]     - Profile CPU/memory performance
-  gptcode perf bench [pattern]      - Run benchmarks with optimization tips
-
-## ADVANCED
-  gptcode config get/set       - Direct config manipulation (advanced)
-  gptcode ml list|train|test|eval|predict - Machine learning features
-  gptcode graph build|query    - Dependency graph analysis
-  gptcode feedback good|bad    - User feedback tracking
-  gptcode detect-language      - Detect project language`,
+Run "gptcode <command> --help" for command-specific documentation.`,
 }
 
 func init() {
@@ -184,29 +182,6 @@ func init() {
 `)
 		}
 
-		// Initialize Live dashboard connection (with short timeout)
-		// Must be synchronous so GetClient() works during command execution
-		done := make(chan struct{})
-		go func() {
-			defer close(done)
-			agentID := live.GetAgentID()
-			client := live.NewClient(live.GetDashboardURL(), agentID)
-			if err := client.Connect(); err != nil {
-				return
-			}
-			live.SetGlobalClient(client)
-
-			// Register global control manager for pause/resume/kill from dashboard
-			cm := live.GetControlManager()
-			cm.RegisterWithClient(client)
-		}()
-		select {
-		case <-done:
-			// Connected (or failed silently)
-		case <-time.After(2 * time.Second):
-			// Timeout — proceed without live dashboard
-		}
-
 		return nil
 	}
 
@@ -214,13 +189,10 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	setupCmd.Flags().BoolP("yes", "y", false, "Use Quick Start (non-interactive)")
 	rootCmd.AddCommand(keyCmd)
-	rootCmd.AddCommand(releaseCmd)
 	rootCmd.AddCommand(backendCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(detectLanguageCmd)
-	rootCmd.AddCommand(mlCmd)
 	rootCmd.AddCommand(runCmd)
-	rootCmd.AddCommand(watchCmd)
 	rootCmd.AddCommand(goCmd)
 	rootCmd.AddCommand(chatCmd)
 	rootCmd.AddCommand(tddCmd)
@@ -229,14 +201,6 @@ func init() {
 	rootCmd.AddCommand(implementCmd)
 	rootCmd.AddCommand(featureCmd)
 	rootCmd.AddCommand(reviewCmd)
-	rootCmd.AddCommand(issueCmd)
-	rootCmd.AddCommand(prCmd)
-	rootCmd.AddCommand(loginCmd)
-	rootCmd.AddCommand(logoutCmd)
-	rootCmd.AddCommand(trainingCmd)
-	rootCmd.AddCommand(monitorCmd)
-	rootCmd.AddCommand(gainCmd)
-	rootCmd.AddCommand(cavemanCmd)
 }
 
 // monitorCmd scans local AI agent logs and reports real API usage to the Live Dashboard
@@ -1770,68 +1734,11 @@ Examples:
 
 		// If we have input or --once flag, use single-shot AI mode
 		if input != "" || once {
-			// Auto-detect agent type from input text
-			agentType := live.AgentTypeFromInput(input)
-			agentID := live.GetAgentIDWithType(agentType)
-
-			// Resolve model first so we can send it in all connect payloads
 			builder, provider, model, err := newBuilderAndLLM("general", "run", "")
 			if err != nil {
 				return err
 			}
-
-			// Try to connect to Live Dashboard via HTTP API
-			reportConfig := live.DefaultReportConfig()
-			reportConfig.Model = model
-			liveURL := os.Getenv("GPTCODE_LIVE_URL")
-			if liveURL != "" {
-				reportConfig.SetBaseURL(liveURL)
-			}
-
-			// Report connect to Live
-			if err := reportConfig.Connect(agentID, agentType, input); err != nil {
-				fmt.Printf("⚠️  Live connect error: %v\n", err)
-			} else {
-				fmt.Printf("🔗 Reported to Live Dashboard: %s\n", reportConfig.BaseURL)
-			}
-
-			// Report first step
-			reportConfig.Step("Starting: "+input, "start")
-
-			// WebSocket connection for commands (optional)
-			var liveClient *live.Client
-			wsURL := os.Getenv("GPTCODE_LIVE_URL")
-			if wsURL != "" && strings.HasPrefix(wsURL, "ws") {
-				liveClient = live.NewClient(wsURL, agentID)
-				liveClient.SetAgentType(agentType)
-				liveClient.SetTask(input)
-				liveClient.SetModel(model)
-				if err := liveClient.Connect(); err != nil {
-					fmt.Printf("⚠️  Live WS error: %v\n", err)
-				} else {
-					live.SetGlobalClient(liveClient)
-				}
-			}
-
-			err = modes.RunExecute(builder, provider, model, strings.Fields(input), liveClient, reportConfig)
-
-			// Report completion to Live
-			if err != nil {
-				reportConfig.Step("Error: "+err.Error(), "error")
-			} else {
-				reportConfig.Step("Completed: "+input, "complete")
-			}
-			reportConfig.Disconnect()
-
-			// Send end event via WebSocket
-			if liveClient != nil {
-				liveClient.SendExecutionStep("complete", "Task completed", map[string]interface{}{
-					"task":  input,
-					"error": err != nil,
-				})
-			}
-
-			return err
+			return modes.RunExecute(builder, provider, model, strings.Fields(input), nil, nil)
 		}
 
 		// Start AI-assisted REPL mode - combine run REPL with AI processing
