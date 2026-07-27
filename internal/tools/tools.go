@@ -299,7 +299,10 @@ func readFile(call ToolCall, workdir string) ToolResult {
 		return ToolResult{Tool: "read_file", Error: "path parameter required"}
 	}
 
-	fullPath := filepath.Join(workdir, path)
+	fullPath, err := resolveRepositoryPath(workdir, path, false)
+	if err != nil {
+		return ToolResult{Tool: "read_file", Error: err.Error()}
+	}
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		return ToolResult{Tool: "read_file", Error: err.Error()}
@@ -322,10 +325,13 @@ func listFiles(call ToolCall, workdir string) ToolResult {
 	pathArg, _ := call.Arguments["path"].(string)
 	pattern, _ := call.Arguments["pattern"].(string)
 
-	targetPath := filepath.Join(workdir, pathArg)
+	targetPath, err := resolveRepositoryPath(workdir, pathArg, false)
+	if err != nil {
+		return ToolResult{Tool: "list_files", Error: err.Error()}
+	}
 
 	var files []string
-	err := filepath.Walk(targetPath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(targetPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -480,7 +486,10 @@ func writeFile(call ToolCall, workdir string) ToolResult {
 		return ToolResult{Tool: "write_file", Error: "content parameter required"}
 	}
 
-	fullPath := filepath.Join(workdir, path)
+	fullPath, err := resolveRepositoryPath(workdir, path, true)
+	if err != nil {
+		return ToolResult{Tool: "write_file", Error: err.Error()}
+	}
 
 	dir := filepath.Dir(fullPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {

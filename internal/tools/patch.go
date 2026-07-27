@@ -3,7 +3,6 @@ package tools
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -27,7 +26,10 @@ func ApplyPatch(call ToolCall, workdir string) ToolResult {
 		return ToolResult{Tool: "apply_patch", Error: "search block cannot be empty"}
 	}
 
-	fullPath := filepath.Join(workdir, path)
+	fullPath, err := resolveRepositoryPath(workdir, path, false)
+	if err != nil {
+		return ToolResult{Tool: "apply_patch", Error: err.Error()}
+	}
 	contentBytes, err := os.ReadFile(fullPath)
 	if err != nil {
 		return ToolResult{Tool: "apply_patch", Error: err.Error()}
