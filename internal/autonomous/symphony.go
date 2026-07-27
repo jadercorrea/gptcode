@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"gptcode/internal/maestro"
+	"github.com/jadercorrea/gptcode/internal/maestro"
 )
 
 // Symphony represents a multi-movement task execution

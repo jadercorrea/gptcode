@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 // Integration test for full Symphony execution

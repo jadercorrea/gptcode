@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"gptcode/internal/llm"
-	"gptcode/internal/observability"
-	"gptcode/internal/tools"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/observability"
+	"github.com/jadercorrea/gptcode/internal/tools"
 )
 
 // calculateCost estimates the cost of an LLM call based on model and token usage

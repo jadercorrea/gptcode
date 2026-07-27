@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
 	"github.com/spf13/cobra"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
 )
 
 var cavemanCmd = &cobra.Command{

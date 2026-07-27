@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"gptcode/internal/maestro"
+	"github.com/jadercorrea/gptcode/internal/maestro"
 )
 
 type AutonomousWorkflow struct {

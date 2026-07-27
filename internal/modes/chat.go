@@ -12,12 +12,12 @@ import (
 
 	"golang.org/x/term"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/config"
-	"gptcode/internal/graph"
-	"gptcode/internal/llm"
-	"gptcode/internal/output"
-	"gptcode/internal/prompt"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/graph"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/output"
+	"github.com/jadercorrea/gptcode/internal/prompt"
 )
 
 type ChatHistory struct {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"gptcode/internal/ml"
+	"github.com/jadercorrea/gptcode/internal/ml"
 )
 
 type Intent string

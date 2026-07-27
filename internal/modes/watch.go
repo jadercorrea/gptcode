@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"gptcode/internal/live"
-	"gptcode/internal/llm"
-	"gptcode/internal/prompt"
+	"github.com/jadercorrea/gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/prompt"
 )
 
 // WatchConfig holds configuration for the watch loop

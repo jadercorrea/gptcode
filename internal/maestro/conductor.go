@@ -9,12 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/config"
-	"gptcode/internal/feedback"
-	"gptcode/internal/live"
-	"gptcode/internal/llm"
-	"gptcode/internal/observability"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/feedback"
+	"github.com/jadercorrea/gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/observability"
 )
 
 // ProgressCallback is called during execution to report progress

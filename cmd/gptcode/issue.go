@@ -11,15 +11,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gptcode/internal/ci"
-	"gptcode/internal/codebase"
-	"gptcode/internal/config"
-	"gptcode/internal/github"
-	"gptcode/internal/langdetect"
-	"gptcode/internal/llm"
-	"gptcode/internal/modes"
-	"gptcode/internal/recovery"
-	"gptcode/internal/validation"
+	"github.com/jadercorrea/gptcode/internal/ci"
+	"github.com/jadercorrea/gptcode/internal/codebase"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/github"
+	"github.com/jadercorrea/gptcode/internal/langdetect"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/modes"
+	"github.com/jadercorrea/gptcode/internal/recovery"
+	"github.com/jadercorrea/gptcode/internal/validation"
 )
 
 var issueCmd = &cobra.Command{

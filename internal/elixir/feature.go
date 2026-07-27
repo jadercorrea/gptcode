@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gptcode/internal/llm"
-	"gptcode/internal/prompt"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/prompt"
 )
 
 func RunFeatureElixir(builder *prompt.Builder, provider llm.Provider, model string) error {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 type PlannerAgent struct {

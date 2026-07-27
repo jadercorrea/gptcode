@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"gptcode/internal/modes"
+	"github.com/jadercorrea/gptcode/internal/modes"
 )
 
 func setupTestConfig(t *testing.T) func() {

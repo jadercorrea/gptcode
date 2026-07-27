@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"gptcode/internal/tools"
+	"github.com/jadercorrea/gptcode/internal/tools"
 )
 
 type OrchestratorProvider struct {

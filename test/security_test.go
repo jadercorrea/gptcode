@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/security"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/security"
 )
 
 func TestSecurityScanner(t *testing.T) {

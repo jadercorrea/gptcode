@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"gptcode/internal/intelligence"
+	"github.com/jadercorrea/gptcode/internal/intelligence"
 )
 
 // Telemetry provides OpenTelemetry-based telemetry tracking

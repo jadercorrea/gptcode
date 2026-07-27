@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jadercorrea/gptcode/internal/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gptcode/internal/validation"
 )
 
 func TestTestExecutor(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"gptcode/internal/config"
-	"gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/live"
 )
 
 type BlockedNotification struct {

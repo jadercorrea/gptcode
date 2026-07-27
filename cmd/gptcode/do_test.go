@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/config"
 )
 
 func TestSelectDoModelsPrefersConfiguredAgentModels(t *testing.T) {

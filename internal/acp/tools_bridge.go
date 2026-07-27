@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gptcode/internal/tools"
+	"github.com/jadercorrea/gptcode/internal/tools"
 )
 
 // ToolsBridge adapts the internal tool executor to work with ACP.

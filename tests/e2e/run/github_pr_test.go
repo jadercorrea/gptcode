@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jadercorrea/gptcode/internal/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gptcode/internal/github"
 )
 
 func TestGitHubBranchOperations(t *testing.T) {

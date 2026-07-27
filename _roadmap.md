@@ -30,6 +30,7 @@ engineering portfolio.
 - [x] Use one `make verify` quality gate locally, in CI, and before tagged releases.
 - [x] Remove tracked binaries, traces, and scratch scripts from the public repository.
 - [x] Prevent research evidence collection from traversing private/generated directories or symlink escapes.
-- [ ] Exercise the new release workflow with the next intentional semantic-version tag.
+- [x] Exercise the new release workflow with an intentional semantic-version tag and validate its artifacts.
+- [x] Align the Go module path with the public repository so `go install ...@latest` is supported.
 - [ ] Retire or isolate the legacy Live, training, Supabase, and experimental command surfaces with compatibility tests.
 - [ ] Raise coverage in legacy workflow packages without presenting the public fixture as repository-wide coverage.

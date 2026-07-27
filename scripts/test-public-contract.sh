@@ -25,6 +25,7 @@ assert_contains README.md "AI coding agents should produce evidence, not just an
 assert_contains README.md "make evidence"
 assert_contains README.md "go test -race"
 assert_contains README.md "Limitations"
+assert_contains go.mod "module github.com/jadercorrea/gptcode"
 assert_not_contains README.md '$0-5/month'
 assert_not_contains README.md "Autonomous AI Coding Assistant"
 assert_not_contains README.md "Your code never stored on our servers"

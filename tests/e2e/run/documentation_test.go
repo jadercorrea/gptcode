@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"gptcode/internal/changelog"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/changelog"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 func TestDocumentationUpdates(t *testing.T) {

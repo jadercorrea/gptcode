@@ -8,10 +8,10 @@ import (
 	"os"
 	"strings"
 
-	"gptcode/internal/live"
-	"gptcode/internal/llm"
-	"gptcode/internal/prompt"
-	"gptcode/internal/tools"
+	"github.com/jadercorrea/gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/prompt"
+	"github.com/jadercorrea/gptcode/internal/tools"
 )
 
 // ExecutionCallback is called during execution to report progress

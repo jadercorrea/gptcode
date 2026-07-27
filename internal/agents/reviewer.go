@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"gptcode/internal/llm"
-	"gptcode/internal/tools"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/tools"
 )
 
 type ReviewerAgent struct {

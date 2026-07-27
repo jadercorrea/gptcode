@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gptcode/internal/langdetect"
+	"github.com/jadercorrea/gptcode/internal/langdetect"
 )
 
 type VerificationResult struct {

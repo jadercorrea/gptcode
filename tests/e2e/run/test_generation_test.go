@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
-	"gptcode/internal/mockgen"
-	"gptcode/internal/testgen"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/mockgen"
+	"github.com/jadercorrea/gptcode/internal/testgen"
 )
 
 func TestTestGeneration(t *testing.T) {

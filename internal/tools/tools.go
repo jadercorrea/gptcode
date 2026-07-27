@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jadercorrea/gptcode/internal/observability"
 	"gopkg.in/yaml.v3"
-	"gptcode/internal/observability"
 )
 
 type Tool struct {

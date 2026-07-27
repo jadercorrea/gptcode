@@ -2,7 +2,7 @@ package intelligence
 
 import (
 	"fmt"
-	"gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/config"
 	"os"
 )
 

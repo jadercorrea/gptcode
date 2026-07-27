@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/migration"
 	"github.com/spf13/cobra"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
-	"gptcode/internal/migration"
 )
 
 var evolveCmd = &cobra.Command{

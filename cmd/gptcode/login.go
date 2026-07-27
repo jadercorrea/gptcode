@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gptcode/internal/auth"
+	"github.com/jadercorrea/gptcode/internal/auth"
 
 	"github.com/spf13/cobra"
 )

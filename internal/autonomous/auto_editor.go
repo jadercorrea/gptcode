@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"gptcode/internal/maestro"
+	"github.com/jadercorrea/gptcode/internal/maestro"
 )
 
 type AutoEditor struct {

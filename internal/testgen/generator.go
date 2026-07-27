@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/langdetect"
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/langdetect"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 type TestGenerator struct {

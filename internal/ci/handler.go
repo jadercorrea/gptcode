@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"gptcode/internal/llm"
-	"gptcode/internal/recovery"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/recovery"
 )
 
 type CIStatus struct {

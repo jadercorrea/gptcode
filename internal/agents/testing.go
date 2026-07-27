@@ -3,7 +3,7 @@ package agents
 import (
 	"context"
 
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 // MockProvider simulates LLM responses for testing

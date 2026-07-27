@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/live"
 )
 
 var contextCmd = &cobra.Command{

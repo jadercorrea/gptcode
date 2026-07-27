@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"gptcode/internal/config"
-	"gptcode/internal/testrunner"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/testrunner"
 
 	"github.com/spf13/cobra"
 )

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
 	"github.com/spf13/cobra"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
 )
 
 var gitCmd = &cobra.Command{

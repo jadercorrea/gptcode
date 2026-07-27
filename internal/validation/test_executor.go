@@ -3,7 +3,7 @@ package validation
 import (
 	"bytes"
 	"fmt"
-	"gptcode/internal/langdetect"
+	"github.com/jadercorrea/gptcode/internal/langdetect"
 	"os/exec"
 	"path/filepath"
 	"strings"

@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gptcode/internal/live"
-	"gptcode/internal/llm"
-	"gptcode/internal/modes"
+	"github.com/jadercorrea/gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/modes"
 )
 
 var agentCmd = &cobra.Command{

@@ -1,4 +1,4 @@
-module gptcode
+module github.com/jadercorrea/gptcode
 
 go 1.24
 

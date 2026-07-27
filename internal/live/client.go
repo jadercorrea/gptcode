@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"gptcode/internal/crypto"
+	"github.com/jadercorrea/gptcode/internal/crypto"
 
 	"github.com/gorilla/websocket"
 )

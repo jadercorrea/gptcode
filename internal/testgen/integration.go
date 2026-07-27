@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gptcode/internal/langdetect"
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/langdetect"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 type IntegrationTestGenerator struct {

@@ -13,8 +13,8 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"gptcode/internal/langdetect"
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/langdetect"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 type APIEndpoint struct {

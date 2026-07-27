@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/merge"
 	"github.com/spf13/cobra"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
-	"gptcode/internal/merge"
 )
 
 var mergeCmd = &cobra.Command{

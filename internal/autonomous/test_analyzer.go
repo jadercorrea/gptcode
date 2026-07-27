@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 type TestFailure struct {

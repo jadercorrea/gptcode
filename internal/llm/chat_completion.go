@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/config"
 	"io"
 	"net/http"
 	"os"

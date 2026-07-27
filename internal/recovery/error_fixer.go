@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"gptcode/internal/llm"
-	"gptcode/internal/validation"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/validation"
 )
 
 type ErrorFixer struct {

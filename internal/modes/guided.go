@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/config"
-	"gptcode/internal/events"
-	"gptcode/internal/llm"
-	"gptcode/internal/ml"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/events"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/ml"
 )
 
 type GuidedMode struct {

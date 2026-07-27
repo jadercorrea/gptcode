@@ -9,11 +9,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gptcode/internal/config"
-	"gptcode/internal/intelligence"
-	"gptcode/internal/live"
-	"gptcode/internal/llm"
-	"gptcode/internal/modes"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/intelligence"
+	"github.com/jadercorrea/gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/modes"
 
 	"golang.org/x/term"
 )

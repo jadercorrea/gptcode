@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"gptcode/internal/intelligence"
+	"github.com/jadercorrea/gptcode/internal/intelligence"
 )
 
 // Event is the base interface for all observer events

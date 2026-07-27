@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/docs"
+	"github.com/jadercorrea/gptcode/internal/llm"
 	"github.com/spf13/cobra"
-	"gptcode/internal/config"
-	"gptcode/internal/docs"
-	"gptcode/internal/llm"
 )
 
 var docsCmd = &cobra.Command{

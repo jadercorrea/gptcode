@@ -12,20 +12,20 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gptcode/internal/repl"
+	"github.com/jadercorrea/gptcode/internal/repl"
 
-	"gptcode/internal/catalog"
-	"gptcode/internal/config"
-	"gptcode/internal/elixir"
-	"gptcode/internal/feedback"
-	"gptcode/internal/langdetect"
-	"gptcode/internal/live"
-	"gptcode/internal/llm"
-	"gptcode/internal/memory"
-	"gptcode/internal/ml"
-	"gptcode/internal/modes"
-	"gptcode/internal/ollama"
-	"gptcode/internal/prompt"
+	"github.com/jadercorrea/gptcode/internal/catalog"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/elixir"
+	"github.com/jadercorrea/gptcode/internal/feedback"
+	"github.com/jadercorrea/gptcode/internal/langdetect"
+	"github.com/jadercorrea/gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/memory"
+	"github.com/jadercorrea/gptcode/internal/ml"
+	"github.com/jadercorrea/gptcode/internal/modes"
+	"github.com/jadercorrea/gptcode/internal/ollama"
+	"github.com/jadercorrea/gptcode/internal/prompt"
 )
 
 func main() {

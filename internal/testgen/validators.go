@@ -4,7 +4,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"gptcode/internal/langdetect"
+	"github.com/jadercorrea/gptcode/internal/langdetect"
 )
 
 type Validator struct {

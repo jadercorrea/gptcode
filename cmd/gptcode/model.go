@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gptcode/internal/catalog"
-	"gptcode/internal/config"
-	"gptcode/internal/intelligence"
+	"github.com/jadercorrea/gptcode/internal/catalog"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/intelligence"
 )
 
 var modelCmd = &cobra.Command{

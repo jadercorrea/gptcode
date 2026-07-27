@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jadercorrea/gptcode/internal/langdetect"
 	"gopkg.in/yaml.v3"
-	"gptcode/internal/langdetect"
 )
 
 func RunSetup() {

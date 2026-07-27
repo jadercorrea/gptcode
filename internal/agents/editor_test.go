@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 // mockProvider simulates LLM responses for testing

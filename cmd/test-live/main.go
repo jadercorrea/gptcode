@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/live"
 )
 
 func main() {

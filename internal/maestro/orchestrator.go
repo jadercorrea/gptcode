@@ -10,13 +10,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/config"
-	"gptcode/internal/events"
-	"gptcode/internal/live"
-	"gptcode/internal/llm"
-	"gptcode/internal/observability"
-	"gptcode/internal/telemetry"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/events"
+	"github.com/jadercorrea/gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/observability"
+	"github.com/jadercorrea/gptcode/internal/telemetry"
 )
 
 // Maestro orchestrates autonomous execution with verification and recovery

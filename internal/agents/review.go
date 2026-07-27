@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"gptcode/internal/llm"
-	"gptcode/internal/tools"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/tools"
 )
 
 type ReviewAgent struct {

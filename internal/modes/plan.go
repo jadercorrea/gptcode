@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
-	"gptcode/internal/output"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/output"
 
 	"golang.org/x/term"
 )

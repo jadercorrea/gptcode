@@ -9,11 +9,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gptcode/internal/acp"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
-	"gptcode/internal/maestro"
-	"gptcode/internal/tools"
+	"github.com/jadercorrea/gptcode/internal/acp"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/maestro"
+	"github.com/jadercorrea/gptcode/internal/tools"
 )
 
 var (

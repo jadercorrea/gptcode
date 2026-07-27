@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"gptcode/internal/llm"
-	"gptcode/internal/prompt"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/prompt"
 )
 
 func RunGo(builder *prompt.Builder, provider llm.Provider, model string, args []string) error {

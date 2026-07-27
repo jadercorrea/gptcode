@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 func TestReviewAgent(t *testing.T) {

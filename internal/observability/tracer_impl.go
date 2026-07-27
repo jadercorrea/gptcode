@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/live"
 )
 
 // TracerImpl is a concrete implementation of the Tracer interface

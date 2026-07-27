@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/llm"
 )
 
 type APICoordinator struct {

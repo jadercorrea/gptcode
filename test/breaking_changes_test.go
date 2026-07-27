@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/refactor"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/refactor"
 )
 
 func TestBreakingChangesDetection(t *testing.T) {

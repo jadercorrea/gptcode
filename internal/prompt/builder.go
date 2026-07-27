@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/config"
 )
 
 type BuildOptions struct {

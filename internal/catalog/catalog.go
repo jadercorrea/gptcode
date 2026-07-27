@@ -3,8 +3,8 @@ package catalog
 import (
 	"encoding/json"
 	"fmt"
-	"gptcode/internal/feedback"
-	"gptcode/internal/ollama"
+	"github.com/jadercorrea/gptcode/internal/feedback"
+	"github.com/jadercorrea/gptcode/internal/ollama"
 	"os"
 	"path/filepath"
 	"sort"

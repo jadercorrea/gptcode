@@ -7,10 +7,10 @@ import (
 	"regexp"
 	"strings"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
-	"gptcode/internal/ml"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/ml"
 )
 
 // shouldDeepAnalyze determines if a task needs deep analysis

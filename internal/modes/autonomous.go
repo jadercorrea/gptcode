@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"gptcode/internal/agents"
-	"gptcode/internal/autonomous"
-	"gptcode/internal/config"
-	"gptcode/internal/events"
-	"gptcode/internal/live"
-	"gptcode/internal/llm"
-	"gptcode/internal/maestro"
+	"github.com/jadercorrea/gptcode/internal/agents"
+	"github.com/jadercorrea/gptcode/internal/autonomous"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/events"
+	"github.com/jadercorrea/gptcode/internal/live"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/maestro"
 )
 
 // AutonomousExecutor wraps autonomous execution for use across modes

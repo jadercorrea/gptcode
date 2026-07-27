@@ -6,13 +6,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/jadercorrea/gptcode/internal/changelog"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/migration"
+	"github.com/jadercorrea/gptcode/internal/mockgen"
+	"github.com/jadercorrea/gptcode/internal/testgen"
 	"github.com/spf13/cobra"
-	"gptcode/internal/changelog"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
-	"gptcode/internal/migration"
-	"gptcode/internal/mockgen"
-	"gptcode/internal/testgen"
 )
 
 var genCmd = &cobra.Command{

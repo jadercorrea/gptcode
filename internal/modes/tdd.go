@@ -3,8 +3,8 @@ package modes
 import (
 	"context"
 	"fmt"
-	"gptcode/internal/llm"
-	"gptcode/internal/prompt"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/prompt"
 	"strings"
 )
 

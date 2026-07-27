@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
-	"gptcode/internal/modes"
-	"gptcode/internal/observability"
-	"gptcode/internal/prompt"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/modes"
+	"github.com/jadercorrea/gptcode/internal/observability"
+	"github.com/jadercorrea/gptcode/internal/prompt"
 )
 
 // ChatREPL implements a Read-Eval-Print Loop for chat conversations

@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"gptcode/internal/config"
-	"gptcode/internal/llm"
-	"gptcode/internal/maestro"
+	"github.com/jadercorrea/gptcode/internal/config"
+	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/maestro"
 
 	"github.com/spf13/cobra"
 )
