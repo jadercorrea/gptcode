@@ -61,8 +61,3 @@ changelog:
       - '^chore:'
       - Merge pull request
       - Merge branch
-
-# We don't use goreleaser's release feature directly
-# because we need to push to a different repo
-release:
-  disable: true

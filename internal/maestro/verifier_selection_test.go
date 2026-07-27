@@ -165,6 +165,9 @@ func TestDynamicVerifierSelection(t *testing.T) {
 func execCommand(dir, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = dir
+	if command == "git" {
+		cmd.Env = cleanGitEnvironment(os.Environ())
+	}
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("command failed: %v, output: %s", err, string(output))

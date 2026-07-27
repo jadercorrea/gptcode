@@ -1,280 +1,46 @@
-name: Continuous Delivery
+name: Release
 
 on:
-  workflow_run:
-    workflows: ["Continuous Integration"]
-    types:
-      - completed
-    branches: [main]
-  schedule:
-    # Run every Monday at 9 AM UTC
-    - cron: '0 9 * * 1'
-  workflow_dispatch:  # Allow manual trigger
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
 
 jobs:
-  update-models:
-    name: Update Model Catalog
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    outputs:
-      models_changed: ${{ steps.git-check.outputs.changed }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true
-      
-      - name: Build chu CLI
-        run: go build -o bin/gptcode ./cmd/gptcode
-      
-      - name: Update model catalog
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          # Models will be saved to ~/.gptcode/models_catalog.json
-          mkdir -p ~/.gptcode
-          ./bin/gptcode model update --all || echo "Model update completed with warnings"
-          
-          # Copy to default_models.json for embedding in binary
-          cp ~/.gptcode/models_catalog.json internal/catalog/default_models.json
-      
-      - name: Export models for web
-        run: |
-          go run scripts/export-models-for-web.go
-      
-      - name: Check for changes
-        id: git-check
-        run: |
-          git diff --exit-code docs/compare/data/models.json || echo "changed=true" >> $GITHUB_OUTPUT
-      
-      - name: Commit and push if changed
-        if: steps.git-check.outputs.changed == 'true'
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add docs/compare/data/models.json
-          git commit -m "chore: update model catalog [skip ci]"
-          git push
-
-  check-models:
-    name: Check if should release
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
-    needs: [update-models]
-    outputs:
-      should_release: ${{ steps.check.outputs.should_release }}
-    steps:
-      - name: Check if models changed
-        id: check
-        run: |
-          if [ "${{ needs.update-models.outputs.models_changed }}" == "true" ]; then
-            echo "should_release=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_release=false" >> $GITHUB_OUTPUT
-          fi
-
   release:
-    name: Create Release
+    name: Verify and publish release
     runs-on: ubuntu-latest
-    if: |
-      always() &&
-      (
-        startsWith(github.ref, 'refs/tags/v') ||
-        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-        (github.event_name == 'schedule' && needs.check-models.result == 'success' && needs.check-models.outputs.should_release == 'true')
-      )
-    needs: [check-models]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: "1.24"
           cache: true
-      
-      - name: Generate version tag
-        id: version
+
+      - name: Build CLI for tests
         run: |
-          # If already a tag push, use that tag
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-            echo "auto_generated=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          # Get latest tag
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "Latest tag: $LATEST_TAG"
-          
-          # Increment patch version until we find an available tag
-          VERSION=${LATEST_TAG#v}
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-          NEW_PATCH=$((PATCH + 1))
-          NEW_TAG="v${MAJOR}.${MINOR}.${NEW_PATCH}"
-          
-          # Keep incrementing if tag already exists
-          while git ls-remote --tags origin | grep -q "refs/tags/$NEW_TAG"; do
-            echo "Tag $NEW_TAG already exists, incrementing..."
-            NEW_PATCH=$((NEW_PATCH + 1))
-            NEW_TAG="v${MAJOR}.${MINOR}.${NEW_PATCH}"
-          done
-          
-          echo "New tag: $NEW_TAG"
-          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
-          echo "auto_generated=true" >> $GITHUB_OUTPUT
-          
-          # Create and push tag
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git tag -a "$NEW_TAG" -m "Automated release $NEW_TAG"
-          git push origin "$NEW_TAG"
-      
-      - name: Build binary for E2E tests
-        run: go build -o $(go env GOPATH)/bin/gptcode ./cmd/gptcode
-        
-      - name: Run tests
-        run: go test -v ./...
-      
-      - name: Install GoReleaser
+          go build -o "$RUNNER_TEMP/gptcode" ./cmd/gptcode
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: Run test suite
+        run: go test -v -short ./...
+
+      - name: Verify public examples
+        run: scripts/verify-public-examples.sh
+
+      - name: Publish GitHub release
         uses: goreleaser/goreleaser-action@v6
         with:
-          install-only: true
-      
-      - name: Build with GoReleaser
-        run: goreleaser build --clean --snapshot
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
         env:
-          GORELEASER_CURRENT_TAG: ${{ steps.version.outputs.tag }}
-      
-      - name: Create archives and checksums
-        run: |
-          VERSION="${{ steps.version.outputs.tag }}"
-          mkdir -p release
-          
-          # Create archives for each platform
-          for dir in dist/gptcode_*/; do
-            if [ -d "$dir" ]; then
-              PLATFORM=$(basename "$dir" | sed 's/gptcode_//')
-              BINARY=$(find "$dir" -name 'gptcode*' -type f | head -1)
-              
-              if [[ "$PLATFORM" == *"windows"* ]]; then
-                # Zip for Windows
-                cd "$dir"
-                zip -j "../../release/gptcode_${VERSION#v}_${PLATFORM}.zip" gptcode*
-                cd ../..
-              else
-                # Tar.gz for Unix
-                tar -czvf "release/gptcode_${VERSION#v}_${PLATFORM}.tar.gz" -C "$dir" .
-              fi
-            fi
-          done
-          
-          # Generate checksums
-          cd release
-          sha256sum * > checksums.txt
-          cd ..
-          
-          echo "Release artifacts:"
-          ls -la release/
-      
-      - name: Generate changelog
-        id: changelog
-        run: |
-          CURRENT_TAG="${{ steps.version.outputs.tag }}"
-          
-          # Get previous tag (excluding current if it was just created)
-          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${CURRENT_TAG}$" | head -n 1 || echo "")
-          
-          if [ -z "$PREV_TAG" ]; then
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges -n 20)
-          else
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges ${PREV_TAG}..HEAD)
-          fi
-          
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-      
-      - name: Checkout releases repo
-        uses: actions/checkout@v4
-        with:
-          repository: gptcode-cloud/cli-releases
-          token: ${{ secrets.RELEASES_REPO_TOKEN }}
-          path: releases-repo
-      
-      - name: Push release to public repo
-        run: |
-          VERSION="${{ steps.version.outputs.tag }}"
-          cd releases-repo
-          
-          # Configure git
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          
-          # Create release directory
-          mkdir -p releases/$VERSION
-          cp ../release/* releases/$VERSION/
-          
-          # Update latest symlink info
-          echo "$VERSION" > LATEST
-          
-          # Commit and push
-          git add .
-          git commit -m "Release $VERSION" || echo "No changes to commit"
-          git push
-          
-          # Create and push tag
-          git tag -a "$VERSION" -m "Release $VERSION" || echo "Tag already exists"
-          git push origin "$VERSION" || echo "Tag already pushed"
-      
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: GPTCode ${{ steps.version.outputs.tag }}
-          body: |
-            ## Changes
-            ${{ steps.changelog.outputs.changelog }}
-            
-            ## Installation
-            
-            ### Quick Install (macOS/Linux)
-            ```bash
-            curl -sSL https://raw.githubusercontent.com/jadercorrea/gptcode/main/install.sh | sh
-            ```
-            
-            ### Manual Download
-            Download the appropriate binary for your system from the assets below.
-            
-            ### Verify Installation
-            ```bash
-            gptcode --version
-            ```
-            
-            ${{ steps.version.outputs.auto_generated == 'true' && '> ⚡ Automated release triggered by CI' || '' }}
-          files: |
-            release/*
-          draft: false
-          prerelease: false
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

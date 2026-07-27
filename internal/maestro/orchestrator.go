@@ -332,6 +332,7 @@ func (m *Maestro) selectVerifiers() []Verifier {
 	// Get current modified files (including added, modified, deleted, renamed, copied)
 	gitCmd := exec.Command("git", "--no-pager", "diff", "--name-only", "--diff-filter=ACMR")
 	gitCmd.Dir = m.CWD
+	gitCmd.Env = cleanGitEnvironment(os.Environ())
 	out, err := gitCmd.CombinedOutput()
 	if err != nil {
 		// If git fails, return default verifiers
@@ -380,6 +381,19 @@ func (m *Maestro) selectVerifiers() []Verifier {
 	}
 
 	return verifiers
+}
+
+func cleanGitEnvironment(environment []string) []string {
+	clean := make([]string, 0, len(environment))
+	for _, variable := range environment {
+		if strings.HasPrefix(variable, "GIT_INDEX_FILE=") ||
+			strings.HasPrefix(variable, "GIT_DIR=") ||
+			strings.HasPrefix(variable, "GIT_WORK_TREE=") {
+			continue
+		}
+		clean = append(clean, variable)
+	}
+	return clean
 }
 
 type PlanStep struct {

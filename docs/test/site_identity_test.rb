@@ -119,6 +119,19 @@ class SiteIdentityTest < Minitest::Test
     assert_includes verifier, 'coverage" != "100.0"'
   end
 
+  def test_releases_require_explicit_tags_and_quality_gates
+    workflow = File.read(File.join(REPO_ROOT, ".github", "workflows", "cd.yml"))
+    goreleaser = File.read(File.join(REPO_ROOT, ".goreleaser.yml"))
+
+    assert_includes workflow, 'tags:'
+    assert_includes workflow, 'go test -v -short ./...'
+    assert_includes workflow, 'scripts/verify-public-examples.sh'
+    assert_includes workflow, 'args: release --clean'
+    refute_includes workflow, 'schedule:'
+    refute_includes workflow, 'gptcode-cloud'
+    refute_includes goreleaser, 'disable: true'
+  end
+
   def test_anchor_essay_is_published_and_evidence_driven
     article = File.join(
       DOCS_ROOT,
