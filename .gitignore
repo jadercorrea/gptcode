@@ -66,7 +66,6 @@ ml/intent/data/training_data_expanded.csv
 ml/intent/venv/
 ml/intent/__pycache__/
 docs/_site/
-supabase/.temp/
 
 # Training sandbox
 training-sandbox/

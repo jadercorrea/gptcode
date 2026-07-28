@@ -37,5 +37,5 @@ engineering portfolio.
 - [x] Validate the complete research, edit, deterministic verification, and review workflow with a local Ollama model.
 - [x] Propagate cancellation through agent-run command process trees and report local-model telemetry without false precision.
 - [x] Remove the disconnected legacy `monitor` and imperative `release` command implementations while preserving public-surface compatibility tests.
-- [ ] Retire or isolate the legacy Live, training, Supabase, and experimental command surfaces with compatibility tests.
+- [ ] Isolate Live as an optional local observability protocol and retire unused training and experimental command surfaces.
 - [ ] Raise coverage in legacy workflow packages without presenting the public fixture as repository-wide coverage.
