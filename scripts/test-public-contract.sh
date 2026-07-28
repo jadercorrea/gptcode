@@ -37,6 +37,12 @@ assert_contains Makefile "verify:"
 assert_contains .github/workflows/ci.yml "make verify"
 assert_contains .github/workflows/cd.yml "make verify"
 
+retired_backend="supa""base"
+if matches="$(git grep -in "$retired_backend" -- . ':!scripts/test-public-contract.sh')"; then
+  printf 'retired hosted backend references are still tracked:\n%s\n' "$matches" >&2
+  exit 1
+fi
+
 for file in LICENSE QUALITY.md SECURITY.md SUPPORT.md .github/ISSUE_TEMPLATE/bug_report.yml; do
   if [[ ! -f "$file" ]]; then
     printf 'missing public project contract: %s\n' "$file" >&2
