@@ -38,4 +38,7 @@ engineering portfolio.
 - [x] Propagate cancellation through agent-run command process trees and report local-model telemetry without false precision.
 - [x] Remove the disconnected legacy `monitor` and imperative `release` command implementations while preserving public-surface compatibility tests.
 - [ ] Isolate Live as an optional local observability protocol and retire unused training and experimental command surfaces.
+- [x] Build a content-free Codex history scanner and validate turn-level Git, patch, verification, and completion evidence against the local corpus.
+- [x] Build and container-validate a path-safe historical patch replayer, and establish that legacy Codex sessions lack the dirty-worktree baseline needed for deterministic replay.
+- [ ] Capture an initial base diff or snapshot in new sessions, prove deterministic replay end to end, then add an OpenCode importer to challenge the vendor-neutral evidence model.
 - [ ] Raise coverage in legacy workflow packages without presenting the public fixture as repository-wide coverage.
