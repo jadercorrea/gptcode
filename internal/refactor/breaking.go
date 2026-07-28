@@ -107,8 +107,7 @@ func (c *BreakingCoordinator) DetectAndCoordinate(ctx context.Context) (*Breakin
 }
 
 func (c *BreakingCoordinator) detectBreakingChanges() ([]BreakingChange, error) {
-	cmd := exec.Command("git", "diff", "--name-only", "HEAD")
-	cmd.Dir = c.workDir
+	cmd := repositoryGitCommand(c.workDir, "diff", "--name-only", "HEAD")
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, err
@@ -140,8 +139,7 @@ func (c *BreakingCoordinator) analyzeFileChanges(file string) ([]BreakingChange,
 	}
 
 	relPath, _ := filepath.Rel(c.workDir, file)
-	cmd := exec.Command("git", "show", fmt.Sprintf("HEAD:%s", relPath))
-	cmd.Dir = c.workDir
+	cmd := repositoryGitCommand(c.workDir, "show", fmt.Sprintf("HEAD:%s", relPath))
 	oldContent, err := cmd.Output()
 	if err != nil {
 		return nil, nil
@@ -158,6 +156,35 @@ func (c *BreakingCoordinator) analyzeFileChanges(file string) ([]BreakingChange,
 	}
 
 	return c.compareASTs(file, oldAST, currentAST), nil
+}
+
+var localGitEnvironment = map[string]struct{}{
+	"GIT_ALTERNATE_OBJECT_DIRECTORIES": {},
+	"GIT_OBJECT_DIRECTORY":             {},
+	"GIT_DIR":                          {},
+	"GIT_WORK_TREE":                    {},
+	"GIT_IMPLICIT_WORK_TREE":           {},
+	"GIT_GRAFT_FILE":                   {},
+	"GIT_INDEX_FILE":                   {},
+	"GIT_NO_REPLACE_OBJECTS":           {},
+	"GIT_REPLACE_REF_BASE":             {},
+	"GIT_PREFIX":                       {},
+	"GIT_SHALLOW_FILE":                 {},
+	"GIT_COMMON_DIR":                   {},
+}
+
+func repositoryGitCommand(dir string, args ...string) *exec.Cmd {
+	cmd := exec.Command("git", args...)
+	cmd.Dir = dir
+	cmd.Env = make([]string, 0, len(os.Environ()))
+	for _, variable := range os.Environ() {
+		name, _, _ := strings.Cut(variable, "=")
+		if _, local := localGitEnvironment[name]; local {
+			continue
+		}
+		cmd.Env = append(cmd.Env, variable)
+	}
+	return cmd
 }
 
 func (c *BreakingCoordinator) parseFile(content []byte) (*ast.File, error) {

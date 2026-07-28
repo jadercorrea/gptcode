@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/jadercorrea/gptcode/internal/observability"
+	"github.com/jadercorrea/gptcode/internal/processutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,6 +32,7 @@ type ToolResult struct {
 	Tool          string   `json:"tool"`
 	Result        string   `json:"result"`
 	Error         string   `json:"error,omitempty"`
+	Err           error    `json:"-"`
 	ModifiedFiles []string `json:"modified_files,omitempty"`
 	TokensSaved   int      `json:"tokens_saved,omitempty"`
 }
@@ -47,6 +50,14 @@ func GetAvailableTools() []map[string]interface{} {
 						"path": map[string]interface{}{
 							"type":        "string",
 							"description": "Relative path to the file from repository root",
+						},
+						"start_line": map[string]interface{}{
+							"type":        "integer",
+							"description": "Optional 1-based first line to read",
+						},
+						"end_line": map[string]interface{}{
+							"type":        "integer",
+							"description": "Optional 1-based last line to read (inclusive)",
 						},
 					},
 					"required": []string{"path"},
@@ -241,13 +252,17 @@ func GetAvailableTools() []map[string]interface{} {
 }
 
 func ExecuteTool(call ToolCall, workdir string) ToolResult {
+	return ExecuteToolContext(context.Background(), call, workdir)
+}
+
+func ExecuteToolContext(ctx context.Context, call ToolCall, workdir string) ToolResult {
 	switch call.Name {
 	case "read_file":
 		return readFile(call, workdir)
 	case "list_files":
 		return listFiles(call, workdir)
 	case "run_command":
-		return runCommand(call, workdir)
+		return runCommandContext(ctx, call, workdir)
 	case "search_code":
 		return searchCode(call, workdir)
 	case "read_guideline":
@@ -277,6 +292,10 @@ type LLMToolCall struct {
 }
 
 func ExecuteToolFromLLM(call LLMToolCall, workdir string) ToolResult {
+	return ExecuteToolFromLLMContext(context.Background(), call, workdir)
+}
+
+func ExecuteToolFromLLMContext(ctx context.Context, call LLMToolCall, workdir string) ToolResult {
 	var argsMap map[string]interface{}
 	if err := json.Unmarshal([]byte(call.Arguments), &argsMap); err != nil {
 		return ToolResult{
@@ -290,7 +309,7 @@ func ExecuteToolFromLLM(call LLMToolCall, workdir string) ToolResult {
 		Arguments: argsMap,
 	}
 
-	return ExecuteTool(toolCall, workdir)
+	return ExecuteToolContext(ctx, toolCall, workdir)
 }
 
 func readFile(call ToolCall, workdir string) ToolResult {
@@ -310,14 +329,55 @@ func readFile(call ToolCall, workdir string) ToolResult {
 
 	result := string(content)
 	lines := strings.Split(result, "\n")
+	startLine, hasStart := numericArgument(call.Arguments, "start_line")
+	endLine, hasEnd := numericArgument(call.Arguments, "end_line")
+	if hasStart || hasEnd {
+		if !hasStart {
+			startLine = 1
+		}
+		if !hasEnd {
+			endLine = startLine + 199
+		}
+		if startLine < 1 || endLine < startLine || startLine > len(lines) {
+			return ToolResult{Tool: "read_file", Error: fmt.Sprintf(
+				"invalid line range %d-%d for file with %d lines", startLine, endLine, len(lines))}
+		}
+		if endLine > len(lines) {
+			endLine = len(lines)
+		}
+
+		numbered := make([]string, 0, endLine-startLine+1)
+		for lineNumber := startLine; lineNumber <= endLine; lineNumber++ {
+			numbered = append(numbered, fmt.Sprintf("%d: %s", lineNumber, lines[lineNumber-1]))
+		}
+		return ToolResult{Tool: "read_file", Result: strings.Join(numbered, "\n")}
+	}
+
 	if len(lines) > 200 {
 		truncated := strings.Join(lines[:200], "\n")
-		result = truncated + fmt.Sprintf("\n... (truncated, %d total lines)", len(lines))
+		result = truncated + fmt.Sprintf(
+			"\n... (truncated, %d total lines; use start_line and end_line to read a specific range)",
+			len(lines))
 	}
 
 	return ToolResult{
 		Tool:   "read_file",
 		Result: result,
+	}
+}
+
+func numericArgument(arguments map[string]interface{}, name string) (int, bool) {
+	value, ok := arguments[name]
+	if !ok {
+		return 0, false
+	}
+	switch number := value.(type) {
+	case float64:
+		return int(number), true
+	case int:
+		return number, true
+	default:
+		return 0, false
 	}
 }
 
@@ -368,7 +428,7 @@ func listFiles(call ToolCall, workdir string) ToolResult {
 	}
 }
 
-func runCommand(call ToolCall, workdir string) ToolResult {
+func runCommandContext(ctx context.Context, call ToolCall, workdir string) ToolResult {
 	command, ok := call.Arguments["command"].(string)
 	if !ok {
 		return ToolResult{Tool: "run_command", Error: "command parameter required"}
@@ -382,9 +442,7 @@ func runCommand(call ToolCall, workdir string) ToolResult {
 		}
 	}
 
-	cmd := exec.Command("sh", "-c", command)
-	cmd.Dir = workdir
-	output, err := cmd.CombinedOutput()
+	output, err := processutil.CombinedOutput(ctx, workdir, "sh", "-c", command)
 
 	exitCode := 0
 	if err != nil {
@@ -405,6 +463,7 @@ func runCommand(call ToolCall, workdir string) ToolResult {
 
 	if err != nil {
 		result.Error = err.Error()
+		result.Err = err
 	}
 
 	return result
@@ -509,10 +568,22 @@ func writeFile(call ToolCall, workdir string) ToolResult {
 
 // ExecuteToolWithObserver wraps ExecuteToolFromLLM and emits events to the observer
 func ExecuteToolWithObserver(call LLMToolCall, workdir string, observer observability.Observer) ToolResult {
+	return ExecuteToolWithObserverContext(context.Background(), call, workdir, observer)
+}
+
+func ExecuteToolWithObserverContext(ctx context.Context, call LLMToolCall, workdir string, observer observability.Observer) ToolResult {
 	start := time.Now()
+	existedBefore := make(map[string]bool)
+	var arguments map[string]interface{}
+	if err := json.Unmarshal([]byte(call.Arguments), &arguments); err == nil {
+		if path, ok := arguments["path"].(string); ok {
+			_, err := os.Stat(filepath.Join(workdir, path))
+			existedBefore[path] = err == nil
+		}
+	}
 
 	// Execute the tool
-	result := ExecuteToolFromLLM(call, workdir)
+	result := ExecuteToolFromLLMContext(ctx, call, workdir)
 
 	// Emit events if observer is provided
 	if observer != nil {
@@ -535,13 +606,10 @@ func ExecuteToolWithObserver(call LLMToolCall, workdir string, observer observab
 		// Emit file modification events
 		for _, file := range result.ModifiedFiles {
 			// Determine operation type (create vs modify)
-			operation := "modify"
+			operation := "create"
 			fullPath := filepath.Join(workdir, file)
-			if info, err := os.Stat(fullPath); err == nil {
-				// Check if file was just created (very recent)
-				if time.Since(info.ModTime()) < time.Second*2 {
-					operation = "create"
-				}
+			if existedBefore[file] {
+				operation = "modify"
 			}
 
 			var bytes int64

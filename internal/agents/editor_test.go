@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/jadercorrea/gptcode/internal/llm"
+	"github.com/jadercorrea/gptcode/internal/observability"
 )
 
 // mockProvider simulates LLM responses for testing
@@ -27,6 +28,21 @@ func (m *mockProvider) Chat(ctx context.Context, req llm.ChatRequest) (*llm.Chat
 
 func (m *mockProvider) ChatStream(ctx context.Context, req llm.ChatRequest, callback func(string)) error {
 	return nil
+}
+
+func TestEditorRecordsLLMCallWhenProviderOmitsTokenUsage(t *testing.T) {
+	provider := &mockProvider{responses: []llm.ChatResponse{{Text: "No changes needed."}}}
+	observer := observability.NewObserver()
+	editor := NewEditorWithObserver(provider, t.TempDir(), "local-model", observer)
+
+	if _, _, err := editor.Execute(context.Background(), []llm.ChatMessage{{
+		Role: "user", Content: "Inspect the implementation",
+	}}, nil); err != nil {
+		t.Fatal(err)
+	}
+	if calls := observer.Summary().LLMCalls; calls != 1 {
+		t.Fatalf("expected one recorded LLM call, got %d", calls)
+	}
 }
 
 // Test: Query task (read file) should return file content immediately
@@ -88,6 +104,7 @@ func TestEditor_CreateFileTask_ExecutesAndReturns(t *testing.T) {
 					},
 				},
 			},
+			{Text: "Implemented output.txt."},
 		},
 	}
 
@@ -105,14 +122,14 @@ func TestEditor_CreateFileTask_ExecutesAndReturns(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	if result != "Changes applied; awaiting deterministic validation" {
+	if result != "Implemented output.txt." {
 		t.Errorf("Expected success message, got: %q", result)
 	}
 	if len(modifiedFiles) != 1 || modifiedFiles[0] != "output.txt" {
 		t.Errorf("Expected modifiedFiles=['output.txt'], got: %v", modifiedFiles)
 	}
-	if mock.callCount != 1 {
-		t.Errorf("Expected 1 LLM call, got: %d", mock.callCount)
+	if mock.callCount != 2 {
+		t.Errorf("Expected write and completion calls, got: %d", mock.callCount)
 	}
 
 	// Verify file was actually created
@@ -279,6 +296,7 @@ func TestEditor_EditTask_ContinuesUntilDone(t *testing.T) {
 					},
 				},
 			},
+			{Text: "Renamed old to new."},
 		},
 	}
 
@@ -308,11 +326,11 @@ func TestEditor_EditTask_ContinuesUntilDone(t *testing.T) {
 	if result == "package main\n\nfunc old() {}\n" {
 		t.Skip("KNOWN ISSUE: read_file returns early even for edit tasks. Need to fix: only return early for pure query tasks.")
 	}
-	if result != "Changes applied; awaiting deterministic validation" {
+	if result != "Renamed old to new." {
 		t.Errorf("Expected editor completion after patch, got: %q", result)
 	}
-	if mock.callCount != 2 {
-		t.Errorf("Expected 2 LLM calls (read, patch), got: %d", mock.callCount)
+	if mock.callCount != 3 {
+		t.Errorf("Expected 3 LLM calls (read, patch, completion), got: %d", mock.callCount)
 	}
 }
 
@@ -428,6 +446,170 @@ func TestEditor_QueryThenEdit_ReturnsAfterEdit(t *testing.T) {
 	}
 	if len(modifiedFiles) != 1 {
 		t.Errorf("Expected 1 modified file, got: %d", len(modifiedFiles))
+	}
+}
+
+func TestEditor_EditTask_RetriesWhenModelReturnsWithoutToolCalls(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	mock := &mockProvider{
+		responses: []llm.ChatResponse{
+			{Text: "I will update the file."},
+			{
+				ToolCalls: []llm.ChatToolCall{{
+					ID:        "1",
+					Name:      "write_file",
+					Arguments: `{"path":"result.txt","content":"implemented"}`,
+				}},
+			},
+			{Text: "Implemented result.txt."},
+		},
+	}
+
+	editor := NewEditor(mock, tmpDir, "test-model")
+	result, modifiedFiles, err := editor.Execute(context.Background(), []llm.ChatMessage{{
+		Role:    "user",
+		Content: "Create result.txt with the implementation.",
+	}}, nil)
+
+	if err != nil {
+		t.Fatalf("expected retry to recover, got error: %v", err)
+	}
+	if result != "Implemented result.txt." {
+		t.Fatalf("expected deterministic validation handoff, got %q", result)
+	}
+	if len(modifiedFiles) != 1 || modifiedFiles[0] != "result.txt" {
+		t.Fatalf("expected result.txt to be modified, got %v", modifiedFiles)
+	}
+	if mock.callCount != 3 {
+		t.Fatalf("expected retry, write, and completion calls, got %d", mock.callCount)
+	}
+}
+
+func TestEditor_EditTask_ModifiesEveryPlannedFileBeforeCompleting(t *testing.T) {
+	tmpDir := t.TempDir()
+	mock := &mockProvider{
+		responses: []llm.ChatResponse{
+			{ToolCalls: []llm.ChatToolCall{{
+				ID:        "1",
+				Name:      "write_file",
+				Arguments: `{"path":"implementation.go","content":"package example"}`,
+			}}},
+			{ToolCalls: []llm.ChatToolCall{{
+				ID:        "2",
+				Name:      "write_file",
+				Arguments: `{"path":"implementation_test.go","content":"package example"}`,
+			}}},
+			{Text: "Implementation and regression tests completed."},
+		},
+	}
+
+	editor := NewEditor(mock, tmpDir, "test-model")
+	result, modifiedFiles, err := editor.Execute(context.Background(), []llm.ChatMessage{{
+		Role: "user",
+		Content: "Files to create:\n- implementation.go\n- implementation_test.go\n" +
+			"Implement the change and its regression tests.",
+	}}, nil)
+
+	if err != nil {
+		t.Fatalf("expected multi-file edit to complete: %v", err)
+	}
+	if result != "Implementation and regression tests completed." {
+		t.Fatalf("unexpected completion: %q", result)
+	}
+	if len(modifiedFiles) != 2 {
+		t.Fatalf("expected both planned files to be modified, got %v", modifiedFiles)
+	}
+	if mock.callCount != 3 {
+		t.Fatalf("expected two writes and completion, got %d calls", mock.callCount)
+	}
+}
+
+func TestEditor_EditTask_StopsWhenEveryExpectedFileWasModified(t *testing.T) {
+	tmpDir := t.TempDir()
+	mock := &mockProvider{
+		responses: []llm.ChatResponse{{
+			ToolCalls: []llm.ChatToolCall{{
+				ID:        "1",
+				Name:      "write_file",
+				Arguments: `{"path":"counter.go","content":"package counter"}`,
+			}},
+		}},
+	}
+
+	editor := NewEditor(mock, tmpDir, "test-model")
+	editor.SetExpectedFiles([]string{"counter.go"})
+	result, modifiedFiles, err := editor.Execute(context.Background(), []llm.ChatMessage{{
+		Role:    "user",
+		Content: "Modify counter.go to fix the bug.",
+	}}, nil)
+
+	if err != nil {
+		t.Fatalf("expected edit to complete: %v", err)
+	}
+	if result != "All planned files changed; awaiting deterministic validation" {
+		t.Fatalf("unexpected completion: %q", result)
+	}
+	if len(modifiedFiles) != 1 || modifiedFiles[0] != "counter.go" {
+		t.Fatalf("unexpected modified files: %v", modifiedFiles)
+	}
+	if mock.callCount != 1 {
+		t.Fatalf("expected no extra model completion call, got %d", mock.callCount)
+	}
+}
+
+func TestEditor_ExpectedFilesRejectsSuffixCollision(t *testing.T) {
+	tmpDir := t.TempDir()
+	mock := &mockProvider{
+		responses: []llm.ChatResponse{{
+			ToolCalls: []llm.ChatToolCall{{
+				ID:        "1",
+				Name:      "write_file",
+				Arguments: `{"path":"evilcounter.go","content":"package counter"}`,
+			}},
+		}},
+	}
+
+	editor := NewEditor(mock, tmpDir, "test-model")
+	editor.SetExpectedFiles([]string{"counter.go"})
+	_, modifiedFiles, _ := editor.Execute(context.Background(), []llm.ChatMessage{{
+		Role:    "user",
+		Content: "Modify counter.go.",
+	}}, nil)
+
+	if len(modifiedFiles) != 0 {
+		t.Fatalf("suffix collision escaped the planned-file boundary: %v", modifiedFiles)
+	}
+	if _, err := os.Stat(filepath.Join(tmpDir, "evilcounter.go")); !os.IsNotExist(err) {
+		t.Fatalf("unexpected file write, stat error: %v", err)
+	}
+}
+
+func TestEditor_EditTask_FailsWhenModelNeverUsesTools(t *testing.T) {
+	tmpDir := t.TempDir()
+	responses := make([]llm.ChatResponse, 10)
+	for i := range responses {
+		responses[i] = llm.ChatResponse{Text: "The change should be applied."}
+	}
+	mock := &mockProvider{responses: responses}
+
+	editor := NewEditor(mock, tmpDir, "test-model")
+	result, modifiedFiles, err := editor.Execute(context.Background(), []llm.ChatMessage{{
+		Role:    "user",
+		Content: "Fix the bug by modifying code.go.",
+	}}, nil)
+
+	if err == nil {
+		t.Fatal("expected an error when an edit task completes without modifying files")
+	}
+	if !strings.Contains(err.Error(), "without modifying any files") {
+		t.Fatalf("expected actionable error, got %v", err)
+	}
+	if result != "" {
+		t.Fatalf("expected no success result, got %q", result)
+	}
+	if len(modifiedFiles) != 0 {
+		t.Fatalf("expected no modified files, got %v", modifiedFiles)
 	}
 }
 

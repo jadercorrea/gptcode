@@ -1,8 +1,36 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
+
+func TestNewModelSelectorUsesEmbeddedCatalogWhenUserCatalogIsMissing(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	setup := &Setup{Backend: map[string]BackendConfig{
+		"ollama": {
+			Type:         "ollama",
+			DefaultModel: "qwen3-coder:latest",
+			AgentModels:  AgentModels{Editor: "qwen3-coder:latest"},
+		},
+	}}
+	setup.Defaults.Backend = "ollama"
+	setup.Defaults.Mode = "local"
+
+	selector, err := NewModelSelector(setup)
+	if err != nil {
+		t.Fatalf("expected embedded catalog fallback, got %v", err)
+	}
+	if selector == nil {
+		t.Fatal("expected a usable selector")
+	}
+	if _, err := os.Stat(filepath.Join(home, ".gptcode", "models_catalog.json")); !os.IsNotExist(err) {
+		t.Fatalf("fallback must not require creating a user catalog, stat error: %v", err)
+	}
+}
 
 func TestSelectModelPrefersConfiguredEditor(t *testing.T) {
 	setup := &Setup{

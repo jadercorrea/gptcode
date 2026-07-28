@@ -20,7 +20,6 @@ import (
 	"github.com/jadercorrea/gptcode/internal/elixir"
 	"github.com/jadercorrea/gptcode/internal/feedback"
 	"github.com/jadercorrea/gptcode/internal/langdetect"
-	"github.com/jadercorrea/gptcode/internal/live"
 	"github.com/jadercorrea/gptcode/internal/llm"
 	"github.com/jadercorrea/gptcode/internal/memory"
 	"github.com/jadercorrea/gptcode/internal/ml"
@@ -201,78 +200,6 @@ func init() {
 	rootCmd.AddCommand(implementCmd)
 	rootCmd.AddCommand(featureCmd)
 	rootCmd.AddCommand(reviewCmd)
-}
-
-// monitorCmd scans local AI agent logs and reports real API usage to the Live Dashboard
-var monitorCmd = &cobra.Command{
-	Use:   "monitor",
-	Short: "Scan local AI agents and report real API usage to Live Dashboard",
-	Long: `Discovers installed AI coding agents (Antigravity, Cursor, Windsurf, etc.),
-reads their log files, counts today's API calls per model, and reports real
-usage data to the gptcode Live Dashboard.
-
-This is the 'fuel gauge' — shows how much of your daily model quota is used.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("🔍 Scanning local AI agents...")
-		fmt.Println()
-
-		result, err := live.Monitor()
-		if err != nil {
-			return fmt.Errorf("scan failed: %w", err)
-		}
-
-		if len(result.Agents) == 0 {
-			fmt.Println("No AI agent activity found today.")
-			return nil
-		}
-
-		// Display results
-		fmt.Printf("📊 Found %d API calls across %d agent(s) today:\n\n", result.TotalAPICalls, len(result.Agents))
-		for _, u := range result.Agents {
-			pct := int(u.QuotaUsed * 100)
-			bar := renderBar(u.QuotaUsed)
-			exhaustedTag := ""
-			if u.Exhausted {
-				exhaustedTag = " ⚠️  HIT RATE LIMIT"
-			}
-			fmt.Printf("  %s (%s)\n", u.DisplayName(), u.Agent)
-			fmt.Printf("  %s %d%% · %d calls · %s → %s%s\n\n", bar, pct, u.APICalls, u.FirstCall, u.LastCall, exhaustedTag)
-		}
-
-		// Report to Live Dashboard
-		liveURL := os.Getenv("GPTCODE_LIVE_URL")
-		if liveURL == "" {
-			liveURL = "https://gptcode.live"
-		}
-
-		reportConfig := live.DefaultReportConfig()
-		reportConfig.SetBaseURL(liveURL)
-
-		fmt.Println("📡 Reporting to Live Dashboard...")
-		if err := result.ReportToLive(reportConfig); err != nil {
-			fmt.Printf("⚠️  Report error: %v\n", err)
-		} else {
-			fmt.Printf("✅ Reported to %s\n", liveURL)
-		}
-
-		return nil
-	},
-}
-
-func renderBar(quota float64) string {
-	filled := int(quota * 10)
-	if filled > 10 {
-		filled = 10
-	}
-	empty := 10 - filled
-	bar := ""
-	for i := 0; i < filled; i++ {
-		bar += "●"
-	}
-	for i := 0; i < empty; i++ {
-		bar += "○"
-	}
-	return bar
 }
 
 func newBuilderAndLLM(lang, mode, hint string) (*prompt.Builder, llm.Provider, string, error) {

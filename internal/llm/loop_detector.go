@@ -28,6 +28,7 @@ type LoopDetector struct {
 	FileModifications int
 	ReadOperations    int
 	Intent            string // "query", "edit", "plan", "research"
+	MaxIterations     int    // Optional caller-provided limit
 }
 
 // NewLoopDetector creates a new loop detector with Claude Code-style thresholds
@@ -95,7 +96,7 @@ func (ld *LoopDetector) ShouldContinue() (shouldContinue bool, reason string) {
 	// Intent-aware safety limits (inspired by Claude Code --max-turns)
 	maxIterations := ld.getMaxIterationsForIntent()
 
-	if ld.Iteration >= maxIterations {
+	if ld.Iteration > maxIterations {
 		return false, fmt.Sprintf("Safety limit reached: %d iterations for %s intent", maxIterations, ld.Intent)
 	}
 
@@ -120,6 +121,9 @@ func (ld *LoopDetector) ShouldContinue() (shouldContinue bool, reason string) {
 
 // getMaxIterationsForIntent returns the maximum iterations based on task intent
 func (ld *LoopDetector) getMaxIterationsForIntent() int {
+	if ld.MaxIterations > 0 {
+		return ld.MaxIterations
+	}
 	limits := map[string]int{
 		"query":    10, // Query tasks are typically shorter
 		"edit":     15, // Reduced from 25 to prevent runaway edits
@@ -132,6 +136,10 @@ func (ld *LoopDetector) getMaxIterationsForIntent() int {
 		return limit
 	}
 	return limits[""]
+}
+
+func (ld *LoopDetector) SetMaxIterations(max int) {
+	ld.MaxIterations = max
 }
 
 // RecordFileModification increments the file modification counter

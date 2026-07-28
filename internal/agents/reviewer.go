@@ -249,7 +249,7 @@ Be precise and specific.`, plan, filesStr)
 
 	// Tool call processing loop for validation - Maestro controls outer retry logic.
 	// Lower internal limit (5) since most validations complete in 2-3 iterations.
-	maxIterations := 5
+	maxIterations := 3
 	for i := 0; i < maxIterations; i++ {
 		if os.Getenv("GPTCODE_DEBUG") == "1" {
 			fmt.Fprintf(os.Stderr, "[VALIDATOR] Iteration %d/%d\n", i+1, maxIterations)
@@ -297,7 +297,7 @@ Be precise and specific.`, plan, filesStr)
 				Name:      tc.Name,
 				Arguments: tc.Arguments,
 			}
-			result := tools.ExecuteToolFromLLM(llmCall, v.cwd)
+			result := tools.ExecuteToolFromLLMContext(ctx, llmCall, v.cwd)
 
 			content := result.Result
 			if result.Error != "" {
@@ -333,11 +333,51 @@ Be precise and specific.`, plan, filesStr)
 		}
 	}
 
-	return &ReviewResult{
-		Success:     false,
-		Issues:      []string{"Validator reached max iterations"},
-		Suggestions: "Unable to complete review",
-	}, nil
+	history = append(history, llm.ChatMessage{
+		Role: "user",
+		Content: `Tool use is now complete. Based only on the evidence already collected, return a final verdict.
+Start with exactly SUCCESS or FAIL. If FAIL, list concrete unmet requirements.`,
+	})
+	resp, err := v.provider.Chat(ctx, llm.ChatRequest{
+		SystemPrompt: reviewerPrompt,
+		Messages:     history,
+		Model:        v.model,
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := &ReviewResult{Suggestions: resp.Text}
+	verdict := explicitReviewVerdict(resp.Text)
+	result.Success = verdict == "success"
+	if verdict == "" {
+		return nil, fmt.Errorf("reviewer returned no explicit SUCCESS or FAIL verdict")
+	}
+	if !result.Success {
+		result.Issues = extractIssues(resp.Text)
+		if len(result.Issues) == 0 {
+			result.Issues = []string{"Reviewer did not provide a conclusive evidence-based verdict"}
+		}
+	}
+	return result, nil
+}
+
+func explicitReviewVerdict(text string) string {
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		first := strings.ToUpper(strings.Trim(strings.Fields(line)[0], ":.-"))
+		switch first {
+		case "SUCCESS":
+			return "success"
+		case "FAIL":
+			return "fail"
+		default:
+			return ""
+		}
+	}
+	return ""
 }
 
 func containsSuccess(text string) bool {

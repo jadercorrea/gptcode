@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -50,16 +52,21 @@ func (a *TaskAnalyzer) DeepAnalyze(ctx context.Context, task string) (string, er
 		provider = llm.NewChatCompletion(backendCfg.BaseURL, backendName)
 	}
 
+	evidence := repositoryEvidence(a.cwd, extractFileMentions(task), 24*1024)
 	deepAnalysisPrompt := fmt.Sprintf(`You are a senior software engineer performing DEEP ANALYSIS of a bug fix task.
 
 TASK:
 %s
 
+REPOSITORY EVIDENCE:
+%s
+
 INSTRUCTIONS:
-1. Identify the ROOT CAUSE of the bug (not just symptoms)
-2. Determine what files likely need to be modified
-3. Identify any edge cases or potential regressions
-4. Outline the APPROACH for fixing this bug
+1. Base every claim on the repository evidence above. Never invent behavior, files, or root causes.
+2. Identify the ROOT CAUSE. If evidence is insufficient, say "UNKNOWN — more repository evidence is required".
+3. Determine what files likely need to be modified
+4. Identify any edge cases or potential regressions
+5. Outline the APPROACH for fixing this bug
 
 Be specific and technical. Focus on the actual code changes needed.
 
@@ -67,7 +74,7 @@ Return your analysis in this format:
 ROOT CAUSE: [2-3 sentence explanation of the root cause]
 FILES TO MODIFY: [list of likely files]
 EDGE CASES: [potential edge cases to consider]
-APPROACH: [high-level approach to fix]`, task)
+APPROACH: [high-level approach to fix]`, task, evidence)
 
 	response, err := provider.Chat(ctx, llm.ChatRequest{
 		SystemPrompt: "You are a senior software engineer performing deep analysis.",
@@ -80,6 +87,48 @@ APPROACH: [high-level approach to fix]`, task)
 	}
 
 	return response.Text, nil
+}
+
+func repositoryEvidence(cwd string, paths []string, limit int) string {
+	if len(paths) == 0 {
+		return "No explicit repository files were identified in the task."
+	}
+	root, err := filepath.EvalSymlinks(cwd)
+	if err != nil {
+		return "The repository root could not be resolved."
+	}
+	var evidence strings.Builder
+	for _, path := range paths {
+		clean := filepath.Clean(path)
+		if filepath.IsAbs(clean) || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+			continue
+		}
+		resolved, err := filepath.EvalSymlinks(filepath.Join(root, clean))
+		if err != nil {
+			continue
+		}
+		relative, err := filepath.Rel(root, resolved)
+		if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+			continue
+		}
+		content, err := os.ReadFile(resolved)
+		if err != nil {
+			continue
+		}
+		remaining := limit - evidence.Len()
+		if remaining <= 0 {
+			break
+		}
+		entry := fmt.Sprintf("\n--- %s ---\n%s\n", clean, content)
+		if len(entry) > remaining {
+			entry = entry[:remaining]
+		}
+		evidence.WriteString(entry)
+	}
+	if evidence.Len() == 0 {
+		return "The files named in the task could not be read."
+	}
+	return evidence.String()
 }
 
 // TaskAnalysis represents the result of analyzing a task

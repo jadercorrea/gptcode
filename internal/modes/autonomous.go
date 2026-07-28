@@ -84,6 +84,10 @@ func (a *AutonomousExecutor) Execute(ctx context.Context, task string) error {
 	return a.executor.Execute(ctx, task)
 }
 
+func (a *AutonomousExecutor) SetMaxAttempts(max int) {
+	a.conductor.SetMaxAttempts(max)
+}
+
 // ShouldUseAutonomous determines if a task should use autonomous mode
 // This is a lightweight heuristic check before full analysis.
 // The real complexity scoring happens in TaskAnalyzer.estimateComplexity()

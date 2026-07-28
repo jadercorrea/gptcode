@@ -91,6 +91,12 @@ func NewEditorWithFileValidation(provider llm.Provider, cwd string, model string
 	}
 }
 
+// SetExpectedFiles constrains writes to planned files and lets the editor hand
+// control back as soon as every planned file has been changed.
+func (e *EditorAgent) SetExpectedFiles(files []string) {
+	e.allowedFiles = append([]string(nil), files...)
+}
+
 const editorPrompt = `You are a code editor and executor. Your job is to modify files AND execute shell commands.
 
 WORKFLOW:
@@ -183,8 +189,37 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 							"type":        "string",
 							"description": "File path",
 						},
+						"start_line": map[string]interface{}{
+							"type":        "integer",
+							"description": "Optional 1-based first line to read",
+						},
+						"end_line": map[string]interface{}{
+							"type":        "integer",
+							"description": "Optional 1-based last line to read (inclusive)",
+						},
 					},
 					"required": []string{"path"},
+				},
+			},
+		},
+		map[string]interface{}{
+			"type": "function",
+			"function": map[string]interface{}{
+				"name":        "search_code",
+				"description": "Find matching lines before reading or patching a large file",
+				"parameters": map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"pattern": map[string]interface{}{
+							"type":        "string",
+							"description": "Search pattern (regular expression)",
+						},
+						"file_pattern": map[string]interface{}{
+							"type":        "string",
+							"description": "Optional file pattern such as '*.ex'",
+						},
+					},
+					"required": []string{"pattern"},
 				},
 			},
 		},
@@ -307,15 +342,20 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 			return "", nil, err
 		}
 
-		// Emit LLM request event to observer
-		if e.observer != nil && resp.TokenUsage != nil {
-			// Calculate cost (free models have 0 cost)
-			cost := calculateCost(e.model, resp.TokenUsage.PromptTokens, resp.TokenUsage.CompletionTokens)
+		// Record the call even when a local provider omits token accounting.
+		// Zero token counts are more accurate than claiming no LLM call occurred.
+		if e.observer != nil {
+			tokensIn, tokensOut := 0, 0
+			if resp.TokenUsage != nil {
+				tokensIn = resp.TokenUsage.PromptTokens
+				tokensOut = resp.TokenUsage.CompletionTokens
+			}
+			cost := calculateCost(e.model, tokensIn, tokensOut)
 			e.observer.Emit(&observability.LLMRequestEvent{
 				BaseEvent: observability.BaseEvent{Time: time.Now()},
 				Model:     e.model,
-				TokensIn:  resp.TokenUsage.PromptTokens,
-				TokensOut: resp.TokenUsage.CompletionTokens,
+				TokensIn:  tokensIn,
+				TokensOut: tokensOut,
 				Cost:      cost,
 				Duration:  llmDuration,
 			})
@@ -367,7 +407,7 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 						}
 					}
 
-					result := tools.ExecuteToolWithObserver(llmCall, e.cwd, e.observer)
+					result := tools.ExecuteToolWithObserverContext(ctx, llmCall, e.cwd, e.observer)
 					if len(result.ModifiedFiles) > 0 {
 						modifiedFiles = append(modifiedFiles, result.ModifiedFiles...)
 					}
@@ -421,9 +461,20 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 						fmt.Fprintf(os.Stderr, "[EDITOR] Executed %s: %s\n", tc.Name, result.Result[:min(50, len(result.Result))])
 					}
 				}
-				if len(modifiedFiles) > 0 {
-					return "Changes applied; awaiting deterministic validation", modifiedFiles, nil
+				if e.allExpectedFilesModified(modifiedFiles) {
+					return "All planned files changed; awaiting deterministic validation", modifiedFiles, nil
 				}
+				continue
+			}
+			if editRequested(messages) && len(modifiedFiles) == 0 {
+				messages = append(messages,
+					llm.ChatMessage{Role: "assistant", Content: resp.Text},
+					llm.ChatMessage{
+						Role: "user",
+						Content: "No files were modified. This is an implementation task: use the available file tools " +
+							"to inspect and apply the requested change. Do not merely describe the solution.",
+					},
+				)
 				continue
 			}
 			return resp.Text, modifiedFiles, nil
@@ -460,7 +511,7 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 				}
 			}
 
-			result := tools.ExecuteToolWithObserver(llmCall, e.cwd, e.observer)
+			result := tools.ExecuteToolWithObserverContext(ctx, llmCall, e.cwd, e.observer)
 			if len(result.ModifiedFiles) > 0 {
 				modifiedFiles = append(modifiedFiles, result.ModifiedFiles...)
 			}
@@ -514,12 +565,35 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 				fmt.Fprintf(os.Stderr, "[EDITOR] Executed %s: %s\n", tc.Name, result.Result[:min(50, len(result.Result))])
 			}
 		}
-		if len(modifiedFiles) > 0 {
-			return "Changes applied; awaiting deterministic validation", modifiedFiles, nil
+		if e.allExpectedFilesModified(modifiedFiles) {
+			return "All planned files changed; awaiting deterministic validation", modifiedFiles, nil
 		}
 	}
 
+	if editRequested(messages) && len(modifiedFiles) == 0 {
+		return "", nil, fmt.Errorf("editor stopped without modifying any files after %d attempts", maxToolChainDepth)
+	}
+
 	return "Editor reached max iterations", modifiedFiles, nil
+}
+
+func (e *EditorAgent) allExpectedFilesModified(modifiedFiles []string) bool {
+	if len(e.allowedFiles) == 0 {
+		return false
+	}
+	for _, expected := range e.allowedFiles {
+		found := false
+		for _, modified := range modifiedFiles {
+			if modified == expected || strings.HasSuffix(modified, expected) || strings.HasSuffix(expected, modified) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 func min(a, b int) int {
@@ -555,6 +629,7 @@ func containsEditKeywords(text string) bool {
 	editKeywords := []string{
 		"write_file", "apply_patch", // Tool calls
 		"modify file", "create file", "update file", "patch file",
+		"fix ", "implement ", "create ", "add test", "add regression",
 		"add to", "append to", "insert into",
 		"delete from", "remove from",
 		"rename", "move file", "rewrite",
@@ -565,6 +640,15 @@ func containsEditKeywords(text string) bool {
 		}
 	}
 
+	return false
+}
+
+func editRequested(messages []llm.ChatMessage) bool {
+	for _, message := range messages {
+		if message.Role == "user" && containsEditKeywords(message.Content) {
+			return true
+		}
+	}
 	return false
 }
 
