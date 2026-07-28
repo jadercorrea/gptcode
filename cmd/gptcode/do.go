@@ -11,6 +11,7 @@ import (
 
 	"github.com/jadercorrea/gptcode/internal/config"
 	"github.com/jadercorrea/gptcode/internal/intelligence"
+	"github.com/jadercorrea/gptcode/internal/langdetect"
 	"github.com/jadercorrea/gptcode/internal/live"
 	"github.com/jadercorrea/gptcode/internal/llm"
 	"github.com/jadercorrea/gptcode/internal/modes"
@@ -143,7 +144,7 @@ func runDoExecutionWithRetry(ctx context.Context, task string, verbose bool, max
 		}
 
 		startTime := time.Now()
-		err := runDoExecution(ctx, task, verbose, supervised, setup, currentBackend, currentEditorModel)
+		err := runDoExecution(ctx, task, verbose, supervised, setup, currentBackend, currentEditorModel, maxAttempts)
 		elapsed := time.Since(startTime).Milliseconds()
 
 		if err == nil {
@@ -331,7 +332,7 @@ func shouldPromptForRetry(interactive bool) bool {
 	return interactive && term.IsTerminal(int(os.Stdin.Fd()))
 }
 
-func runDoExecution(ctx context.Context, task string, verbose bool, supervised bool, setup *config.Setup, backendName string, editorModel string) error {
+func runDoExecution(ctx context.Context, task string, verbose bool, supervised bool, setup *config.Setup, backendName string, editorModel string, maxAttempts int) error {
 	backendCfg := setup.Backend[backendName]
 
 	cwd, _ := os.Getwd()
@@ -372,10 +373,7 @@ func runDoExecution(ctx context.Context, task string, verbose bool, supervised b
 			fmt.Fprintf(os.Stderr, "Analyzing task complexity...\n")
 		}
 		// Detect language
-		language := setup.Defaults.Lang
-		if language == "" {
-			language = "go" // default
-		}
+		language := executionLanguage(cwd, setup.Defaults.Lang)
 
 		liveClient := live.GetClient()
 		var reportConfig *live.ReportConfig
@@ -389,6 +387,7 @@ func runDoExecution(ctx context.Context, task string, verbose bool, supervised b
 		}
 
 		executor := modes.NewAutonomousExecutorWithLive(queryProvider, cwd, queryModel, language, liveClient, reportConfig, backendName)
+		executor.SetMaxAttempts(maxAttempts)
 		return executor.Execute(ctx, task)
 	}
 
@@ -427,4 +426,15 @@ func runDoExecution(ctx context.Context, task string, verbose bool, supervised b
 	}
 
 	return nil
+}
+
+func executionLanguage(cwd, configured string) string {
+	detected := langdetect.DetectLanguage(cwd)
+	if detected != langdetect.Unknown {
+		return string(detected)
+	}
+	if configured != "" {
+		return configured
+	}
+	return string(langdetect.Go)
 }

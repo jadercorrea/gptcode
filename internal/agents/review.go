@@ -189,7 +189,7 @@ func (r *ReviewAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 			if statusCallback != nil {
 				statusCallback(fmt.Sprintf("Review: Executing %s...", tc.Name))
 			}
-			result := tools.ExecuteToolFromLLM(llmCall, r.cwd)
+			result := tools.ExecuteToolFromLLMContext(ctx, llmCall, r.cwd)
 
 			content := result.Result
 			if result.Error != "" {

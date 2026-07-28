@@ -167,7 +167,7 @@ Do NOT suggest changes. Just report what exists.`, task)
 					}
 				}
 			}
-			result := tools.ExecuteToolFromLLM(llmCall, a.cwd)
+			result := tools.ExecuteToolFromLLMContext(ctx, llmCall, a.cwd)
 
 			content := result.Result
 			if result.Error != "" {

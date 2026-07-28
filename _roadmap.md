@@ -34,5 +34,8 @@ engineering portfolio.
 - [x] Align the Go module path with the public repository so `go install ...@latest` is supported.
 - [x] Report module versions correctly for both GoReleaser and `go install`, and keep Go/Actions dependencies monitored.
 - [x] Publish a reproducible engineering case study of the Go data-race workflow.
+- [x] Validate the complete research, edit, deterministic verification, and review workflow with a local Ollama model.
+- [x] Propagate cancellation through agent-run command process trees and report local-model telemetry without false precision.
+- [x] Remove the disconnected legacy `monitor` and imperative `release` command implementations while preserving public-surface compatibility tests.
 - [ ] Retire or isolate the legacy Live, training, Supabase, and experimental command surfaces with compatibility tests.
 - [ ] Raise coverage in legacy workflow packages without presenting the public fixture as repository-wide coverage.

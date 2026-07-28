@@ -2,11 +2,45 @@ package maestro
 
 import (
 	"context"
+	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
+	"runtime"
+	"strings"
 	"testing"
+	"time"
 )
+
+func TestRunRequestedVerificationCancelsProcessTree(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix process-group behavior")
+	}
+	root := t.TempDir()
+	pidFile := filepath.Join(root, "child.pid")
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+	defer cancel()
+
+	_, err := runRequestedVerification(ctx, root, []string{
+		"sh", "-c", "sleep 30 & echo $! > child.pid; wait",
+	})
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected deadline error, got %v", err)
+	}
+	data, readErr := os.ReadFile(pidFile)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	pid := strings.TrimSpace(string(data))
+	if processExists(pid) {
+		t.Fatalf("child process %s survived cancellation", pid)
+	}
+}
+
+func processExists(pid string) bool {
+	return exec.Command("sh", "-c", "kill -0 "+pid).Run() == nil
+}
 
 func TestRequestedVerificationCommandUsesExplicitRaceCheck(t *testing.T) {
 	got := requestedVerificationCommand("Fix it. Verify with go test -race ./...")
@@ -19,6 +53,16 @@ func TestRequestedVerificationCommandUsesExplicitRaceCheck(t *testing.T) {
 func TestRequestedVerificationCommandUsesScopedGoCheck(t *testing.T) {
 	got := requestedVerificationCommand("Fix it. Run go test ./internal/tools and report exact evidence.")
 	want := []string{"go", "test", "./internal/tools"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("command = %v, want %v", got, want)
+	}
+}
+
+func TestRequestedVerificationCommandUsesScopedMixCheck(t *testing.T) {
+	got := requestedVerificationCommand(
+		"Fix it. Run mix test test/teiserver_web/components/core_components_test.exs and report exact evidence.",
+	)
+	want := []string{"mix", "test", "test/teiserver_web/components/core_components_test.exs"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("command = %v, want %v", got, want)
 	}

@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/jadercorrea/gptcode/internal/catalog"
 )
 
 type ActionType string
@@ -100,7 +102,13 @@ func (ms *ModelSelector) loadCatalog() error {
 	catalogPath := filepath.Join(configDir(), "models_catalog.json")
 	data, err := os.ReadFile(catalogPath)
 	if err != nil {
-		return err
+		if !os.IsNotExist(err) {
+			return err
+		}
+		data = catalog.GetDefaultModels()
+		if len(data) == 0 {
+			return fmt.Errorf("user catalog not found and embedded catalog is empty")
+		}
 	}
 
 	var rawCatalog map[string]interface{}

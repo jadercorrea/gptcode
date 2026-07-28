@@ -153,7 +153,7 @@ func (q *QueryAgent) Execute(ctx context.Context, history []llm.ChatMessage, sta
 			if statusCallback != nil {
 				statusCallback(fmt.Sprintf("Query: Executing %s...", tc.Name))
 			}
-			result := tools.ExecuteToolFromLLM(llmCall, q.cwd)
+			result := tools.ExecuteToolFromLLMContext(ctx, llmCall, q.cwd)
 
 			content := result.Result
 			if result.Error != "" {

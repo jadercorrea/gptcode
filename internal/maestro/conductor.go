@@ -33,12 +33,17 @@ type Conductor struct {
 	liveReportConfig *live.ReportConfig           // For Live Dashboard HTTP reporting
 	liveClient       *live.Client                 // For Live Dashboard WebSocket reporting
 	progressCallback ProgressCallback             // For real-time progress updates
+	maxAttempts      int
 
 	// Telemetry
 	mu           sync.Mutex
 	apiCalls     int
 	totalTokens  int
 	currentModel string
+}
+
+func (c *Conductor) SetMaxAttempts(max int) {
+	c.maxAttempts = max
 }
 
 // NewConductor creates a new Maestro conductor
@@ -327,6 +332,7 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 		intent = "query"
 	}
 	c.loopDetector = llm.NewLoopDetector(intent)
+	c.loopDetector.SetMaxIterations(c.maxAttempts)
 
 	if os.Getenv("GPTCODE_DEBUG") == "1" {
 		fmt.Fprintf(os.Stderr, "[MAESTRO] LoopDetector initialized with intent=%s\n", intent)
@@ -371,6 +377,7 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 		// Create editor with selected model and observer
 		editProvider := c.createProvider(editBackend)
 		editor := agents.NewEditorWithObserver(editProvider, c.cwd, editModel, c.Observer)
+		editor.SetExpectedFiles(plannedFiles(plan))
 
 		// Execute with editor
 		fmt.Println("Executing changes...")
@@ -529,7 +536,14 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 		fmt.Println("Validating...")
 		c.ReportProgress("validation", "Running tests and checks")
 		start = time.Now()
-		review, err := reviewer.Review(ctx, plan, modifiedFiles, nil)
+		reviewPlan := fmt.Sprintf(`%s
+
+DETERMINISTIC VERIFICATION EVIDENCE (authoritative):
+Command: %s
+Exit status: 0
+Output:
+%s`, plan, strings.Join(verificationCommand, " "), verificationOutput)
+		review, err := reviewer.Review(ctx, reviewPlan, modifiedFiles, nil)
 		elapsed = time.Since(start)
 		c.ReportProgress("validation", "Validation complete")
 		c.selector.RecordUsage(reviewBackend, reviewModel, err == nil, errorMsg(err))
@@ -877,4 +891,46 @@ func (c *Conductor) isQueryTask(task, plan string, modifiedFiles []string) bool 
 	}
 
 	return false
+}
+
+func plannedFiles(plan string) []string {
+	var files []string
+	inFilesSection := false
+
+	for _, rawLine := range strings.Split(plan, "\n") {
+		line := strings.TrimSpace(rawLine)
+		lower := strings.ToLower(line)
+
+		if strings.HasPrefix(lower, "## files to modify") ||
+			strings.HasPrefix(lower, "## files to create") {
+			inFilesSection = true
+			continue
+		}
+		if strings.HasPrefix(line, "## ") {
+			inFilesSection = false
+			continue
+		}
+		if !inFilesSection || !strings.HasPrefix(line, "- ") {
+			continue
+		}
+
+		item := strings.TrimSpace(strings.TrimPrefix(line, "- "))
+		if strings.EqualFold(item, "none") {
+			continue
+		}
+		if start := strings.Index(item, "`"); start >= 0 {
+			if end := strings.Index(item[start+1:], "`"); end >= 0 {
+				item = item[start+1 : start+1+end]
+			}
+		} else if description := strings.Index(item, " ("); description >= 0 {
+			item = item[:description]
+		}
+
+		item = strings.TrimSpace(item)
+		if item != "" {
+			files = append(files, item)
+		}
+	}
+
+	return files
 }

@@ -1,11 +1,55 @@
 package tools
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/jadercorrea/gptcode/internal/observability"
 )
+
+func TestExecuteToolFromLLMContextCancelsRunCommand(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	result := ExecuteToolFromLLMContext(ctx, LLMToolCall{
+		Name:      "run_command",
+		Arguments: `{"command":"sleep 30"}`,
+	}, t.TempDir())
+	if !errors.Is(result.Err, context.DeadlineExceeded) {
+		t.Fatalf("expected deadline error, got %#v", result)
+	}
+	if elapsed := time.Since(start); elapsed > 2*time.Second {
+		t.Fatalf("cancellation took too long: %s", elapsed)
+	}
+}
+
+func TestExecuteToolWithObserverReportsExistingFileAsModified(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "counter.go"), []byte("return a - b"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	observer := observability.NewObserver()
+	result := ExecuteToolWithObserver(LLMToolCall{
+		Name:      "apply_patch",
+		Arguments: `{"path":"counter.go","search":"return a - b","replace":"return a + b"}`,
+	}, root, observer)
+	if result.Error != "" {
+		t.Fatal(result.Error)
+	}
+	summary := observer.Summary()
+	if len(summary.FilesModified) != 1 || summary.FilesModified[0] != "counter.go" {
+		t.Fatalf("expected counter.go to be modified, got %#v", summary)
+	}
+	if len(summary.FilesCreated) != 0 {
+		t.Fatalf("did not expect a created file, got %#v", summary.FilesCreated)
+	}
+}
 
 func TestProjectMap(t *testing.T) {
 	t.Run("basic structure", func(t *testing.T) {
@@ -205,6 +249,34 @@ func TestApplyPatch(t *testing.T) {
 			t.Error("Expected error for missing parameters")
 		}
 	})
+}
+
+func TestReadFile_ReturnsRequestedLineRange(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "large.txt")
+	lines := make([]string, 300)
+	for i := range lines {
+		lines[i] = fmt.Sprintf("line %d", i+1)
+	}
+	if err := os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	result := readFile(ToolCall{
+		Name: "read_file",
+		Arguments: map[string]interface{}{
+			"path":       "large.txt",
+			"start_line": float64(150),
+			"end_line":   float64(152),
+		},
+	}, tmpDir)
+
+	if result.Error != "" {
+		t.Fatalf("read_file failed: %s", result.Error)
+	}
+	if result.Result != "150: line 150\n151: line 151\n152: line 152" {
+		t.Fatalf("unexpected range:\n%s", result.Result)
+	}
 }
 
 func TestPathSecurity(t *testing.T) {

@@ -2,11 +2,45 @@ package autonomous
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/jadercorrea/gptcode/internal/agents"
 	"github.com/jadercorrea/gptcode/internal/llm"
 )
+
+func TestRepositoryEvidenceReadsOnlyFilesNamedByTask(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "counter.go"), []byte("func Add(a, b int) int { return a - b }\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "secret.txt"), []byte("do not include"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	evidence := repositoryEvidence(root, []string{"counter.go"}, 4096)
+	if !strings.Contains(evidence, "return a - b") {
+		t.Fatalf("expected source evidence, got %q", evidence)
+	}
+	if strings.Contains(evidence, "do not include") {
+		t.Fatal("included a file that was not named by the task")
+	}
+}
+
+func TestRepositoryEvidenceRejectsSymlinkOutsideRepository(t *testing.T) {
+	root := t.TempDir()
+	outside := filepath.Join(t.TempDir(), "secret.go")
+	if err := os.WriteFile(outside, []byte("outside secret"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(root, "linked.go")); err != nil {
+		t.Fatal(err)
+	}
+	if evidence := repositoryEvidence(root, []string{"linked.go"}, 4096); strings.Contains(evidence, "outside secret") {
+		t.Fatal("repository evidence followed a symlink outside the repository")
+	}
+}
 
 func TestExtractVerb(t *testing.T) {
 	tests := []struct {

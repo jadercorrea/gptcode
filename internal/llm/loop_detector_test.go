@@ -85,3 +85,14 @@ func TestLoopDetector_DifferentToolCallsNoLoop(t *testing.T) {
 		}
 	}
 }
+
+func TestLoopDetectorHonorsConfiguredMaxIterations(t *testing.T) {
+	detector := NewLoopDetector("edit")
+	detector.SetMaxIterations(1)
+	if ok, reason := detector.ShouldContinue(); !ok {
+		t.Fatalf("first attempt should run: %s", reason)
+	}
+	if ok, _ := detector.ShouldContinue(); ok {
+		t.Fatal("second attempt should be rejected when max iterations is one")
+	}
+}

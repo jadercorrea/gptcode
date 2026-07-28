@@ -102,6 +102,7 @@ type ExecutionSummary struct {
 	FilesModified []string       `json:"files_modified"`
 	FilesDeleted  []string       `json:"files_deleted"`
 	ToolCalls     map[string]int `json:"tool_calls"`
+	ToolDuration  time.Duration  `json:"tool_duration_ms"`
 	LLMCalls      int            `json:"llm_calls"`
 	TokensIn      int            `json:"tokens_in"`
 	TokensOut     int            `json:"tokens_out"`
@@ -143,6 +144,7 @@ type AgentObserver struct {
 	filesModified map[string]int64
 	filesDeleted  []string
 	toolCalls     map[string]int
+	toolDuration  time.Duration
 	llmCalls      int
 	tokensIn      int
 	tokensOut     int
@@ -181,6 +183,7 @@ func (o *AgentObserver) Emit(event Event) {
 	switch e := event.(type) {
 	case *ToolCallEvent:
 		o.toolCalls[e.Name]++
+		o.toolDuration += e.Duration
 
 		// If the tool event didn't calculate cost saved, let's do it based on active model
 		if e.TokensSaved > 0 && e.CostSaved == 0 {
@@ -316,6 +319,7 @@ func (o *AgentObserver) Summary() *ExecutionSummary {
 		FilesModified: modified,
 		FilesDeleted:  o.filesDeleted,
 		ToolCalls:     o.toolCalls,
+		ToolDuration:  o.toolDuration,
 		LLMCalls:      o.llmCalls,
 		TokensIn:      o.tokensIn,
 		TokensOut:     o.tokensOut,
@@ -421,7 +425,7 @@ func (o *AgentObserver) PrintSummary() {
 		totalToolCalls += count
 	}
 	if totalToolCalls > 0 {
-		avgPerCall := summary.Duration.Seconds() / float64(totalToolCalls)
+		avgPerCall := summary.ToolDuration.Seconds() / float64(totalToolCalls)
 		fmt.Printf("  Avg per Tool Call:  %.2fs\n", avgPerCall)
 	}
 
@@ -493,10 +497,14 @@ func (o *AgentObserver) PrintSummary() {
 	fmt.Println(strings.Repeat("-", 40))
 
 	if summary.LLMCalls > 0 || summary.TokensIn > 0 || summary.TokensOut > 0 {
-		fmt.Printf("  API Calls:          %d\n", summary.LLMCalls)
-		fmt.Printf("  Tokens In:          %s\n", formatNumber(summary.TokensIn))
-		fmt.Printf("  Tokens Out:         %s\n", formatNumber(summary.TokensOut))
-		fmt.Printf("  Total Tokens:       %s\n", formatNumber(summary.TokensIn+summary.TokensOut))
+		fmt.Printf("  Observed Model Calls: %d\n", summary.LLMCalls)
+		if summary.TokensIn+summary.TokensOut > 0 {
+			fmt.Printf("  Tokens In:          %s\n", formatNumber(summary.TokensIn))
+			fmt.Printf("  Tokens Out:         %s\n", formatNumber(summary.TokensOut))
+			fmt.Printf("  Total Tokens:       %s\n", formatNumber(summary.TokensIn+summary.TokensOut))
+		} else {
+			fmt.Println("  Token Usage:        not reported by provider")
+		}
 		fmt.Printf("  Total Cost:         $%.4f\n", summary.TotalCost)
 		if summary.TokensSaved > 0 {
 			fmt.Printf("  Tokens Saved (RTK): %s\n", formatNumber(summary.TokensSaved))

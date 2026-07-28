@@ -95,6 +95,7 @@ if err != nil {
 	}
 
 	coordinator := refactor.NewBreakingCoordinator(provider, "test-model", tmpDir)
+	t.Setenv("GIT_INDEX_FILE", filepath.Join(t.TempDir(), "foreign-index"))
 
 	result, err := coordinator.DetectAndCoordinate(context.Background())
 	if err != nil {
@@ -136,12 +137,24 @@ func isolatedGitCommand(dir string, args ...string) *exec.Cmd {
 	cmd.Dir = dir
 	cmd.Env = make([]string, 0, len(os.Environ()))
 	for _, variable := range os.Environ() {
-		if strings.HasPrefix(variable, "GIT_INDEX_FILE=") ||
-			strings.HasPrefix(variable, "GIT_DIR=") ||
-			strings.HasPrefix(variable, "GIT_WORK_TREE=") {
+		if strings.HasPrefix(variable, "GIT_") {
 			continue
 		}
 		cmd.Env = append(cmd.Env, variable)
 	}
+	cmd.Env = append(cmd.Env, "GIT_CONFIG_GLOBAL="+os.DevNull, "GIT_CONFIG_NOSYSTEM=1")
 	return cmd
+}
+
+func TestIsolatedGitCommandClearsInheritedGitEnvironment(t *testing.T) {
+	t.Setenv("GIT_EXTERNAL_DIFF", "must-not-leak")
+	t.Setenv("GIT_OBJECT_DIRECTORY", "/tmp/must-not-leak")
+
+	cmd := isolatedGitCommand(t.TempDir(), "status")
+	for _, variable := range cmd.Env {
+		if strings.HasPrefix(variable, "GIT_EXTERNAL_DIFF=") ||
+			strings.HasPrefix(variable, "GIT_OBJECT_DIRECTORY=") {
+			t.Fatalf("inherited Git environment leaked into isolated command: %s", variable)
+		}
+	}
 }

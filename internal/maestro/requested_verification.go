@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/jadercorrea/gptcode/internal/processutil"
 )
 
 var safeVerificationToken = regexp.MustCompile(`^(?:-[A-Za-z0-9=._/-]+|[A-Za-z0-9.][A-Za-z0-9=._/-]*)$`)
@@ -15,11 +16,12 @@ var safeVerificationToken = regexp.MustCompile(`^(?:-[A-Za-z0-9=._/-]+|[A-Za-z0-
 func requestedVerificationCommand(task string) []string {
 	fields := strings.Fields(task)
 	for index := 0; index+1 < len(fields); index++ {
-		if !strings.EqualFold(fields[index], "go") || !strings.EqualFold(fields[index+1], "test") {
+		executable := strings.ToLower(fields[index])
+		if (executable != "go" && executable != "mix") || !strings.EqualFold(fields[index+1], "test") {
 			continue
 		}
 
-		command := []string{"go", "test"}
+		command := []string{executable, "test"}
 		for _, field := range fields[index+2:] {
 			token := strings.TrimRight(field, ",:")
 			if token != "./..." {
@@ -79,9 +81,7 @@ func runRequestedVerification(ctx context.Context, cwd string, command []string)
 	if len(command) == 0 {
 		return "", nil
 	}
-	process := exec.CommandContext(ctx, command[0], command[1:]...)
-	process.Dir = cwd
-	output, err := process.CombinedOutput()
+	output, err := processutil.CombinedOutput(ctx, cwd, command[0], command[1:]...)
 	if err != nil {
 		return string(output), fmt.Errorf("%s failed: %w", strings.Join(command, " "), err)
 	}
