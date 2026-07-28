@@ -71,6 +71,7 @@ func TestBuildCodebaseResearchPromptRequiresGroundedEvidence(t *testing.T) {
 		"session/store.go",
 		"session/store_test.go",
 		"func (s *Store) Active",
+		`1 | func (s *Store) Active`,
 		"read_file",
 		"exact file paths",
 		"Do not speculate",
@@ -80,6 +81,8 @@ func TestBuildCodebaseResearchPromptRequiresGroundedEvidence(t *testing.T) {
 		"report contradictions",
 		"Concurrency claims require synchronization in the implementation",
 		"WaitGroup or goroutines in a test exercise concurrency",
+		"internally consistent",
+		"Do not claim a command passed",
 	} {
 		if !strings.Contains(prompt, required) {
 			t.Fatalf("research prompt missing %q:\n%s", required, prompt)
@@ -128,6 +131,52 @@ func TestResearchDetectsUnsupportedConcurrencySafetyClaim(t *testing.T) {
 	}
 	if contradictsUnsafeConcurrencyEvidence("Concurrent access is not safe because the map has no lock.", evidence) {
 		t.Fatal("a grounded unsafe finding must be accepted")
+	}
+}
+
+func TestResearchDetectsUnsupportedGoMethodLockClaim(t *testing.T) {
+	evidence := repositoryEvidence{
+		Language: "Go",
+		Contents: map[string]string{
+			"cache.go": `package cache
+func (c *Cache) Get() {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+}
+func (c *Cache) Len() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return 0
+}`,
+		},
+	}
+
+	issues := unsupportedGoLockClaims(
+		"Read operations (`Get`, `Len`) acquire read locks (`RLock`).",
+		evidence,
+	)
+	if len(issues) != 1 || !strings.Contains(issues[0], "Len") {
+		t.Fatalf("expected the false Len lock claim to be rejected, got %v", issues)
+	}
+	if issues := unsupportedGoLockClaims(
+		"`Get` starts with RLock; `Len` takes the exclusive Lock because it deletes expired entries.",
+		evidence,
+	); len(issues) != 0 {
+		t.Fatalf("expected exact per-method lock claims to pass, got %v", issues)
+	}
+}
+
+func TestResearchRejectsCIClaimsWithoutCIEvidence(t *testing.T) {
+	evidence := repositoryEvidence{
+		Files: []string{"cache.go", "cache_test.go", "task.md"},
+	}
+	if issue := unsupportedCIClaim("These commands are executed by the repository's CI system.", evidence); issue == "" {
+		t.Fatal("expected unsupported CI claim to be rejected")
+	}
+
+	evidence.Files = append(evidence.Files, ".github/workflows/verify.yml")
+	if issue := unsupportedCIClaim("These commands are executed by CI.", evidence); issue != "" {
+		t.Fatalf("expected CI claim with workflow evidence to pass, got %q", issue)
 	}
 }
 

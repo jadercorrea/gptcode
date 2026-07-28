@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jadercorrea/gptcode/internal/llm"
 	"github.com/jadercorrea/gptcode/internal/tools"
@@ -135,6 +136,14 @@ func (q *QueryAgent) Execute(ctx context.Context, history []llm.ChatMessage, sta
 		}
 
 		if len(resp.ToolCalls) == 0 {
+			if strings.TrimSpace(resp.Text) == "" {
+				messages = append(messages, llm.ChatMessage{
+					Role: "user",
+					Content: "The previous answer was empty. Answer the original question using the supplied " +
+						"repository evidence. Include concrete file paths and verification commands.",
+				})
+				continue
+			}
 			return resp.Text, nil
 		}
 
@@ -192,6 +201,9 @@ func (q *QueryAgent) Execute(ctx context.Context, history []llm.ChatMessage, sta
 	})
 	if err != nil {
 		return "", err
+	}
+	if strings.TrimSpace(finalResp.Text) == "" {
+		return "", fmt.Errorf("query returned an empty answer after %d attempts", maxIterations+1)
 	}
 
 	return finalResp.Text, nil

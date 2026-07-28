@@ -1,0 +1,43 @@
+{
+  "id": "go-safe-store-devstral-small-2",
+  "output": "/tmp/gptcode-devstral-small-2-safe-store",
+  "repetitions": 1,
+  "run_timeout_seconds": 1800,
+  "setup": [
+    {
+      "name": "select-local-devstral-profile",
+      "args": ["gt", "profiles", "use", "local.devstral"]
+    }
+  ],
+  "agent": {
+    "name": "gptcode-local-devstral-small-2-16k",
+    "args": [
+      "/usr/bin/env",
+      "GPTCODE_OLLAMA_CONTEXT_LENGTH=16384",
+      "GPTCODE_OLLAMA_TIMEOUT=6m",
+      "gt",
+      "do",
+      "Read task.md, implement the requested fix, and meet every regression and quality constraint in the repository.",
+      "--verbose",
+      "--max-attempts",
+      "8"
+    ]
+  },
+  "fixtures": [
+    {
+      "id": "safe-store",
+      "source": "benchmarks/fixtures/go-safe-store",
+      "require_failing_baseline": true,
+      "verifications": [
+        {
+          "name": "tests-race-and-quality-contract",
+          "args": ["go", "test", "-count=1", "-race", "./..."]
+        },
+        {
+          "name": "static-analysis",
+          "args": ["go", "vet", "./..."]
+        }
+      ]
+    }
+  ]
+}

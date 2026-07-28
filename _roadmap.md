@@ -40,5 +40,15 @@ engineering portfolio.
 - [ ] Isolate Live as an optional local observability protocol and retire unused training and experimental command surfaces.
 - [x] Build a content-free Codex history scanner and validate turn-level Git, patch, verification, and completion evidence against the local corpus.
 - [x] Build and container-validate a path-safe historical patch replayer, and establish that legacy Codex sessions lack the dirty-worktree baseline needed for deterministic replay.
-- [ ] Capture an initial base diff or snapshot in new sessions, prove deterministic replay end to end, then add an OpenCode importer to challenge the vendor-neutral evidence model.
+- [x] Capture complete initial and final snapshots for new agent experiments and prove deterministic bundle restoration end to end.
+- [x] Run a real local-model evaluation against a concurrent Go fixture and use its failures to fix local routing, repository-grounded planning, and retry context.
+- [x] Expand the evaluation corpus across concurrency, temporal semantics, and filesystem containment, with failure-inclusive suite aggregation and per-run time budgets.
+- [x] Compare GPT-OSS and Qwen3-Coder on the same smoke corpus, review the apparent pass, and strengthen the contract after identifying a false positive.
+- [x] Identify a local configuration that produces a human-reviewed fixture pass and measure three-run repeatability on the strengthened cache contract.
+- [x] Find a fully GPU-backed local configuration that passes the strengthened safe-store contract, while retaining Qwen's extended-budget failure as negative evidence.
+- [x] Stream verbose agent stages from the evidence suite without sacrificing the replayable output bundle.
+- [x] Measure Devstral safe-store repeatability and retain the 0/3 timeout result alongside the earlier reviewed capability pass.
+- [ ] Improve local safe-store convergence; neither Qwen nor Devstral currently supports a reliability claim on the strengthened contract.
+- [ ] Extend reviewed repeatability beyond one fixture before publishing a general coding-agent success-rate claim.
+- [ ] Add an OpenCode importer to challenge the vendor-neutral evidence model.
 - [ ] Raise coverage in legacy workflow packages without presenting the public fixture as repository-wide coverage.

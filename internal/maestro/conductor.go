@@ -236,7 +236,7 @@ func (c *Conductor) ReportCompleteWithPR(success bool, summary string, prURL str
 }
 
 // ExecuteTask orchestrates the execution of a task
-func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity string) error {
+func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity string) (taskErr error) {
 	if os.Getenv("GPTCODE_DEBUG") == "1" {
 		fmt.Fprintf(os.Stderr, "[MAESTRO] ExecuteTask called: task=%s complexity=%s lang=%s\n", task, complexity, c.language)
 	}
@@ -254,7 +254,7 @@ func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity str
 	sessionID := uuid.New().String()
 	if c.Tracer != nil {
 		_ = c.Tracer.Begin(sessionID, task)
-		defer func() { _ = c.Tracer.End(true) }() // End with success status (will be updated on error)
+		defer func() { _ = c.Tracer.End(taskErr == nil) }()
 	}
 
 	// Select model for planning
@@ -282,11 +282,15 @@ func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity str
 	// Create planner with selected model
 	planProvider := c.createProvider(planBackend)
 	planner := agents.NewPlanner(planProvider, planModel)
+	repositoryContext, err := buildPlanningRepositoryContext(c.cwd, c.language, 32*1024)
+	if err != nil {
+		return fmt.Errorf("build planning repository context: %w", err)
+	}
 
 	fmt.Println("Creating plan...")
 	c.ReportProgress("planning", "Creating plan")
 	start := time.Now()
-	plan, err := planner.CreatePlan(ctx, task, "", nil)
+	plan, err := planner.CreatePlan(ctx, task, repositoryContext, nil)
 	elapsed := time.Since(start)
 	c.ReportProgress("planning", "Plan created")
 	c.selector.RecordUsage(planBackend, planModel, err == nil, errorMsg(err))
@@ -304,10 +308,6 @@ func (c *Conductor) ExecuteTask(ctx context.Context, task string, complexity str
 	}
 
 	// Build conversation history
-	repositoryContext, err := buildEditorRepositoryContext(c.cwd, c.language, 32*1024)
-	if err != nil {
-		return fmt.Errorf("build editor repository context: %w", err)
-	}
 	history := []llm.ChatMessage{
 		{
 			Role: "user",
@@ -339,6 +339,7 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 	}
 
 	consecutiveErrors := 0
+	verificationProgress := newVerificationProgress(3)
 
 	for {
 		// Check if we should continue (intent-aware limits + loop detection)
@@ -429,9 +430,13 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 				_ = c.Tracer.RecordDecision("RecoverySystem", decision)
 			}
 
+			retryMessage, retryErr := buildRetryMessage(c.cwd, c.language, advancedPrompt)
+			if retryErr != nil {
+				return fmt.Errorf("build execution retry context: %w", retryErr)
+			}
 			history = append(history, llm.ChatMessage{
 				Role:    "user",
-				Content: advancedPrompt,
+				Content: retryMessage,
 			})
 			continue
 		}
@@ -447,6 +452,26 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 			_ = c.Tracer.RecordMetrics("EditorAgent", metrics)
 		}
 
+		if strings.EqualFold(c.language, "go") && len(modifiedFiles) > 0 {
+			formatOutput, formatErr := formatModifiedGoFiles(ctx, c.cwd, modifiedFiles)
+			if formatErr != nil {
+				feedback := fmt.Sprintf(
+					"Deterministic Go formatting failed. Fix the current implementation.\nOutput:\n%s\nError: %v",
+					formatOutput,
+					formatErr,
+				)
+				retryMessage, retryErr := buildRetryMessage(c.cwd, c.language, feedback)
+				if retryErr != nil {
+					return fmt.Errorf("build formatter retry context: %w", retryErr)
+				}
+				history = append(history, llm.ChatMessage{
+					Role:    "user",
+					Content: retryMessage,
+				})
+				continue
+			}
+		}
+
 		// Check if this is a query-only task (no validation needed)
 		if c.isQueryTask(task, plan, modifiedFiles) {
 			c.recordFeedback(editBackend, editModel, "editor", task, true, "")
@@ -458,13 +483,10 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 
 			// Print detailed execution summary
 			if c.Observer != nil {
+				c.Observer.SetOutcome(true)
 				c.Observer.PrintSummary()
 			}
 
-			// Record success metrics
-			if c.Tracer != nil {
-				_ = c.Tracer.End(true)
-			}
 			return nil
 		}
 
@@ -476,10 +498,17 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 			if changes := publicAPIChanges(publicAPIBaseline, currentPublicAPI); len(changes) > 0 {
 				issues := strings.Join(changes, "\n")
 				fmt.Printf("[WARNING] Public API contract changed:\n%s\n", issues)
+				retryMessage, retryErr := buildRetryMessage(
+					c.cwd,
+					c.language,
+					"Deterministic public API validation failed. Restore the original exported API while preserving the requested internal fix:\n"+issues,
+				)
+				if retryErr != nil {
+					return fmt.Errorf("build public API retry context: %w", retryErr)
+				}
 				history = append(history, llm.ChatMessage{
-					Role: "user",
-					Content: "Deterministic public API validation failed. Restore the original exported API while preserving the requested internal fix:\n" +
-						issues,
+					Role:    "user",
+					Content: retryMessage,
 				})
 				continue
 			}
@@ -497,10 +526,32 @@ Do not add, remove, or rename exported symbols when API stability is required.`,
 		verificationOutput, verificationErr := runRequestedVerification(ctx, c.cwd, verificationCommand)
 		if verificationErr != nil {
 			fmt.Printf("[WARNING] Deterministic verification failed:\n%s\n", verificationOutput)
-			history = append(history, llm.ChatMessage{
-				Role: "user",
-				Content: fmt.Sprintf("Deterministic verification failed. Fix the implementation and rerun the required check.\nCommand: %s\nOutput:\n%s",
+			if verificationProgress.Observe(verificationOutput) {
+				c.recordFeedback(
+					editBackend,
+					editModel,
+					"editor",
+					task,
+					false,
+					"verification plateau: "+verificationOutput,
+				)
+				return fmt.Errorf(
+					"verification plateau after %d equivalent failures; stopping without spending the remaining attempt budget",
+					verificationProgress.Consecutive(),
+				)
+			}
+			retryMessage, retryErr := buildRetryMessage(
+				c.cwd,
+				c.language,
+				fmt.Sprintf("Deterministic verification failed. Fix the implementation and rerun the required check.\nCommand: %s\nOutput:\n%s",
 					strings.Join(verificationCommand, " "), verificationOutput),
+			)
+			if retryErr != nil {
+				return fmt.Errorf("build verification retry context: %w", retryErr)
+			}
+			history = append(history, llm.ChatMessage{
+				Role:    "user",
+				Content: retryMessage,
 			})
 			continue
 		}
@@ -580,9 +631,13 @@ Output:
 				_ = c.Tracer.RecordDecision("RecoverySystem", decision)
 			}
 
+			retryMessage, retryErr := buildRetryMessage(c.cwd, c.language, advancedPrompt)
+			if retryErr != nil {
+				return fmt.Errorf("build validation retry context: %w", retryErr)
+			}
 			history = append(history, llm.ChatMessage{
 				Role:    "user",
-				Content: advancedPrompt,
+				Content: retryMessage,
 			})
 			continue
 		}
@@ -621,9 +676,13 @@ Output:
 				_ = c.Tracer.RecordDecision("RecoverySystem", decision)
 			}
 
+			retryMessage, retryErr := buildRetryMessage(c.cwd, c.language, advancedPrompt)
+			if retryErr != nil {
+				return fmt.Errorf("build review retry context: %w", retryErr)
+			}
 			history = append(history, llm.ChatMessage{
 				Role:    "user",
-				Content: advancedPrompt,
+				Content: retryMessage,
 			})
 			continue
 		}
@@ -648,13 +707,10 @@ Output:
 
 		// Print detailed execution summary
 		if c.Observer != nil {
+			c.Observer.SetOutcome(true)
 			c.Observer.PrintSummary()
 		}
 
-		// Record success metrics
-		if c.Tracer != nil {
-			_ = c.Tracer.End(true)
-		}
 		return nil
 	}
 

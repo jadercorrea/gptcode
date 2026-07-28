@@ -381,6 +381,20 @@ func (ms *ModelSelector) SelectModel(action ActionType, language string, complex
 	mode := ms.setup.Defaults.Mode
 	defaultBackend := ms.setup.Defaults.Backend
 
+	// An explicit model in the active backend/profile is the user's routing
+	// decision. Approved models are fallbacks and must not silently move a
+	// local execution to a cloud backend.
+	if backendCfg, ok := ms.setup.Backend[defaultBackend]; ok {
+		configuredModel := explicitlyConfiguredModelForAction(backendCfg, ms.setup.Defaults.Profile, action)
+		if configuredModel != "" {
+			if os.Getenv("GPTCODE_DEBUG") == "1" {
+				fmt.Fprintf(os.Stderr, "[MODEL_SELECTOR] Using configured model for action=%s: %s/%s\n",
+					action, defaultBackend, configuredModel)
+			}
+			return defaultBackend, configuredModel, nil
+		}
+	}
+
 	// First, try approved models for this action
 	approvedModels := ms.setup.GetApprovedModelsForAction(string(action))
 	if len(approvedModels) > 0 {
@@ -389,6 +403,9 @@ func (ms *ModelSelector) SelectModel(action ActionType, language string, complex
 		}
 		for _, approved := range approvedModels {
 			backend, model, err := ms.trySelectApprovedModel(approved.Model, action, language, complexity)
+			if err == nil && !modeAllowsBackend(mode, backend, ms.setup) {
+				err = fmt.Errorf("backend %q is not allowed in %s mode", backend, mode)
+			}
 			if err == nil {
 				if os.Getenv("GPTCODE_DEBUG") == "1" {
 					fmt.Fprintf(os.Stderr, "[MODEL_SELECTOR] Approved model selected: %s/%s\n", backend, model)
@@ -406,17 +423,6 @@ func (ms *ModelSelector) SelectModel(action ActionType, language string, complex
 		}
 		ms.logBlockedNotification(string(action), language)
 		return "", "", fmt.Errorf("all approved models failed for action=%s (check setup.yaml and models_catalog.json)", action)
-	}
-
-	if backendCfg, ok := ms.setup.Backend[defaultBackend]; ok {
-		configuredModel := configuredModelForAction(backendCfg, ms.setup.Defaults.Profile, action)
-		if configuredModel != "" {
-			if os.Getenv("GPTCODE_DEBUG") == "1" {
-				fmt.Fprintf(os.Stderr, "[MODEL_SELECTOR] Using configured model for action=%s: %s/%s\n",
-					action, defaultBackend, configuredModel)
-			}
-			return defaultBackend, configuredModel, nil
-		}
 	}
 
 	type scoredModel struct {
@@ -502,6 +508,38 @@ func (ms *ModelSelector) SelectModel(action ActionType, language string, complex
 	}
 
 	return best.backend, best.model, nil
+}
+
+func modeAllowsBackend(mode, backendName string, setup *Setup) bool {
+	backend, configured := setup.Backend[backendName]
+	isLocal := backendName == "ollama" || (configured && backend.Type == "ollama")
+	switch mode {
+	case "local":
+		return isLocal
+	case "cloud":
+		return !isLocal
+	default:
+		return true
+	}
+}
+
+func explicitlyConfiguredModelForAction(backend BackendConfig, profile string, action ActionType) string {
+	models := backend.AgentModels
+	if profile != "" && profile != "default" {
+		if configuredProfile, ok := backend.Profiles[profile]; ok {
+			models = configuredProfile.AgentModels
+		}
+	}
+	switch action {
+	case ActionEdit:
+		return models.Editor
+	case ActionResearch:
+		return models.Research
+	case ActionPlan, ActionReview, ActionRoute:
+		return models.Query
+	default:
+		return ""
+	}
 }
 
 func configuredModelForAction(backend BackendConfig, profile string, action ActionType) string {

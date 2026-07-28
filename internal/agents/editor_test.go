@@ -2,6 +2,7 @@ package agents
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -525,16 +526,19 @@ func TestEditor_EditTask_ModifiesEveryPlannedFileBeforeCompleting(t *testing.T) 
 	}
 }
 
-func TestEditor_EditTask_StopsWhenEveryExpectedFileWasModified(t *testing.T) {
+func TestEditor_EditTask_WaitsForModelCompletionAfterExpectedFilesChange(t *testing.T) {
 	tmpDir := t.TempDir()
 	mock := &mockProvider{
-		responses: []llm.ChatResponse{{
-			ToolCalls: []llm.ChatToolCall{{
-				ID:        "1",
-				Name:      "write_file",
-				Arguments: `{"path":"counter.go","content":"package counter"}`,
-			}},
-		}},
+		responses: []llm.ChatResponse{
+			{
+				ToolCalls: []llm.ChatToolCall{{
+					ID:        "1",
+					Name:      "write_file",
+					Arguments: `{"path":"counter.go","content":"package counter"}`,
+				}},
+			},
+			{Text: "Implemented counter.go; ready for deterministic validation."},
+		},
 	}
 
 	editor := NewEditor(mock, tmpDir, "test-model")
@@ -547,14 +551,98 @@ func TestEditor_EditTask_StopsWhenEveryExpectedFileWasModified(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected edit to complete: %v", err)
 	}
-	if result != "All planned files changed; awaiting deterministic validation" {
+	if result != "Implemented counter.go; ready for deterministic validation." {
 		t.Fatalf("unexpected completion: %q", result)
 	}
 	if len(modifiedFiles) != 1 || modifiedFiles[0] != "counter.go" {
 		t.Fatalf("unexpected modified files: %v", modifiedFiles)
 	}
-	if mock.callCount != 1 {
-		t.Fatalf("expected no extra model completion call, got %d", mock.callCount)
+	if mock.callCount != 2 {
+		t.Fatalf("expected an explicit completion after the write, got %d calls", mock.callCount)
+	}
+}
+
+func TestEditor_EditTask_CanRepairSameFileAfterCommandFailure(t *testing.T) {
+	tmpDir := t.TempDir()
+	mock := &mockProvider{
+		responses: []llm.ChatResponse{
+			{ToolCalls: []llm.ChatToolCall{{
+				ID:        "1",
+				Name:      "write_file",
+				Arguments: `{"path":"counter.go","content":"package counter\n\nvar Value = broken"}`,
+			}}},
+			{ToolCalls: []llm.ChatToolCall{{
+				ID:        "2",
+				Name:      "run_command",
+				Arguments: `{"command":"test \"$(tail -n 1 counter.go)\" = \"var Value = 1\""}`,
+			}}},
+			{ToolCalls: []llm.ChatToolCall{{
+				ID:        "3",
+				Name:      "apply_patch",
+				Arguments: `{"path":"counter.go","search":"var Value = broken","replace":"var Value = 1"}`,
+			}}},
+			{Text: "Verification failure repaired."},
+		},
+	}
+
+	editor := NewEditor(mock, tmpDir, "test-model")
+	editor.SetExpectedFiles([]string{"counter.go"})
+	result, modifiedFiles, err := editor.Execute(context.Background(), []llm.ChatMessage{{
+		Role:    "user",
+		Content: "Fix counter.go and verify the result.",
+	}}, nil)
+
+	if err != nil {
+		t.Fatalf("expected in-turn repair to complete: %v", err)
+	}
+	if result != "Verification failure repaired." {
+		t.Fatalf("unexpected completion: %q", result)
+	}
+	content, err := os.ReadFile(filepath.Join(tmpDir, "counter.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(content), "var Value = 1") {
+		t.Fatalf("same-file repair was not applied: %s", content)
+	}
+	if len(modifiedFiles) != 2 {
+		t.Fatalf("expected both writes to be recorded, got %v", modifiedFiles)
+	}
+}
+
+func TestEditor_EditTask_AllowsGroundedToolChainsBeyondTenCalls(t *testing.T) {
+	tmpDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(tmpDir, "counter.go"), []byte("package counter\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	responses := make([]llm.ChatResponse, 0, 14)
+	for i := 0; i < 11; i++ {
+		responses = append(responses, llm.ChatResponse{ToolCalls: []llm.ChatToolCall{{
+			ID:        fmt.Sprintf("read-%d", i),
+			Name:      "read_file",
+			Arguments: `{"path":"counter.go"}`,
+		}}})
+	}
+	responses = append(responses,
+		llm.ChatResponse{ToolCalls: []llm.ChatToolCall{{
+			ID:        "write",
+			Name:      "apply_patch",
+			Arguments: `{"path":"counter.go","search":"package counter","replace":"package counter\n\nvar Value = 1"}`,
+		}}},
+		llm.ChatResponse{Text: "Grounded implementation complete."},
+	)
+
+	editor := NewEditor(&mockProvider{responses: responses}, tmpDir, "test-model")
+	result, modifiedFiles, err := editor.Execute(context.Background(), []llm.ChatMessage{{
+		Role:    "user",
+		Content: "Fix counter.go after inspecting the repository evidence.",
+	}}, nil)
+	if err != nil {
+		t.Fatalf("expected a long grounded tool chain to complete: %v", err)
+	}
+	if result != "Grounded implementation complete." || len(modifiedFiles) != 1 {
+		t.Fatalf("unexpected result %q with files %v", result, modifiedFiles)
 	}
 }
 

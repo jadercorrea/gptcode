@@ -58,6 +58,72 @@ func buildEditorRepositoryContext(root, language string, maxBytes int) (string, 
 	return context.String(), err
 }
 
+func buildPlanningRepositoryContext(root, language string, maxBytes int) (string, error) {
+	return buildRecoveryRepositoryContext(root, language, maxBytes)
+}
+
+func buildRetryMessage(root, language, feedback string) (string, error) {
+	current, err := buildRecoveryRepositoryContext(root, language, 64*1024)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(
+		"%s\n\n## CURRENT REPOSITORY STATE AFTER THE PREVIOUS ATTEMPT\n%s\n"+
+			"Base the correction on this current state, not the original snapshot.",
+		feedback,
+		current,
+	), nil
+}
+
+// buildRecoveryRepositoryContext includes the contract that failed as well as
+// the implementation being repaired. Planning context intentionally omits test
+// files to conserve tokens, but retrying without tests leaves the editor unable
+// to reason about assertions that are only summarized by test output.
+func buildRecoveryRepositoryContext(root, language string, maxBytes int) (string, error) {
+	if maxBytes <= 0 {
+		return "", nil
+	}
+
+	var context strings.Builder
+	used := 0
+	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			switch entry.Name() {
+			case ".git", "vendor", "node_modules":
+				if path != root {
+					return filepath.SkipDir
+				}
+			}
+			return nil
+		}
+
+		name := entry.Name()
+		if !isEditorSourceFile(path, language) &&
+			name != "task.md" &&
+			name != "AGENTS.md" {
+			return nil
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if used+len(content) > maxBytes {
+			return nil
+		}
+		relative, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(&context, "\n<file path=%q>\n%s\n</file>\n", filepath.ToSlash(relative), content)
+		used += len(content)
+		return nil
+	})
+	return context.String(), err
+}
+
 func isEditorSourceFile(path, language string) bool {
 	extension := strings.ToLower(filepath.Ext(path))
 	switch strings.ToLower(language) {

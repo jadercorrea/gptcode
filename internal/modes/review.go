@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
-	"time"
 
 	"github.com/jadercorrea/gptcode/internal/agents"
 	"github.com/jadercorrea/gptcode/internal/config"
@@ -27,7 +27,7 @@ func RunReview(opts ReviewOptions) error {
 	backendName := setup.Defaults.Backend
 
 	backendCfg := setup.Backend[backendName]
-	model := backendCfg.GetModelForAgent("query")
+	model := configuredAgentModel(backendCfg, setup.Defaults.Profile, "query")
 	if model == "" {
 		model = backendCfg.DefaultModel
 	}
@@ -60,14 +60,20 @@ func RunReview(opts ReviewOptions) error {
 	}
 
 	var fileEvidence string
+	var relatedEvidence string
 	if !info.IsDir() {
 		content, err := os.ReadFile(targetPath)
 		if err != nil {
 			return fmt.Errorf("read review target: %w", err)
 		}
 		fileEvidence = string(content)
+		evidence, evidenceErr := collectRepositoryEvidence(cwd, target+" "+opts.Focus)
+		if evidenceErr != nil {
+			return fmt.Errorf("collect review evidence: %w", evidenceErr)
+		}
+		relatedEvidence = formatRelatedReviewEvidence(cwd, targetPath, evidence)
 	}
-	reviewPrompt := buildReviewPrompt(targetPath, info.IsDir(), opts.Focus, fileEvidence)
+	reviewPrompt := buildReviewPrompt(targetPath, info.IsDir(), opts.Focus, fileEvidence, relatedEvidence)
 
 	fmt.Printf("Reviewing: %s\n", target)
 	if opts.Focus != "" {
@@ -86,7 +92,7 @@ func RunReview(opts ReviewOptions) error {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), localModelTimeout)
 	defer cancel()
 	var result string
 	if fileEvidence != "" {
@@ -121,7 +127,7 @@ func RunReview(opts ReviewOptions) error {
 	return nil
 }
 
-func buildReviewPrompt(targetPath string, isDir bool, focus string, fileEvidence string) string {
+func buildReviewPrompt(targetPath string, isDir bool, focus, fileEvidence, relatedEvidence string) string {
 	var prompt strings.Builder
 
 	if isDir {
@@ -133,6 +139,11 @@ func buildReviewPrompt(targetPath string, isDir bool, focus string, fileEvidence
 		prompt.WriteString("```text\n")
 		prompt.WriteString(numberLines(fileEvidence))
 		prompt.WriteString("\n```\n")
+		if relatedEvidence != "" {
+			prompt.WriteString("\nRelated repository contracts and tests:\n")
+			prompt.WriteString(relatedEvidence)
+			prompt.WriteString("\n")
+		}
 	}
 
 	if focus != "" {
@@ -150,8 +161,38 @@ func buildReviewPrompt(targetPath string, isDir bool, focus string, fileEvidence
 	prompt.WriteString("Do not invent lifecycle requirements, background work, or new public API methods. When the requested focus is satisfied and no defect is evidenced, say so explicitly.\n")
 	prompt.WriteString("Treat an evidenced violation of the requested focus as a defect even if no broader product requirements were supplied.\n")
 	prompt.WriteString("Private implementation changes do not alter the public API; do not claim that adding private synchronization changes exported constructors or methods.\n")
+	prompt.WriteString("Reserve Critical Issues for a demonstrated failing input, unsafe interleaving, security boundary violation, or broken contract; place simplifications and micro-optimizations under Suggestions.\n")
+	prompt.WriteString("Go visibility is determined by capitalization; do not recommend underscore prefixes for private identifiers.\n")
+	prompt.WriteString("When reasoning about concurrency, an exclusive lock prevents concurrent map mutation for its duration. Do not invent a race or deadlock without showing a concrete interleaving from the supplied code.\n")
 
 	return prompt.String()
+}
+
+func formatRelatedReviewEvidence(cwd, targetPath string, evidence repositoryEvidence) string {
+	targetRelative, err := filepath.Rel(cwd, targetPath)
+	if err != nil {
+		return ""
+	}
+	targetRelative = filepath.ToSlash(targetRelative)
+
+	paths := make([]string, 0, len(evidence.Contents))
+	for path := range evidence.Contents {
+		if path != targetRelative {
+			paths = append(paths, path)
+		}
+	}
+	sort.Strings(paths)
+
+	var related strings.Builder
+	for _, path := range paths {
+		fmt.Fprintf(
+			&related,
+			"\n<file path=%q>\n%s\n</file>\n",
+			path,
+			numberLines(evidence.Contents[path]),
+		)
+	}
+	return related.String()
 }
 
 func numberLines(content string) string {

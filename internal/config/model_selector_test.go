@@ -55,6 +55,70 @@ func TestSelectModelPrefersConfiguredEditor(t *testing.T) {
 	}
 }
 
+func TestSelectModelPrefersExplicitLocalProfileOverApprovedCloudModel(t *testing.T) {
+	setup := &Setup{
+		Backend: map[string]BackendConfig{
+			"local": {
+				Type: "ollama",
+				Profiles: map[string]ProfileConfig{
+					"evaluation": {
+						AgentModels: AgentModels{
+							Query: "qwen3-coder:latest",
+						},
+					},
+				},
+			},
+			"openrouter": {
+				Type: "openai",
+			},
+		},
+		ApprovedModels: []ApprovedModel{
+			{Model: "openai/o3-mini", ForActions: []string{string(ActionPlan)}},
+		},
+	}
+	setup.Defaults.Backend = "local"
+	setup.Defaults.Profile = "evaluation"
+	setup.Defaults.Mode = "local"
+
+	selector := &ModelSelector{setup: setup}
+	backend, model, err := selector.SelectModel(ActionPlan, "go", "complex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if backend != "local" || model != "qwen3-coder:latest" {
+		t.Fatalf("selected %s/%s, want explicit local profile", backend, model)
+	}
+}
+
+func TestSelectModelNeverRoutesLocalModeToApprovedCloudBackend(t *testing.T) {
+	setup := &Setup{
+		Backend: map[string]BackendConfig{
+			"local": {
+				Type: "ollama",
+			},
+			"openrouter": {
+				Type: "openai",
+			},
+		},
+		ApprovedModels: []ApprovedModel{
+			{Model: "google/gemini-2.5-pro", ForActions: []string{string(ActionPlan)}},
+		},
+	}
+	setup.Defaults.Backend = "local"
+	setup.Defaults.Mode = "local"
+
+	selector := &ModelSelector{
+		setup: setup,
+		catalog: map[string][]ModelInfo{
+			"openrouter": {{ID: "google/gemini-2.5-pro"}},
+		},
+	}
+	backend, model, err := selector.SelectModel(ActionPlan, "go", "complex")
+	if err == nil {
+		t.Fatalf("SelectModel() = %s/%s, want local-mode cloud rejection", backend, model)
+	}
+}
+
 func TestApprovedOpenRouterModelUsesConfiguredBackend(t *testing.T) {
 	setup := &Setup{
 		Backend: map[string]BackendConfig{
