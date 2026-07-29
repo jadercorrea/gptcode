@@ -48,6 +48,7 @@ engineering portfolio.
 - [x] Find a fully GPU-backed local configuration that passes the strengthened safe-store contract, while retaining Qwen's extended-budget failure as negative evidence.
 - [x] Stream verbose agent stages from the evidence suite without sacrificing the replayable output bundle.
 - [x] Measure Devstral safe-store repeatability and retain the 0/3 timeout result alongside the earlier reviewed capability pass.
+- [x] Launch Evidence-Based AI Engineering with a full paper, technical brief, reusable result figure, and evidence-linked distribution package.
 - [ ] Improve local safe-store convergence; neither Qwen nor Devstral currently supports a reliability claim on the strengthened contract.
 - [ ] Extend reviewed repeatability beyond one fixture before publishing a general coding-agent success-rate claim.
 - [ ] Add an OpenCode importer to challenge the vendor-neutral evidence model.

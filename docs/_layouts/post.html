@@ -4,6 +4,11 @@ layout: default
 
 <article class="post">
   <header class="post-header">
+    {% if page.series %}
+      <p class="post-series">
+        {{ page.series }}{% if page.format %} · {{ page.format }}{% endif %}
+      </p>
+    {% endif %}
     <h1 class="post-title">{{ page.title }}</h1>
     <div class="post-meta">
       <time datetime="{{ page.date | date_to_xmlschema }}">
@@ -41,6 +46,16 @@ layout: default
   margin-bottom: var(--spacing-sm);
 }
 
+.post-series {
+  margin: 0 0 var(--spacing-sm);
+  color: var(--color-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .post-meta {
   color: var(--color-text-muted);
   font-size: 14px;
@@ -56,6 +71,43 @@ layout: default
 
 .post-content h1 {
   display: none; /* Hide duplicate H1 from markdown */
+}
+
+.paper-abstract {
+  display: block;
+  margin: 0 0 var(--spacing-xl);
+  padding: var(--spacing-lg);
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-code-bg);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.paper-abstract strong {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text);
+}
+
+.result-figure {
+  width: min(960px, calc(100vw - 32px));
+  margin: var(--spacing-xl) 0 var(--spacing-xl) 50%;
+  transform: translateX(-50%);
+}
+
+.result-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.result-figure figcaption {
+  margin-top: var(--spacing-sm);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .post-footer {

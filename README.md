@@ -15,7 +15,8 @@ code.
 [Website](https://gptcode.dev) ·
 [Architecture](https://gptcode.dev/#architecture) ·
 [Documentation](https://gptcode.dev/guides/getting-started) ·
-[Engineering essay](https://gptcode.dev/blog/the-workflow-is-the-source-of-truth/)
+[Engineering thesis](https://gptcode.dev/blog/the-workflow-is-the-source-of-truth/) ·
+[Evaluation essay](https://gptcode.dev/blog/2026-07-29-one-successful-agent-run-proves-almost-nothing)
 
 <p align="center">
   <a href="https://gptcode.dev">

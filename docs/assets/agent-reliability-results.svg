@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Capability is not reliability</title>
+  <desc id="description">One capability check passed. Three subsequent repeatability runs timed out. Capability was demonstrated; reliability was not.</desc>
+  <rect width="1200" height="630" fill="#0f111a"/>
+  <rect x="48" y="48" width="1104" height="534" rx="18" fill="#161925" stroke="#2a2f42" stroke-width="2"/>
+
+  <text x="88" y="116" fill="#7aa2f7" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" font-weight="700" letter-spacing="2">EVIDENCE-BASED AI ENGINEERING</text>
+  <text x="88" y="176" fill="#c0caf5" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="48" font-weight="700">Capability is not reliability.</text>
+  <text x="88" y="218" fill="#9aa5ce" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="22">Capability campaign followed by repeatability campaign.</text>
+
+  <text x="88" y="286" fill="#9aa5ce" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" letter-spacing="0.5">CAPABILITY CHECK</text>
+  <rect x="88" y="308" width="238" height="106" rx="10" fill="#182b2a" stroke="#73daca" stroke-width="2"/>
+  <circle cx="122" cy="342" r="10" fill="#73daca"/>
+  <text x="148" y="351" fill="#c0caf5" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="700">PASS</text>
+  <text x="122" y="390" fill="#9aa5ce" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18">1 / 1 · 26m08s</text>
+
+  <text x="410" y="286" fill="#9aa5ce" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" letter-spacing="0.5">SUBSEQUENT REPEATABILITY CAMPAIGN</text>
+  <g font-family="Inter, ui-sans-serif, system-ui, sans-serif">
+    <rect x="374" y="308" width="218" height="106" rx="10" fill="#30232a" stroke="#f7768e" stroke-width="2"/>
+    <circle cx="408" cy="342" r="10" fill="#f7768e"/>
+    <text x="434" y="351" fill="#c0caf5" font-size="25" font-weight="700">TIMEOUT</text>
+    <text x="408" y="390" fill="#9aa5ce" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18">RUN 1 · 30m01s</text>
+
+    <rect x="614" y="308" width="218" height="106" rx="10" fill="#30232a" stroke="#f7768e" stroke-width="2"/>
+    <circle cx="648" cy="342" r="10" fill="#f7768e"/>
+    <text x="674" y="351" fill="#c0caf5" font-size="25" font-weight="700">TIMEOUT</text>
+    <text x="648" y="390" fill="#9aa5ce" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18">RUN 2 · 30m01s</text>
+
+    <rect x="854" y="308" width="218" height="106" rx="10" fill="#30232a" stroke="#f7768e" stroke-width="2"/>
+    <circle cx="888" cy="342" r="10" fill="#f7768e"/>
+    <text x="914" y="351" fill="#c0caf5" font-size="25" font-weight="700">TIMEOUT</text>
+    <text x="888" y="390" fill="#9aa5ce" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18">RUN 3 · 30m01s</text>
+  </g>
+
+  <line x1="88" y1="464" x2="1072" y2="464" stroke="#2a2f42" stroke-width="2"/>
+  <text x="88" y="504" fill="#73daca" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">CAPABILITY</text>
+  <text x="88" y="541" fill="#c0caf5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="29" font-weight="700">1 / 1</text>
+  <text x="210" y="541" fill="#73daca" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700">demonstrated</text>
+  <text x="560" y="504" fill="#f7768e" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">REPEATABILITY</text>
+  <text x="560" y="541" fill="#c0caf5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="29" font-weight="700">0 / 3</text>
+  <text x="682" y="541" fill="#f7768e" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700">not demonstrated</text>
+  <text x="88" y="570" fill="#7982a9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13">FULL PROTOCOL AND RAW EVIDENCE · AI-EXPERIMENTS 2026.07.29.1</text>
+</svg>
