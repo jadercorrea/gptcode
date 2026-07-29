@@ -129,6 +129,10 @@ type Observer interface {
 
 	// SetVerbose enables real-time console output
 	SetVerbose(verbose bool)
+
+	// SetOutcome records the authoritative final task outcome. Recoverable
+	// intermediate errors remain available as diagnostic evidence.
+	SetOutcome(success bool)
 }
 
 // AgentObserver is the concrete implementation of Observer
@@ -151,6 +155,7 @@ type AgentObserver struct {
 	totalCost     float64
 	errors        []string
 	success       bool
+	outcomeSet    bool
 	tokensSaved   int
 	costSaved     float64
 	activeModel   string
@@ -325,10 +330,18 @@ func (o *AgentObserver) Summary() *ExecutionSummary {
 		TokensOut:     o.tokensOut,
 		TotalCost:     o.totalCost,
 		Errors:        o.errors,
-		Success:       o.success && len(o.errors) == 0,
+		Success:       o.success && (o.outcomeSet || len(o.errors) == 0),
 		TokensSaved:   o.tokensSaved,
 		CostSaved:     o.costSaved,
 	}
+}
+
+// SetOutcome records the authoritative result after retries and verification.
+func (o *AgentObserver) SetOutcome(success bool) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.success = success
+	o.outcomeSet = true
 }
 
 // Subscribe adds a channel to receive events

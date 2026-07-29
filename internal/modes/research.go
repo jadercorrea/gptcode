@@ -19,6 +19,8 @@ import (
 	"golang.org/x/term"
 )
 
+const localModelTimeout = 2 * time.Minute
+
 func RunResearch(args []string) error {
 	question := ""
 	if len(args) > 0 {
@@ -78,7 +80,7 @@ func RunResearch(args []string) error {
 		customExec = llm.NewChatCompletion(backendCfg.BaseURL, backendName)
 	}
 
-	queryModel := backendCfg.GetModelForAgent("query")
+	queryModel := configuredAgentModel(backendCfg, setup.Defaults.Profile, "research")
 	queryAgent := agents.NewQuery(customExec, cwd, queryModel)
 
 	evidence, err := collectRepositoryEvidence(cwd, question)
@@ -86,7 +88,7 @@ func RunResearch(args []string) error {
 		return fmt.Errorf("collect repository evidence: %w", err)
 	}
 	codebasePrompt := buildCodebaseResearchPrompt(question, evidence)
-	researchCtx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	researchCtx, cancel := context.WithTimeout(context.Background(), localModelTimeout)
 	defer cancel()
 
 	codebaseAnalysis, err := queryAgent.Execute(researchCtx, []llm.ChatMessage{{Role: "user", Content: codebasePrompt}}, nil)
@@ -108,6 +110,41 @@ override the implementation evidence.`
 		if contradictsUnsafeConcurrencyEvidence(codebaseAnalysis, evidence) {
 			return fmt.Errorf("codebase analysis contradicted deterministic concurrency evidence")
 		}
+	}
+
+	for correctionAttempt := 0; correctionAttempt < 2; correctionAttempt++ {
+		issues := unsupportedGoLockClaims(codebaseAnalysis, evidence)
+		if ciIssue := unsupportedCIClaim(codebaseAnalysis, evidence); ciIssue != "" {
+			issues = append(issues, ciIssue)
+		}
+		if len(issues) == 0 {
+			break
+		}
+		correctionCtx, correctionCancel := context.WithTimeout(context.Background(), localModelTimeout)
+		corrected, correctionErr := queryAgent.Execute(correctionCtx, []llm.ChatMessage{{
+			Role: "user",
+			Content: buildCodebaseResearchPrompt(question, evidence) + fmt.Sprintf(`
+
+Mandatory correction:
+The draft made these claims that contradict the inspected repository evidence:
+- %s
+
+Rewrite the answer from scratch. Describe the exact lock acquired by each
+method separately. Return only Findings, Evidence, and Verification; do not
+include the previous draft or a corrections appendix.`, strings.Join(issues, "\n- ")),
+		}}, nil)
+		correctionCancel()
+		if correctionErr != nil {
+			return fmt.Errorf("correct unsupported lock claims: %w", correctionErr)
+		}
+		codebaseAnalysis = corrected
+	}
+	remainingIssues := unsupportedGoLockClaims(codebaseAnalysis, evidence)
+	if ciIssue := unsupportedCIClaim(codebaseAnalysis, evidence); ciIssue != "" {
+		remainingIssues = append(remainingIssues, ciIssue)
+	}
+	if len(remainingIssues) > 0 {
+		return fmt.Errorf("codebase analysis contradicted deterministic evidence: %s", strings.Join(remainingIssues, "; "))
 	}
 
 	home, _ := os.UserHomeDir()
@@ -179,6 +216,61 @@ func contradictsUnsafeConcurrencyEvidence(analysis string, evidence repositoryEv
 		strings.Contains(lower, "unsafe") ||
 		strings.Contains(lower, "not thread-safe")
 	return claimsSafe && !acknowledgesUnsafe
+}
+
+func unsupportedGoLockClaims(analysis string, evidence repositoryEvidence) []string {
+	if !strings.EqualFold(evidence.Language, "Go") {
+		return nil
+	}
+
+	methodUsesReadLock := make(map[string]bool)
+	methodPattern := regexp.MustCompile(`(?s)func\s+\([^)]*\)\s+([A-Za-z][A-Za-z0-9_]*)\([^)]*\)[^{]*\{(.*?)\n\}`)
+	for _, content := range evidence.Contents {
+		for _, match := range methodPattern.FindAllStringSubmatch(content, -1) {
+			if len(match) == 3 {
+				methodUsesReadLock[match[1]] = strings.Contains(match[2], ".RLock()")
+			}
+		}
+	}
+
+	var issues []string
+	segments := strings.FieldsFunc(analysis, func(r rune) bool {
+		return r == '\n' || r == ';'
+	})
+	for _, segment := range segments {
+		lower := strings.ToLower(segment)
+		if !strings.Contains(lower, "read lock") && !strings.Contains(lower, "rlock") {
+			continue
+		}
+		for method, usesReadLock := range methodUsesReadLock {
+			if usesReadLock {
+				continue
+			}
+			methodPattern := regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(method) + `\b`)
+			if methodPattern.MatchString(segment) {
+				issues = append(issues, fmt.Sprintf("%s does not acquire RLock, but the draft says: %s", method, strings.TrimSpace(segment)))
+			}
+		}
+	}
+	sort.Strings(issues)
+	return issues
+}
+
+func unsupportedCIClaim(analysis string, evidence repositoryEvidence) string {
+	mentionsCI := regexp.MustCompile(`(?i)\bCI(?:/CD)?\b`).MatchString(analysis)
+	if !mentionsCI {
+		return ""
+	}
+	for _, path := range evidence.Files {
+		lower := strings.ToLower(path)
+		if strings.HasPrefix(lower, ".github/workflows/") ||
+			strings.Contains(lower, "gitlab-ci") ||
+			strings.Contains(lower, "circleci") ||
+			strings.Contains(lower, "buildkite") {
+			return ""
+		}
+	}
+	return "the draft claims CI execution, but no CI configuration exists in the inspected evidence"
 }
 
 type repositoryEvidence struct {
@@ -335,7 +427,7 @@ func buildCodebaseResearchPrompt(question string, evidence repositoryEvidence) s
 		if !ok {
 			continue
 		}
-		fmt.Fprintf(&groundedFiles, "\n<file path=%q>\n%s\n</file>\n", path, content)
+		fmt.Fprintf(&groundedFiles, "\n<file path=%q>\n%s\n</file>\n", path, numberLines(content))
 	}
 
 	return fmt.Sprintf(`Research this repository question:
@@ -360,6 +452,8 @@ Grounding requirements:
 8. Compare stated expectations with implementation details and report contradictions explicitly.
 9. Concurrency claims require synchronization in the implementation (for example locks, atomics, channels, or documented confinement). A WaitGroup or goroutines in a test exercise concurrency; they do not make shared state safe.
 10. If mutable shared state has no visible synchronization, state that concurrent access is unsafe and recommend running the repository's race/concurrency verification.
+11. Make the answer internally consistent. Describe the lock actually acquired by each method; do not classify a method as a read operation if its implementation takes a write lock or mutates state.
+12. Do not claim a command passed unless its exit status and output are included in the evidence. Distinguish commands required by the repository from commands actually executed.
 
 Return concise sections: Findings, Evidence, Verification.`, question, evidence.Language, strings.Join(evidence.Files, "\n"), groundedFiles.String())
 }

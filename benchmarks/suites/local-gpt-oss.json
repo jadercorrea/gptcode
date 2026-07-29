@@ -1,0 +1,69 @@
+{
+  "id": "go-core-quality",
+  "output": "/tmp/gptcode-go-core-quality",
+  "repetitions": 3,
+  "run_timeout_seconds": 600,
+  "setup": [
+    {
+      "name": "select-local-gpt-oss-profile",
+      "args": ["gt", "profiles", "use", "local.gptoss"]
+    }
+  ],
+  "agent": {
+    "name": "gptcode-local-gpt-oss",
+    "args": [
+      "gt",
+      "do",
+      "Read task.md, implement the requested fix, and meet every regression and quality constraint in the repository.",
+      "--max-attempts",
+      "3"
+    ]
+  },
+  "fixtures": [
+    {
+      "id": "ledger-deadlock",
+      "source": "benchmarks/fixtures/go-ledger",
+      "require_failing_baseline": true,
+      "verifications": [
+        {
+          "name": "tests-race-and-quality-contract",
+          "args": ["go", "test", "-count=1", "-race", "./..."]
+        },
+        {
+          "name": "static-analysis",
+          "args": ["go", "vet", "./..."]
+        }
+      ]
+    },
+    {
+      "id": "cache-expiration",
+      "source": "benchmarks/fixtures/go-expiring-cache",
+      "require_failing_baseline": true,
+      "verifications": [
+        {
+          "name": "tests-race-and-quality-contract",
+          "args": ["go", "test", "-count=1", "-race", "./..."]
+        },
+        {
+          "name": "static-analysis",
+          "args": ["go", "vet", "./..."]
+        }
+      ]
+    },
+    {
+      "id": "safe-store",
+      "source": "benchmarks/fixtures/go-safe-store",
+      "require_failing_baseline": true,
+      "verifications": [
+        {
+          "name": "tests-race-and-quality-contract",
+          "args": ["go", "test", "-count=1", "-race", "./..."]
+        },
+        {
+          "name": "static-analysis",
+          "args": ["go", "vet", "./..."]
+        }
+      ]
+    }
+  ]
+}

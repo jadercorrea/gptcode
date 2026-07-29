@@ -141,17 +141,51 @@ type TaskAnalysis struct {
 	Movements     []Movement `json:"movements,omitempty"`
 }
 
+// FileReferences accepts the compact string format requested by the prompt
+// and the structured path objects commonly emitted by local models.
+type FileReferences []string
+
+func (references *FileReferences) UnmarshalJSON(data []byte) error {
+	var values []json.RawMessage
+	if err := json.Unmarshal(data, &values); err != nil {
+		return err
+	}
+	parsed := make(FileReferences, 0, len(values))
+	for index, value := range values {
+		var path string
+		if err := json.Unmarshal(value, &path); err == nil {
+			if path == "" {
+				return fmt.Errorf("file reference %d is empty", index)
+			}
+			parsed = append(parsed, path)
+			continue
+		}
+		var structured struct {
+			Path string `json:"path"`
+		}
+		if err := json.Unmarshal(value, &structured); err != nil {
+			return fmt.Errorf("decoding file reference %d: %w", index, err)
+		}
+		if structured.Path == "" {
+			return fmt.Errorf("file reference %d is missing path", index)
+		}
+		parsed = append(parsed, structured.Path)
+	}
+	*references = parsed
+	return nil
+}
+
 // Movement represents a single phase in a complex task
 type Movement struct {
-	ID              string   `json:"id"`
-	Name            string   `json:"name"`
-	Description     string   `json:"description"`
-	Goal            string   `json:"goal"`
-	Dependencies    []string `json:"dependencies"`
-	RequiredFiles   []string `json:"required_files"`
-	OutputFiles     []string `json:"output_files"`
-	SuccessCriteria []string `json:"success_criteria"`
-	Status          string   `json:"status"` // "pending", "executing", "completed", "failed"
+	ID              string         `json:"id"`
+	Name            string         `json:"name"`
+	Description     string         `json:"description"`
+	Goal            string         `json:"goal"`
+	Dependencies    []string       `json:"dependencies"`
+	RequiredFiles   FileReferences `json:"required_files"`
+	OutputFiles     FileReferences `json:"output_files"`
+	SuccessCriteria []string       `json:"success_criteria"`
+	Status          string         `json:"status"` // "pending", "executing", "completed", "failed"
 }
 
 // TaskAnalyzer analyzes tasks and decomposes them into movements if complex

@@ -103,7 +103,9 @@ WORKFLOW:
 1. For file reading: Call read_file to get current content
 2. For shell commands: Call run_command (e.g., "gh pr list", "go test", "npm run lint")
 3. For file modification: Call apply_patch for small changes, or write_file for new files/large rewrites
-4. **WHEN DONE**: Stop immediately. Do NOT call tools again. Return success message.
+4. Run the relevant repository verification after editing. If it fails, use the
+   output to repair the implementation before returning.
+5. **WHEN DONE**: Return a brief success message.
 
 CRITICAL RULES:
 - Use run_command for ANY shell operation (git, gh, tests, linters, etc)
@@ -113,7 +115,7 @@ CRITICAL RULES:
 - NEVER use placeholders like "[previous content]" or "[rest of file]"
 - NEVER create fake/placeholder files instead of using run_command
 - **IDEMPOTENCY**: Before modifying, check if change already exists. Don't apply same patch twice
-- **ONE CHANGE PER FILE**: After modifying a file, do NOT modify it again in same turn
+- A failed command is actionable feedback: repair the same file when necessary
 - **GO PACKAGE NAMES**: When editing Go files, NEVER change the package declaration unless explicitly asked. If main.go has "package main", ALL files in the same directory MUST use "package main". Do NOT infer package names from filenames (e.g., utils.go should NOT have "package utils" if it's in a package main directory)
 
 EXAMPLE 1 - Using run_command (for shell operations):
@@ -327,8 +329,10 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 	// Tool call processing loop: handles multiple sequential tool calls within a single editor run.
 	// The outer retry logic (errors, validation failures) is controlled by Maestro's LoopDetector.
 	// This internal loop is for processing a chain of tool calls (discovery → read → write).
-	// Set to 10 to allow complex tasks: 3-4 discovery calls + 2-3 reads + 2-3 writes
-	maxToolChainDepth := 10
+	// Local models commonly need a longer inspect → edit → verify → repair chain
+	// than hosted models. Keep the outer conductor responsible for retries, but
+	// do not truncate a productive in-turn tool chain before validation.
+	maxToolChainDepth := 20
 	for iteration := 0; iteration < maxToolChainDepth; iteration++ {
 		llmStart := time.Now()
 		resp, err := e.provider.Chat(ctx, llm.ChatRequest{
@@ -461,9 +465,6 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 						fmt.Fprintf(os.Stderr, "[EDITOR] Executed %s: %s\n", tc.Name, result.Result[:min(50, len(result.Result))])
 					}
 				}
-				if e.allExpectedFilesModified(modifiedFiles) {
-					return "All planned files changed; awaiting deterministic validation", modifiedFiles, nil
-				}
 				continue
 			}
 			if editRequested(messages) && len(modifiedFiles) == 0 {
@@ -565,9 +566,6 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 				fmt.Fprintf(os.Stderr, "[EDITOR] Executed %s: %s\n", tc.Name, result.Result[:min(50, len(result.Result))])
 			}
 		}
-		if e.allExpectedFilesModified(modifiedFiles) {
-			return "All planned files changed; awaiting deterministic validation", modifiedFiles, nil
-		}
 	}
 
 	if editRequested(messages) && len(modifiedFiles) == 0 {
@@ -575,25 +573,6 @@ func (e *EditorAgent) Execute(ctx context.Context, history []llm.ChatMessage, st
 	}
 
 	return "Editor reached max iterations", modifiedFiles, nil
-}
-
-func (e *EditorAgent) allExpectedFilesModified(modifiedFiles []string) bool {
-	if len(e.allowedFiles) == 0 {
-		return false
-	}
-	for _, expected := range e.allowedFiles {
-		found := false
-		for _, modified := range modifiedFiles {
-			if modified == expected || strings.HasSuffix(modified, expected) || strings.HasSuffix(expected, modified) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-	return true
 }
 
 func min(a, b int) int {

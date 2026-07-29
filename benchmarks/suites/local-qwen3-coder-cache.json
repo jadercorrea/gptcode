@@ -1,0 +1,39 @@
+{
+  "id": "go-cache-qwen3-coder-reviewed",
+  "output": "/tmp/gptcode-qwen-cache-reviewed",
+  "repetitions": 3,
+  "run_timeout_seconds": 600,
+  "setup": [
+    {
+      "name": "select-local-qwen3-coder-profile",
+      "args": ["gt", "profiles", "use", "local.evaluation"]
+    }
+  ],
+  "agent": {
+    "name": "gptcode-local-qwen3-coder",
+    "args": [
+      "gt",
+      "do",
+      "Read task.md, implement the requested fix, and meet every regression and quality constraint in the repository.",
+      "--max-attempts",
+      "3"
+    ]
+  },
+  "fixtures": [
+    {
+      "id": "cache-expiration",
+      "source": "benchmarks/fixtures/go-expiring-cache",
+      "require_failing_baseline": true,
+      "verifications": [
+        {
+          "name": "tests-race-and-quality-contract",
+          "args": ["go", "test", "-count=1", "-race", "./..."]
+        },
+        {
+          "name": "static-analysis",
+          "args": ["go", "vet", "./..."]
+        }
+      ]
+    }
+  ]
+}

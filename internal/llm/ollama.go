@@ -6,9 +6,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -32,6 +34,11 @@ type ollamaReq struct {
 	Messages []ollamaMessage `json:"messages"`
 	Stream   bool            `json:"stream"`
 	Tools    []interface{}   `json:"tools,omitempty"`
+	Options  ollamaOptions   `json:"options,omitempty"`
+}
+
+type ollamaOptions struct {
+	NumCtx int `json:"num_ctx,omitempty"`
 }
 
 type ollamaMessage struct {
@@ -82,6 +89,7 @@ func (o *OllamaProvider) ChatStream(ctx context.Context, req ChatRequest, callba
 		Messages: messages,
 		Stream:   true,
 		Tools:    req.Tools,
+		Options:  configuredOllamaOptions(),
 	}
 	b, _ := json.Marshal(body)
 
@@ -93,6 +101,10 @@ func (o *OllamaProvider) ChatStream(ctx context.Context, req ChatRequest, callba
 		return err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+		return fmt.Errorf("ollama returned %s: %s", resp.Status, strings.TrimSpace(string(body)))
+	}
 
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
@@ -145,18 +157,23 @@ func (o *OllamaProvider) Chat(ctx context.Context, req ChatRequest) (*ChatRespon
 		Messages: messages,
 		Stream:   false,
 		Tools:    req.Tools,
+		Options:  configuredOllamaOptions(),
 	}
 	b, _ := json.Marshal(body)
 
 	httpReq, _ := http.NewRequestWithContext(ctx, "POST", o.BaseURL, bytes.NewReader(b))
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 120 * time.Second}
+	client := &http.Client{Timeout: configuredOllamaTimeout()}
 	resp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+		return nil, fmt.Errorf("ollama returned %s: %s", resp.Status, strings.TrimSpace(string(body)))
+	}
 
 	var or ollamaResp
 	if err := json.NewDecoder(resp.Body).Decode(&or); err != nil {
@@ -192,6 +209,34 @@ func (o *OllamaProvider) Chat(ctx context.Context, req ChatRequest) (*ChatRespon
 	}
 
 	return response, nil
+}
+
+func configuredOllamaOptions() ollamaOptions {
+	raw := strings.TrimSpace(os.Getenv("GPTCODE_OLLAMA_CONTEXT_LENGTH"))
+	if raw == "" {
+		return ollamaOptions{}
+	}
+
+	numCtx, err := strconv.Atoi(raw)
+	if err != nil || numCtx <= 0 {
+		return ollamaOptions{}
+	}
+	return ollamaOptions{NumCtx: numCtx}
+}
+
+func configuredOllamaTimeout() time.Duration {
+	const defaultTimeout = 10 * time.Minute
+
+	raw := strings.TrimSpace(os.Getenv("GPTCODE_OLLAMA_TIMEOUT"))
+	if raw == "" {
+		return defaultTimeout
+	}
+
+	timeout, err := time.ParseDuration(raw)
+	if err != nil || timeout <= 0 {
+		return defaultTimeout
+	}
+	return timeout
 }
 
 func parseXMLToolCalls(text string) []ChatToolCall {

@@ -198,4 +198,72 @@ class SiteIdentityTest < Minitest::Test
     assert_includes content, "time-of-check/time-of-use"
     assert_includes content, "Verification establishes truth."
   end
+
+  def test_local_agent_paper_leads_with_evidence_and_closes_with_thesis
+    article = File.join(
+      DOCS_ROOT,
+      "_posts",
+      "2026-07-29-one-successful-agent-run-proves-almost-nothing.md"
+    )
+    content = File.read(article)
+
+    assert_includes content, "series: Evidence-Based AI Engineering"
+    assert_includes content, 'format: Engineering paper'
+    assert_includes content, '<aside class="paper-abstract"'
+    assert_includes content, "Capability is not reliability."
+    assert_includes content, '<figure class="result-figure"'
+    assert_includes content, "/assets/agent-reliability-results.svg"
+    assert_includes content, "One successful run demonstrates possibility."
+    assert_includes content, "Engineering depends on repeatability."
+    assert_path_exists File.join(
+      DOCS_ROOT,
+      "assets",
+      "agent-reliability-results.svg"
+    )
+    assert_path_exists File.join(
+      DOCS_ROOT,
+      "assets",
+      "agent-reliability-results.png"
+    )
+  end
+
+  def test_capability_reliability_brief_is_a_distribution_entry_point
+    article = File.join(
+      DOCS_ROOT,
+      "_posts",
+      "2026-07-29-capability-is-not-reliability.md"
+    )
+
+    assert_path_exists article
+    content = File.read(article)
+    body = content.sub(/\A---.*?---/m, "")
+    word_count = body.scan(/\b[\w'-]+\b/).size
+
+    assert_operator word_count, :>=, 1_000
+    assert_operator word_count, :<=, 1_500
+    assert_includes content, "series: Evidence-Based AI Engineering"
+    assert_includes content, 'format: Technical brief'
+    assert_includes content, "One Successful Agent Run Proves Almost Nothing"
+    assert_includes content, "ai-experiments/releases/tag/2026.07.29.1"
+  end
+
+  def test_distribution_copy_is_derived_from_the_published_experiment
+    distribution = File.join(
+      DOCS_ROOT,
+      "_distribution",
+      "2026-07-29-capability-is-not-reliability.md"
+    )
+
+    assert_path_exists distribution
+    content = File.read(distribution)
+
+    assert_includes content, "## LinkedIn"
+    assert_includes content, "## X thread"
+    assert_includes content, "## Hacker News"
+    assert_includes content, "## Five-minute video"
+    assert_includes content, "1/1"
+    assert_includes content, "0/3"
+    assert_includes content, "2026.07.29.1"
+    refute_match(/[\u{1F300}-\u{1FAFF}]/, content)
+  end
 end
