@@ -34,7 +34,7 @@ highlighter: rouge
 timezone: America/Sao_Paulo
 future: false
 
-google_analytics: G-PBKPBY1N9H
+google_analytics: G-YRR7YKV1NG
 
 plugins:
   - jekyll-feed
